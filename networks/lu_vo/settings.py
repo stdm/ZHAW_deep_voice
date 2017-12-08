@@ -1,0 +1,5 @@
+ONE_SEC = 50  # spectrogram width
+FREQ_ELEMENTS = 128  # spectrogram height
+SENTENCES_PER_SPEAKER = 10
+SENTENCES_TRAIN = 8
+NUM_OF_SPEAKERS = 100

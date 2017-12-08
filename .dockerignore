@@ -1,0 +1,8 @@
+#################### TIMIT ####################
+# Because this is a payed product, we can't upload it to life github
+common/data/training/TIMIT/*
+common/data/training/speaker_pickles/*
+
+#################### Python ####################
+# Byte-compiled / optimized / DLL files
+**/__pycache__/*
