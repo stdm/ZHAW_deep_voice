@@ -1,7 +1,7 @@
 """
     Provides functionality to store and accurately depict plots.
 
-    Work of Gerber and Glisnki.
+    Work of Gerber and Glinski.
 """
 import matplotlib
 import matplotlib.pyplot as plt

@@ -37,7 +37,7 @@ class LSTMController(NetworkController):
         set_of_embeddings = []
         set_of_speakers = []
         speaker_numbers = []
-        checkpoints = list_all_files(get_experiment_nets(), "*[0-9].h5")
+        checkpoints = list_all_files(get_experiment_nets(), "*pairwise_lstm*.h5")
 
         # Values out of the loop
         metrics = ['accuracy', 'categorical_accuracy', ]

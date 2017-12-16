@@ -10,7 +10,7 @@ This data also needs to be processed using the [sph2pipe tool](https://www.ldc.u
  
  In any way, whether you fork and pull the source code or let docker handle it for you, the whole suite is controllable over a one file interface, controller.py.
  It can be run from console with the following calling structure:
-  controller.py [-h] [-setup] [-n network] [-train] [-test] [-plot] [-clear] [-debug]
+  controller.py [-h] [-setup] [-n network] [-train] [-test] [-plot] [-clear] [-debug] [-best] [-val# ne]
   - -help Display the help screen you are seeing here
   - -setup Create all 
   - -n specifiy which network should be used. Available:
@@ -20,6 +20,8 @@ This data also needs to be processed using the [sph2pipe tool](https://www.ldc.u
   - -plot Specify to plot the results of the chosen network. If network is 'all', all results will be displayed in one single plot
   - -clear Clear the folder in experiments
   - -debug Set the logging level of Tensorflow to Debug
+  - -best Just the best results of the networks will be used in -plot
+  - -val# specify which speaker number you want to use (40, 60, 80) to test the networks
   
 As an example, you want to train, and test but not plot the network pairwise_lstm. you would call:
 > controller.py -n pairwise_lstm -train -test

@@ -1,7 +1,7 @@
 """
     A "config" file of sorts to store all the never changing variables.
 
-    Work of Gerber and Glisnki.
+    Work of Gerber and Glinski.
 """
 ONE_SEC = 100  # spectrogram width
 INTERVALL = 15  # input data width

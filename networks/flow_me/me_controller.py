@@ -39,7 +39,7 @@ class MEController(NetworkController):
 
         list_number = list_dict[self.val_data]
         print('List ' + str(list_number))
-        for checkpoint in list(range(999, 24999, 1000)):
+        for checkpoint in list(range(999, 30001, 1000)):
             checkpoint_str = str(checkpoint)
             print('Checkpoint ' + checkpoint_str)
             embeddings, map_labels = self.test(checkpoint, list_number, self.config_path)

@@ -84,16 +84,16 @@ def plot_curves(plot_file_name, curve_names, mrs, homogeneity_scores, completene
 
     # Define number of figures
     fig1 = plt.figure(1)
-    fig1.set_size_inches(32, 24)
+    fig1.set_size_inches(16, 8)
 
     # Define Plots
-    mr_plot = plt.subplot2grid((2, 2), (0, 0), colspan=2)
-    mr_plot.set_title('MR')
+    mr_plot = plt.subplot2grid((2, 3), (0, 0), colspan=2)
+    mr_plot.set_ylabel('MR')
     mr_plot.set_xlabel('number of clusters')
     plt.ylim([-0.02, 1.02])
 
-    completeness_scores_plot = add_cluster_subplot(fig1, 223, 'completeness_scores')
-    homogeneity_scores_plot = add_cluster_subplot(fig1, 224, 'homogeneity_scores')
+    completeness_scores_plot = add_cluster_subplot(fig1, 234, 'completeness_scores')
+    homogeneity_scores_plot = add_cluster_subplot(fig1, 235, 'homogeneity_scores')
 
     # Define curves and their values
     curves = [[mr_plot, mrs],
@@ -116,7 +116,7 @@ def plot_curves(plot_file_name, curve_names, mrs, homogeneity_scores, completene
     fig1.savefig(get_result_png(plot_file_name + '.svg'), format='svg')
 
 
-def add_cluster_subplot(fig, position, title):
+def add_cluster_subplot(fig, position, y_lable):
     """
     Adds a cluster subplot to the given figure.
 
@@ -126,7 +126,7 @@ def add_cluster_subplot(fig, position, title):
     :return: the subplot itself
     """
     subplot = fig.add_subplot(position)
-    subplot.set_title(title)
+    subplot.set_ylabel(y_lable)
     subplot.set_xlabel('number of clusters')
     return subplot
 

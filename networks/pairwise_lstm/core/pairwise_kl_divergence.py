@@ -2,7 +2,7 @@
     Providing the loss function for the LSTM Keras model, pairwise_kl_divergence is implemented in tensorflow.
 
     Function layout in this file has been altered slightly from given files.
-    Work of Gerber and Glisnki.
+    Work of Gerber and Glinski.
 """
 import tensorflow as tf
 

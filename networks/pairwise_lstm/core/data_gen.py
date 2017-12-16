@@ -1,7 +1,7 @@
 """
     The batch creation file to create generators that yield the batches.
 
-    Work of Gerber and Glisnki.
+    Work of Gerber and Glinski.
 """
 from random import randint
 

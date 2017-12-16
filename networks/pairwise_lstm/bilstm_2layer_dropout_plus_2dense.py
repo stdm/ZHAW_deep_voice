@@ -28,7 +28,7 @@ from common.utils.paths import *
     segment_size: Segment size that is used as input 100 equals 1 second with current Spectrogram extraction
     frequency: size of the frequency Dimension of the Input Spectrogram
 
-    Work of Gerber and Glisnki.
+    Work of Gerber and Glinski.
 '''
 
 

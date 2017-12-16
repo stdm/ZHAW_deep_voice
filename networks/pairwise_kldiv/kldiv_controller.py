@@ -14,7 +14,7 @@ from .network_training.network_factory import *
 class KLDivController(NetworkController):
     def __init__(self):
         super().__init__("pairwise_kldiv")
-        self.checkpoints = ["pairwise_lstm_100.pickle"]
+        self.checkpoints = ["pairwise_kldiv_100.pickle"]
 
     def train_network(self):
         net_file = get_experiment_nets(self.checkpoints[0])
