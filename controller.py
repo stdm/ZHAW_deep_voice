@@ -36,7 +36,7 @@ from networks.pairwise_lstm.lstm_controller import LSTMController
 
 class Controller(NetworkController):
     def __init__(self, setup=True, network='pairwise_lstm', train=False, test=False, clear=False, debug=False,
-                 plot=False, best=False, val_data=40):
+                 plot=False, best=False, val_data=40, out_layer=2, seg_size=15, vec_size=512):
         super().__init__("Front")
         self.setup = setup
         self.network = network
@@ -47,6 +47,9 @@ class Controller(NetworkController):
         self.network_controllers = []
         self.plot = plot
         self.best = best
+        self.out_layer = out_layer
+        self.seg_size = seg_size
+        self.vec_size = vec_size
 
         validation_data = {
             40: "speakers_40_clustering_vs_reynolds",
@@ -68,7 +71,7 @@ class Controller(NetworkController):
             return
 
         for network_controller in self.network_controllers:
-            network_controller.test_network()
+            network_controller.test_network(self.out_layer, self.seg_size, self.vec_size)
 
     def get_embeddings(self):
         return None, None, None, None
@@ -93,11 +96,11 @@ class Controller(NetworkController):
     def generate_controllers(self):
 
         controller_dict = {
-            'pairwise_lstm': [LSTMController()],
-            'pairwise_kldiv': [KLDivController()],
-            'flow_me': [MEController(self.clear, self.debug, False)],
-            'luvo': [LuvoController()],
-            'all': [LSTMController(), KLDivController(), MEController(self.clear, self.debug, False), LuvoController()]
+            'pairwise_lstm': [LSTMController(self.out_layer, self.seg_size, self.vec_size)],
+#            'pairwise_kldiv': [KLDivController()],
+#            'flow_me': [MEController(self.clear, self.debug, False)],
+#            'luvo': [LuvoController()],
+#            'all': [LSTMController(self.out_layer, self.seg_size, self.vec_size), KLDivController(), MEController(self.clear, self.debug, False), LuvoController()]
         }
 
         try:
@@ -157,7 +160,13 @@ if __name__ == '__main__':
                         help='If a single Network is specified and plot was called, just the best curves will be plotted')
     parser.add_argument('-val#', dest='validation_number', default=40,
                         help='Specify how many speakers should be used for testing (40, 60, 80).')
+    parser.add_argument('-out_layer#', dest='out_layer', default=2,
+                        help='Output layer')
+    parser.add_argument('-seg_size#', dest='seg_size', default=15,
+                        help='Segment size')
+    parser.add_argument('-vec_size#', dest='vec_size', default=512,
+                        help='Vector size')
     args = parser.parse_args()
 
-    controller = Controller(args.setup, args.network, args.train, args.test, args.clear, args.debug, args.plot, args.best, args.validation_number)
+    controller = Controller(args.setup, args.network, args.train, args.test, args.clear, args.debug, args.plot, args.best, args.validation_number, int(args.out_layer), int(args.seg_size), int(args.vec_size))
     controller.run()
