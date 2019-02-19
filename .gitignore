@@ -5,6 +5,11 @@
 # manually build them when you need them
 common/data/training/speaker_pickles/*.pickle
 
+# do not save experiment results in git
+common/data/experiments/plots/*.png
+common/data/experiments/nets/*.h5
+common/data/experiments/logs/*.csv
+
 #################### Python ####################
 # Byte-compiled / optimized / DLL files
 */__pycache__/
@@ -16,14 +21,8 @@ TIMIT/crp/
 TIMIT/DOC/
 TIMIT/TEST/
 TIMIT/TRAIN/
-common/data/training/TIMIT/TEST/*.phn
-common/data/training/TIMIT/TEST/*.txt
-common/data/training/TIMIT/TEST/*.wav
-common/data/training/TIMIT/TEST/*.wrd
-common/data/training/TIMIT/TRAIN/*.phn
-common/data/training/TIMIT/TRAIN/*.txt
-common/data/training/TIMIT/TRAIN/*.wav
-common/data/training/TIMIT/TRAIN/*.wrd
+common/data/training/TIMIT/TEST/
+common/data/training/TIMIT/TRAIN/
 
 #################### Misc ####################
 # Home made stuff not present in the gitignore project.
