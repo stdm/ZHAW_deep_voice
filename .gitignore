@@ -5,6 +5,7 @@
 #################### Python ####################
 # Byte-compiled / optimized / DLL files
 */__pycache__/
+*.pyc
 
 #################### TIMIT ####################
 # Because this is a payed product, we can't upload it to life github
