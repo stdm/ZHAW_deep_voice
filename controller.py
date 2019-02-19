@@ -28,9 +28,9 @@ from common.analysis.analysis import *
 from common.extrapolation.setup import setup_suite, is_suite_setup
 from common.network_controller import NetworkController
 from common.utils.paths import *
-from networks.flow_me.me_controller import MEController
-from networks.lu_vo.luvo_controller import LuvoController
-from networks.pairwise_kldiv.kldiv_controller import KLDivController
+# from networks.flow_me.me_controller import MEController
+# from networks.lu_vo.luvo_controller import LuvoController
+# from networks.pairwise_kldiv.kldiv_controller import KLDivController
 from networks.pairwise_lstm.lstm_controller import LSTMController
 
 
@@ -164,6 +164,8 @@ if __name__ == '__main__':
     parser.add_argument('-vec_size#', dest='vec_size', default=512,
                         help='Vector size')
     args = parser.parse_args()
+
+    print(args)
 
     controller = Controller(args.setup, args.network, args.train, args.test, args.clear, args.debug, args.plot, args.best, args.validation_number, int(args.out_layer), int(args.seg_size), int(args.vec_size))
     controller.run()

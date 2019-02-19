@@ -5,7 +5,8 @@ Based on previous work of Gerber, Lukic and Vogt, adapted by Heusser
 """
 from common.extrapolation.speaker import Speaker
 
-
+# lehmacl1: defines which speakers are being set up initially
+#
 def create_all_speakers():
     """
     A generator that yields all Speakers that are needed for the Speaker Clustering Suite to function
