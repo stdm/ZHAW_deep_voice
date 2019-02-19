@@ -1,6 +1,9 @@
 #################### special ####################
 /alteArbeiten/
 /old/
+# speaker pickles are too big to be saved in git,
+# manually build them when you need them
+common/data/training/speaker_pickles/*.pickle
 
 #################### Python ####################
 # Byte-compiled / optimized / DLL files
@@ -13,6 +16,14 @@ TIMIT/crp/
 TIMIT/DOC/
 TIMIT/TEST/
 TIMIT/TRAIN/
+common/data/training/TIMIT/TEST/*.phn
+common/data/training/TIMIT/TEST/*.txt
+common/data/training/TIMIT/TEST/*.wav
+common/data/training/TIMIT/TEST/*.wrd
+common/data/training/TIMIT/TRAIN/*.phn
+common/data/training/TIMIT/TRAIN/*.txt
+common/data/training/TIMIT/TRAIN/*.wav
+common/data/training/TIMIT/TRAIN/*.wrd
 
 #################### Misc ####################
 # Home made stuff not present in the gitignore project.
