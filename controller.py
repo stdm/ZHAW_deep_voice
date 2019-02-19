@@ -35,8 +35,9 @@ from networks.pairwise_lstm.lstm_controller import LSTMController
 
 
 class Controller(NetworkController):
-    def __init__(self, setup=True, network='pairwise_lstm', train=False, test=False, clear=False, debug=False,
-                 plot=False, best=False, val_data=40, out_layer=2, seg_size=15, vec_size=512):
+    def __init__(self, setup=True, network='pairwise_lstm', train=False, test=False, 
+                 clear=False, debug=False, plot=False, best=False, val_data=40, 
+                 out_layer=2, seg_size=15, vec_size=512):
         super().__init__("Front")
         self.setup = setup
         self.network = network
@@ -60,16 +61,10 @@ class Controller(NetworkController):
         self.val_data = validation_data[val_data]
 
     def train_network(self):
-        if not self.train:
-            return
-
         for network_controller in self.network_controllers:
             network_controller.train_network()
 
     def test_network(self):
-        if not self.test:
-            return
-
         for network_controller in self.network_controllers:
             network_controller.test_network(self.out_layer, self.seg_size, self.vec_size)
 
@@ -85,10 +80,12 @@ class Controller(NetworkController):
         self.generate_controllers()
 
         # Train network
-        self.train_network()
+        if self.train:
+            self.train_network()
 
         # Test network
-        self.test_network()
+        if self.test:
+            self.test_network()
 
         # Plot results
         self.plot_results()
