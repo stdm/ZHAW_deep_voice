@@ -53,6 +53,8 @@ def get_experiment_nets(*args):
 def get_experiment_plots(*args):
     return join(get_experiments('plots'), *args)
 
+def get_experiment_cluster(*args):
+    return join(get_experiments('cluster'), *args)
 
 def get_speaker_list(speaker):
     """
