@@ -33,8 +33,8 @@ from common.utils.paths import *
 
 
 class bilstm_2layer_dropout(object):
-    def __init__(self, name, training_data, n_hidden1=128, n_hidden2=128, n_classes=630, n_10_batches=1000,
-                 segment_size=15, frequency=128):
+    def __init__(self, name, training_data, n_hidden1, n_hidden2, n_classes, n_10_batches,
+                 segment_size, frequency=128):
         self.network_name = name
         self.training_data = training_data
         self.test_data = 'test' + training_data[5:]

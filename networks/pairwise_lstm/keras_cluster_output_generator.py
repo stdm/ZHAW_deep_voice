@@ -16,13 +16,15 @@ from .core import data_gen as dg
 from .core import pairwise_kl_divergence as kld
 
 
-def generate_cluster_output(network_name, test_data, output_file, one_file, write_to_file, is_LSTM, segment_size=40):
+def generate_cluster_output(network_name, test_data, output_file, one_file, write_to_file, is_LSTM, segment_size=15):
     with open(get_speaker_pickle(test_data), 'rb') as f:
         (X, y, s_list) = pickle.load(f)
 
     if one_file:
-        model = load_model(get_experiment_nets(network_name + ".h5"),
-                           custom_objects={'pairwise_kl_divergence': kld.pairwise_kl_divergence})
+        model = load_model(
+            get_experiment_nets(network_name + ".h5"),
+            custom_objects={'pairwise_kl_divergence': kld.pairwise_kl_divergence}
+        )
 
     else:
         json_file = open('../data/nets/cnn_speaker02.json', 'r')

@@ -25,8 +25,15 @@ class LSTMController(NetworkController):
         self.vec_size = vec_size
 
     def train_network(self):
-        bilstm_2layer_dropout(self.network_file, 'speakers_100_50w_50m_not_reynolds_cluster',
-                              n_hidden1=256, n_hidden2=256, n_classes=100, segment_size=40)
+        bilstm_2layer_dropout(
+            self.network_file, 
+            'speakers_100_50w_50m_not_reynolds_cluster',
+            n_hidden1=256, 
+            n_hidden2=256, 
+            n_classes=100, 
+            n_10_batches=1000,
+            segment_size=self.seg_size
+        )
 
     def get_embeddings(self, out_layer, seg_size, vec_size):
         logger = get_logger('lstm', logging.INFO)
@@ -79,7 +86,7 @@ class LSTMController(NetworkController):
         return checkpoints, set_of_embeddings, set_of_speakers, speaker_numbers
 
 
-def load_and_prepare_data(data_path, segment_size=15):
+def load_and_prepare_data(data_path, segment_size):
     # Load and generate test data
     x, y, s_list = load(data_path)
     x, speakers = generate_test_data(x, y, segment_size)

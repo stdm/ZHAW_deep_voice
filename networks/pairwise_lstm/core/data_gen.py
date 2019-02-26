@@ -29,7 +29,7 @@ def extract(spectrogram, segment_size):
 
 
 # generates the data for testing the network, with the specified segment_size (timewindow)
-def generate_test_data(X, y, segment_size=15):
+def generate_test_data(X, y, segment_size):
     segments = X.shape[0] * 3 * (800 // segment_size)
     X_test = np.zeros((segments, 1, settings.FREQ_ELEMENTS, segment_size), dtype=np.float32)
     y_test = []
