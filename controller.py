@@ -133,9 +133,13 @@ class Controller(NetworkController):
         elif self.best:
             regex = self.network + '*best*.pickle'
         else:
-            regex = self.network + ".pickle"
+            # TODO: Funktioniert aktuell nicht ohne "-best" Flag
+            #regex = self.network + ".pickle"
+            regex = self.network + '*best*.pickle'
+
 
         files = list_all_files(get_results(), regex)
+
         for index, file in enumerate(files):
             files[index] = get_results(file)
         return files
