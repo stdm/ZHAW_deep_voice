@@ -7,8 +7,10 @@ common/data/training/speaker_pickles/*.pickle
 
 # do not save experiment results in git
 common/data/experiments/plots/*.png
+common/data/experiments/plots/*.svg
 common/data/experiments/nets/*.h5
 common/data/experiments/logs/*.csv
+common/data/experiments/results/*.pickle
 
 #################### Python ####################
 # Byte-compiled / optimized / DLL files
