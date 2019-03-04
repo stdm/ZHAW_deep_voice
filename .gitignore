@@ -25,6 +25,8 @@ TIMIT/TEST/
 TIMIT/TRAIN/
 common/data/training/TIMIT/TEST/
 common/data/training/TIMIT/TRAIN/
+common/data/training/TIMIT/crp/
+common/data/training/TIMIT/DOC
 
 #################### Misc ####################
 # Home made stuff not present in the gitignore project.
