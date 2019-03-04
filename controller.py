@@ -93,7 +93,7 @@ class Controller(NetworkController):
     def run(self):
 
         # Setup
-        if not self.setup:
+        if self.setup:
             self.setup_networks()
 
         # Validate network
