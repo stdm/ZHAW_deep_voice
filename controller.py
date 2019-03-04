@@ -93,7 +93,7 @@ class Controller(NetworkController):
     def run(self):
 
         # Setup
-        if not self.setup:
+        if self.setup:
             self.setup_networks()
 
         # Validate network
@@ -108,7 +108,7 @@ class Controller(NetworkController):
             self.test_network()
 
         # Plot results
-        if not self.plot:
+        if self.plot:
             self.plot_results()
 
     def generate_controllers(self):
