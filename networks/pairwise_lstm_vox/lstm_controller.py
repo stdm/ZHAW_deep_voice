@@ -27,7 +27,7 @@ class LSTMVOX2Controller(NetworkController):
         nr_classes = 100
 
         bilstm_2layer_dropout(
-            self.name + str(nr_classes), 
+            self.name + "_" + str(nr_classes), 
             'speakers_100_50w_50m_not_reynolds_cluster',
             n_hidden1=256, 
             n_hidden2=256, 
