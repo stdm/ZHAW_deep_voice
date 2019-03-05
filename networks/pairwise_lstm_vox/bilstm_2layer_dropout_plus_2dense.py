@@ -62,6 +62,7 @@ class bilstm_2layer_dropout(object):
         model.compile(loss=kld.pairwise_kl_divergence,
                       optimizer=adam,
                       metrics=['accuracy'])
+        print(model)
         return model
 
     def create_train_data(self):
@@ -86,6 +87,7 @@ class bilstm_2layer_dropout(object):
         calls = self.create_callbacks()
 
         X_t, y_t, X_v, y_v = self.create_train_data()
+        # TODO lehmacl1@2019-03-05: Müssen hier nicht 2er Potenzen als Batchsize (100) mitgegeben werden?
         train_gen = dg.batch_generator_lstm(X_t, y_t, 100, segment_size=self.segment_size)
         val_gen = dg.batch_generator_lstm(X_v, y_v, 100, segment_size=self.segment_size)
         # batches_t = ((X_t.shape[0] + 128 - 1) // 128)
