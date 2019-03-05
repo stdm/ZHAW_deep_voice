@@ -58,7 +58,7 @@ class Controller(NetworkController):
                  clear=DEFAULT_CLEAR, debug=DEFAULT_DEBUG, plot=DEFAULT_PLOT, best=DEFAULT_BEST, 
                  val_number=DEFAULT_VAL_NUMBER, out_layer=DEFAULT_OUT_LAYER, seg_size=DEFAULT_SEG_SIZE, 
                  vec_size=DEFAULT_VEC_SIZE):
-        super().__init__("Front")
+        super().__init__("Front", "speakers_40_clustering_vs_reynolds")
         self.setup = setup
         self.network = network
         self.train = train
