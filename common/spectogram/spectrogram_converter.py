@@ -36,9 +36,10 @@ def spectrogram(wav_file):
 def mel_spectrogram(wav_file):
     # Read out audio range and sample rate of wav file
     audio_range, sample_rate = librosa.load(path=wav_file, sr=None)
+    
+    # NOTE: nperseg MUST be an int before handing it over to liberosa's function
     nperseg = int(10 * sample_rate / 1000)
 
-    # NOTE: nperseg MUST be an int before handing it over to liberosa's function
     mel_spectrogram = librosa.feature.melspectrogram(y=audio_range, sr=sample_rate, n_fft=1024, hop_length=nperseg)
 
     # Compress the mel spectrogram to the human dynamic range

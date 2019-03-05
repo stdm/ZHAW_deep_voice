@@ -74,7 +74,6 @@ class Speaker:
         y: the filled testing data in a list of speaker_numbers
         speaker_names: the names associated with the numbers
         """
-        print((self.max_speakers * 20, 1, self.frequency_elements, self.max_audio_length))
         x = np.zeros((self.max_speakers * 20, 1, self.frequency_elements, self.max_audio_length), dtype=np.float32)
         y = np.zeros(self.max_speakers * 20, dtype=np.int32)
 

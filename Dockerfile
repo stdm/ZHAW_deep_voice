@@ -1,7 +1,7 @@
 FROM tensorflow/tensorflow:1.3.0-gpu-py3
 RUN pip install --upgrade pip 
 RUN pip uninstall -y numpy
-RUN pip install numpy scipy==0.19.1 theano==0.9.0 scikit-learn==0.19.1
+RUN pip install numpy==1.14.5 scipy==0.19.1 theano==0.9.0 scikit-learn==0.19.1
 RUN pip install matplotlib==2.1.0
 RUN pip install keras==2.0.6
 RUN pip install librosa==0.5.1
