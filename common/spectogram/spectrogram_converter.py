@@ -8,6 +8,8 @@ import numpy as np
 import scipy.io.wavfile as wav
 import scipy.signal as signal
 
+# Binding.pry
+import code;
 
 def spectrogram(wav_file):
     (rate, sig) = wav.read(wav_file)
@@ -34,12 +36,16 @@ def spectrogram(wav_file):
 
 
 def mel_spectrogram(wav_file):
+
     # Read out audio range and sample rate of wav file
     audio_range, sample_rate = librosa.load(path=wav_file, sr=None)
     nperseg = int(10 * sample_rate / 1000)
 
-    # NOTE: nperseg MUST be an int before handing it over to liberosa's function
-    mel_spectrogram = librosa.feature.melspectrogram(y=audio_range, sr=sample_rate, n_fft=1024, hop_length=nperseg)
+    try:
+        # NOTE: nperseg MUST be an int before handing it over to liberosa's function
+        mel_spectrogram = librosa.feature.melspectrogram(y=audio_range, sr=sample_rate, n_fft=1024, hop_length=nperseg)
+    except:
+        code.interact(local=dict(globals(), **locals()))
 
     # Compress the mel spectrogram to the human dynamic range
     for i in range(mel_spectrogram.shape[0]):
