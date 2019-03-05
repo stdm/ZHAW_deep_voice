@@ -108,7 +108,7 @@ class Controller(NetworkController):
         if self.test:
             self.test_network()
 
-        # Plot results
+        # Plot resultsit b
         if self.plot:
             self.plot_results()
 
@@ -116,7 +116,7 @@ class Controller(NetworkController):
 
         controller_dict = {
             'pairwise_lstm_vox2': [LSTMVOX2Controller(self.out_layer, self.seg_size, self.vec_size)],
-#            'pairwise_lstm': [LSTMController(self.out_layer, self.seg_size, self.vec_size)],
+            'pairwise_lstm': [LSTMController(self.out_layer, self.seg_size, self.vec_size)],
 #            'pairwise_kldiv': [KLDivController()],
 #            'flow_me': [MEController(self.clear, self.debug, False)],
 #            'luvo': [LuvoController()],
