@@ -31,5 +31,5 @@ def calculate_distribution(map_label, total_speakers):
 
     for i in range(total_speakers):
         distribution[i] /= len(map_label)
-    print('Verteilung:')
+    print('Distribution:')
     print(distribution)

@@ -18,7 +18,7 @@ from .core.pairwise_kl_divergence import pairwise_kl_divergence
 
 class LSTMController(NetworkController):
     def __init__(self, out_layer, seg_size, vec_size):
-        super().__init__("pairwise_lstm")
+        super().__init__("pairwise_lstm", "speakers_40_clustering_vs_reynolds")
         self.network_file = self.name + "_100"
         self.out_layer = out_layer
         self.seg_size = seg_size

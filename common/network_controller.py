@@ -13,9 +13,9 @@ from common.utils.paths import get_speaker_pickle
 class NetworkController:
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, name):
-        self.val_data = "speakers_40_clustering_vs_reynolds"
+    def __init__(self, name, val_data):
         self.name = name
+        self.val_data = val_data
 
     def get_validation_train_data(self):
         return get_speaker_pickle(self.val_data + "_train")

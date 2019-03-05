@@ -10,7 +10,7 @@ from .network_training.spectrogram_cnn_590 import SpectrogramCnn590
 
 class LuvoController(NetworkController):
     def __init__(self):
-        super().__init__("luvo")
+        super().__init__("luvo", "speakers_40_clustering_vs_reynolds")
         self.checkpoint = self.name + ".pickle"
         self.logger = get_logger(self.name, logging.INFO)
         self.cnn = SpectrogramCnn590(get_experiment_nets(self.checkpoint))

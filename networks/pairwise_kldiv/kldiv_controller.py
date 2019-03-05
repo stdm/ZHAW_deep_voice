@@ -13,7 +13,7 @@ from .network_training.network_factory import *
 
 class KLDivController(NetworkController):
     def __init__(self):
-        super().__init__("pairwise_kldiv")
+        super().__init__("pairwise_kldiv", "speakers_40_clustering_vs_reynolds")
         self.checkpoints = ["pairwise_kldiv_100.pickle"]
 
     def train_network(self):

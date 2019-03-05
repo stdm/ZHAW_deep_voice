@@ -13,8 +13,8 @@ from common.utils.paths import *
 
 
 class Speaker:
-    def __init__(self, split_train_test, max_speakers, speaker_list, output_name=None, sentences=10,
-                 frequency_elements=128, max_audio_length=800, dataset="timit"):
+    def __init__(self, split_train_test, max_speakers, speaker_list, dataset, output_name=None, sentences=10,
+                 frequency_elements=128, max_audio_length=800):
         """
         Represents a fully defined speaker in the Speaker clustering suite.
 
@@ -42,7 +42,7 @@ class Speaker:
 
     def safe_to_pickle(self):
         """
-        Fetches all data for this speaker from the TIMIT dataset and safes it inside of a pickle.
+        Fetches all data for this speaker from the dataset and safes it inside of a pickle.
         """
         print("Extracting {}".format(self.speaker_list))
 
@@ -79,8 +79,10 @@ class Speaker:
 
         if self.dataset == "timit":
             return self.extract_timit(x, y)
+        elif self.dataset == "voxceleb2":
+            # TODO extract
         else:
-            raise ValueError("self.dataset can currently only be 'timit', was " + self.dataset + ".")
+            raise ValueError("self.dataset can only be one of ('timit', 'voxceleb2'), was " + self.dataset + ".")
 
     def extract_timit(self, x, y):
         """
@@ -99,6 +101,27 @@ class Speaker:
 
         # Prepare SpectrogramExtractor
         extractor = SpectrogramExtractor(self.max_speakers, get_training("TIMIT"), valid_speakers)
+
+        # Extract the spectrogram's, speaker numbers and speaker names
+        return extractor.extract_speaker_data(x, y)
+
+    def extract_voxceleb2(self, x, y):
+        """
+        Extracts the training and testing data from the speaker list of the VoxCeleb2 Dataset
+        :return:
+        x: the filled training data in the 4D array [Speaker, Channel, Frequency, Time]
+        y: the filled testing data in a list of speaker_numbers
+        speaker_names: the names associated with the numbers
+        """
+        # Add all valid speakers
+        valid_speakers = []
+        with open(get_speaker_list(self.speaker_list), 'rb') as f:
+            for line in f:
+                # Added bytes.decode() because python 2.x ignored leading b' while python 3.x doesn't
+                valid_speakers.append(bytes.decode(line.rstrip()))
+
+        # Prepare SpectrogramExtractor
+        extractor = SpectrogramExtractor(self.max_speakers, get_training("VOXCELEB2"), valid_speakers)
 
         # Extract the spectrogram's, speaker numbers and speaker names
         return extractor.extract_speaker_data(x, y)

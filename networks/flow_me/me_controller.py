@@ -14,12 +14,12 @@ from .nn.restore_session import *
 
 class MEController(NetworkController):
     def __init__(self, clear, debug, nchw):
-        super().__init__("flow_me")
+        super().__init__("flow_me", "speakers_40_clustering_vs_reynolds")
         self.clear = clear
         self.debug = debug
         self.nchw = nchw
         self.config_path = '022_100_densefactor'
-
+        
     def train_network(self):
         train_network(get_configs(self.config_path), self.clear, self.debug, self.nchw)
 

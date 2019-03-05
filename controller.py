@@ -35,11 +35,12 @@ from common.utils.paths import *
 # from networks.lu_vo.luvo_controller import LuvoController
 # from networks.pairwise_kldiv.kldiv_controller import KLDivController
 from networks.pairwise_lstm.lstm_controller import LSTMController
+from networks.pairwise_lstm_vox.lstm_controller import LSTMVOX2Controller
 
 # Constants
 # -------------------
 DEFAULT_SETUP = False
-DEFAULT_NETWORK = 'pairwise_lstm'
+DEFAULT_NETWORK = 'pairwise_lstm_vox2'
 DEFAULT_TRAIN = False
 DEFAULT_TEST = False
 DEFAULT_CLEAR = False
@@ -114,7 +115,8 @@ class Controller(NetworkController):
     def generate_controllers(self):
 
         controller_dict = {
-            'pairwise_lstm': [LSTMController(self.out_layer, self.seg_size, self.vec_size)],
+            'pairwise_lstm_vox2': [LSTMVOX2Controller(self.out_layer, self.seg_size, self.vec_size)],
+#            'pairwise_lstm': [LSTMController(self.out_layer, self.seg_size, self.vec_size)],
 #            'pairwise_kldiv': [KLDivController()],
 #            'flow_me': [MEController(self.clear, self.debug, False)],
 #            'luvo': [LuvoController()],
