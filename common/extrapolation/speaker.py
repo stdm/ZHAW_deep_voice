@@ -80,7 +80,7 @@ class Speaker:
         if self.dataset == "timit":
             return self.extract_timit(x, y)
         elif self.dataset == "voxceleb2":
-            # TODO extract
+            return self.extract_voxceleb2(x, y)
         else:
             raise ValueError("self.dataset can only be one of ('timit', 'voxceleb2'), was " + self.dataset + ".")
 
