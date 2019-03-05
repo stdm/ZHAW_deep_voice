@@ -38,7 +38,7 @@ from networks.pairwise_lstm.lstm_controller import LSTMController
 
 # Constants
 # -------------------
-DEFAULT_SETUP = True
+DEFAULT_SETUP = False
 DEFAULT_NETWORK = 'pairwise_lstm'
 DEFAULT_TRAIN = False
 DEFAULT_TEST = False
@@ -93,7 +93,7 @@ class Controller(NetworkController):
     def run(self):
 
         # Setup
-        if not self.setup:
+        if self.setup:
             self.setup_networks()
 
         # Validate network
@@ -189,7 +189,7 @@ if __name__ == '__main__':
                         help='Vector size')
 
     args = parser.parse_args()
-    print(args)
+    #print(args)
 
     controller = Controller(args.setup, args.network, args.train, args.test, args.clear, args.debug, args.plot, args.best, args.validation_number, int(args.out_layer), int(args.seg_size), int(args.vec_size))
     controller.run()
