@@ -20,5 +20,5 @@ def create_all_speakers():
     yield Speaker(True, 80, 'speakers_80_clustering', dataset="timit")
     yield Speaker(True, 590, 'speakers_590_clustering_without_raynolds', dataset="timit")
 
-    yield Speaker(False, 40, "something", dataset="voxceleb2")
+    # yield Speaker(False, 40, "something", dataset="voxceleb2")
     
