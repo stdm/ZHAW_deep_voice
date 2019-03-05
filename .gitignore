@@ -26,6 +26,10 @@ TIMIT/TRAIN/
 common/data/training/TIMIT/TEST/
 common/data/training/TIMIT/TRAIN/
 
+#################### VOXCELEB2 ####################
+common/data/training/VOXCELEB2/TEST/
+common/data/training/VOXCELEB2/TRAIN/
+
 #################### Misc ####################
 # Home made stuff not present in the gitignore project.
 
