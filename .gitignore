@@ -288,3 +288,6 @@ $RECYCLE.BIN/
 .dropbox
 .dropbox.attr
 .dropbox.cache
+
+# Singularity Container
+*.simg

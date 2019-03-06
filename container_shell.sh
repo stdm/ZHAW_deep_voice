@@ -1,5 +1,5 @@
 #!/bin/sh
-DEFAULT_NAME="benchmarking_speakerclustering-first_build"
+DEFAULT_NAME="benchmarking_speakerclustering-latest"
 read -p "Enter name of the container: [$DEFAULT_NAME] " NAME
 NAME="${NAME:-$DEFAULT_NAME}"
 if [ -f ./$NAME.simg ]; then
