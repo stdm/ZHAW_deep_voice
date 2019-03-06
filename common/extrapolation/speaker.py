@@ -96,7 +96,6 @@ class Speaker:
             for line in f:
                 # Added bytes.decode() because python 2.x ignored leading b' while python 3.x doesn't
                 valid_speakers.append(bytes.decode(line.rstrip()))
-                print("speaker appended")
 
         # Prepare SpectrogramExtractor
         extractor = SpectrogramExtractor(self.max_speakers, get_training("TIMIT"), valid_speakers)
