@@ -31,9 +31,9 @@ from common.utils.paths import *
 
 # Controllers
 # -------------------
-# from networks.flow_me.me_controller import MEController
-# from networks.lu_vo.luvo_controller import LuvoController
-# from networks.pairwise_kldiv.kldiv_controller import KLDivController
+from networks.flow_me.me_controller import MEController
+from networks.lu_vo.luvo_controller import LuvoController
+from networks.pairwise_kldiv.kldiv_controller import KLDivController
 from networks.pairwise_lstm.lstm_controller import LSTMController
 
 # Constants
@@ -115,10 +115,10 @@ class Controller(NetworkController):
 
         controller_dict = {
             'pairwise_lstm': [LSTMController(self.out_layer, self.seg_size, self.vec_size)],
-#            'pairwise_kldiv': [KLDivController()],
-#            'flow_me': [MEController(self.clear, self.debug, False)],
-#            'luvo': [LuvoController()],
-#            'all': [LSTMController(self.out_layer, self.seg_size, self.vec_size), KLDivController(), MEController(self.clear, self.debug, False), LuvoController()]
+            'pairwise_kldiv': [KLDivController()],
+            'flow_me': [MEController(self.clear, self.debug, False)],
+            'luvo': [LuvoController()],
+            'all': [LSTMController(self.out_layer, self.seg_size, self.vec_size), KLDivController(), MEController(self.clear, self.debug, False), LuvoController()]
         }
 
         try:
