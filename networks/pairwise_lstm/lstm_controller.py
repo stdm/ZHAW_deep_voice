@@ -28,6 +28,7 @@ class LSTMController(NetworkController):
         bilstm_2layer_dropout(
             self.network_file, 
             'speakers_100_50w_50m_not_reynolds_cluster',
+            'speakers_200_100m_100f_evaluation_cluster',
             n_hidden1=256, 
             n_hidden2=256, 
             n_classes=100, 

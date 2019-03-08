@@ -2,7 +2,7 @@ import pickle
 
 import numpy as np
 
-import common.spectogram.speaker_train_splitter as sts
+import common.spectogram.evaluationdata_picker as edp
 from .core import plot_saver as ps
 
 np.random.seed(1337)  # for reproducibility
@@ -33,10 +33,11 @@ from common.utils.paths import *
 
 
 class bilstm_2layer_dropout(object):
-    def __init__(self, name, training_data, n_hidden1, n_hidden2, n_classes, n_10_batches,
+    def __init__(self, name, training_data, evaluation_data, n_hidden1, n_hidden2, n_classes, n_10_batches,
                  segment_size, frequency=128):
         self.network_name = name
         self.training_data = training_data
+        self.evaluation_data = evaluation_data
         self.test_data = 'test' + training_data[5:]
         self.n_hidden1 = n_hidden1
         self.n_hidden2 = n_hidden2
@@ -66,10 +67,13 @@ class bilstm_2layer_dropout(object):
 
     def create_train_data(self):
         with open(get_speaker_pickle(self.training_data), 'rb') as f:
-            (X, y, speaker_names) = pickle.load(f)
+            (X_t, y_t, speaker_names) = pickle.load(f)
 
-        splitter = sts.SpeakerTrainSplit(0.2, 10)
-        X_t, X_v, y_t, y_v = splitter(X, y)
+        with open(get_speaker_pickle(self.evaluation_data), 'rb') as f:
+            (X, y, speaker_names) = pickle.load(f)
+            eval_picker = edp.EvalData_Picker(40, 10)
+            X_v, y_v = eval_picker(X, y)
+
         return X_t, y_t, X_v, y_v
 
     def create_callbacks(self):
