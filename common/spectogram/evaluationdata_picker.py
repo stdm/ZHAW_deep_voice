@@ -31,9 +31,9 @@ class EvalData_Picker(object):
         for i in range(1,self.eval_size):
             index = random.randrange(size)
             X_eval[eval_index] = X[index]
-            X[index] = X[size]
+            X[index] = X[size-1]
             y_eval[eval_index] = y[index]
-            y[index] = y[size]
+            y[index] = y[size-1]
             size = size - 1
             eval_index = eval_index + 1
 
