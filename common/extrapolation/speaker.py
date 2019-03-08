@@ -112,4 +112,4 @@ class Speaker:
         if self.split_train_test:
             return path.exists(get_speaker_pickle(self.output_name + '_train'))
         else:
-            path.exists(get_speaker_pickle(self.output_name + '_cluster'))
+            return path.exists(get_speaker_pickle(self.output_name + '_cluster'))
