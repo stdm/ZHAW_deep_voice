@@ -79,6 +79,17 @@ class bilstm_2layer_dropout(object):
             monitor='val_loss', verbose=1, save_best_only=True)
         net_checkpoint = keras.callbacks.ModelCheckpoint(
             get_experiment_nets(self.network_name + "_{epoch:05d}.h5"), period=100)
+        keras.callbacks.TensorBoard(log_dir=get_experiment_tensorboard_logs(self.network_name + '.csv'),
+                                    histogram_freq=1,
+                                    batch_size=32,
+                                    write_graph=True,
+                                    write_grads=False,
+                                    write_images=True,
+                                    embeddings_freq=0,
+                                    embeddings_layer_names=None,
+                                    embeddings_metadata=None,
+                                    embeddings_data=None,
+                                    update_freq='epoch')
         return [csv_logger, net_saver, net_checkpoint]
 
     def run_network(self):
