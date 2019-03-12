@@ -24,23 +24,18 @@ class SpectrogramExtractor:
         speaker_names = []
         global_idx = 0
         curr_speaker_num = -1
-        old_speaker = ''
         max_speakers = sum(speaker_files.keys())
 
         # Crawl the base and all sub folders
         for speaker, files in enumerate(speaker_files):
-            # Check files
-            for full_path in files:
-                # Extract speaker
-                if speaker != old_speaker:
-                    curr_speaker_num += 1
-                    old_speaker = speaker
-                    speaker_names.append(speaker)
-                    print('Extraction progress: %d/%d' % (curr_speaker_num + 1, max_speakers))
+            curr_speaker_num += 1
+            speaker_names.append(speaker)
+            print('Extraction progress: %d/%d' % (curr_speaker_num + 1, max_speakers))
 
-                if curr_speaker_num < max_speakers:
-                    extract_mel_spectrogram(full_path, X, y, global_idx, curr_speaker_num)
-                    global_idx += 1
+            # Extract files
+            for full_path in files:
+                extract_mel_spectrogram(full_path, X, y, global_idx, curr_speaker_num)
+                global_idx += 1
 
         return X[0:global_idx], y[0:global_idx], speaker_names
 
