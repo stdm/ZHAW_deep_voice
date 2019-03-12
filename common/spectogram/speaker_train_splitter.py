@@ -22,9 +22,9 @@ class SpeakerTrainSplit(object):
 
     # Annahme für Voxceleb2 Datensatz: 1 sentence = 1 audiofile
     #
-    def __call__(self, X, y, net=None):
-        valid_size = int(len(y) * self.eval_size)
-        train_size = int(len(y) - valid_size)
+    def __call__(self, X, y):
+        valid_size = int(len(y) * self.eval_size) # 0.2y
+        train_size = int(len(y) - valid_size)     # 0.8y
         X_train = np.zeros((train_size, 1, X[0, 0].shape[0], X[0, 0].shape[1]), dtype=np.float32)
         X_valid = np.zeros((valid_size, 1, X[0, 0].shape[0], X[0, 0].shape[1]), dtype=np.float32)
         y_train = np.zeros(train_size, dtype=np.int32)
@@ -35,7 +35,9 @@ class SpeakerTrainSplit(object):
         # lehmacl1@2019-03-05: Muss für Voxceleb umgeschrieben werden und dynamisch nachgerechnet werden
         # anhand der Anzahl effektiver Sentences pro Sprecher
 
-        nth_elem = self.sentences - self.sentences * self.eval_size
+        # TODO: Aufspalten nach Speaker in Train/Valid Set
+        #
+        nth_elem = self.sentences - self.sentences * self.eval_size # 8
         
         for i in range(len(y)):
             if i % self.sentences >= nth_elem:

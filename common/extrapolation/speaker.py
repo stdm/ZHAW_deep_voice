@@ -52,7 +52,7 @@ class Speaker:
         # Safe Test-Data to disk
         if self.split_train_test:
             speaker_train_split = SpeakerTrainSplit(0.2, self.sentences)
-            X_train_valid, X_test, y_train_valid, y_test = speaker_train_split(X, y, None)
+            X_train_valid, X_test, y_train_valid, y_test = speaker_train_split(X, y)
 
             with open(get_speaker_pickle(self.output_name + '_train'), 'wb') as f:
                 pickle.dump((X_train_valid, y_train_valid, speaker_names), f, -1)
@@ -171,9 +171,10 @@ class Speaker:
         speaker_names: the names associated with the numbers
         """
         audio_file_count = sum(len(n) for n in speaker_files.values())
-
+        
         x = np.zeros((audio_file_count, 1, self.frequency_elements, self.max_audio_length), dtype=np.float32)
         y = np.zeros(audio_file_count, dtype=np.int32)
+        print(x.shape)
 
         # Extract the spectrogram's, speaker numbers and speaker names
         return SpectrogramExtractor().extract_speaker_data(x, y, speaker_files)

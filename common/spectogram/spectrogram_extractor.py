@@ -30,7 +30,7 @@ class SpectrogramExtractor:
         for speaker in speaker_files.keys():
             curr_speaker_num += 1
             speaker_names.append(speaker)
-            
+
             print('Extraction progress: %d/%d' % (curr_speaker_num + 1, max_speakers))
 
             # Extract files
@@ -51,6 +51,7 @@ def extract_mel_spectrogram(wav_path, X, y, index, curr_speaker_num):
     :param curr_speaker_num: the speaker number of the current speaker
     :return: a one (1) to increase the index
     """
+    print('processing ', wav_path)
     Sxx = spectrogram_converter.mel_spectrogram(wav_path)
     for i in range(Sxx.shape[0]):
         for j in range(Sxx.shape[1]):
