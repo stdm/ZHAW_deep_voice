@@ -157,7 +157,7 @@ class Speaker:
 
                 full_path = os.path.join(root, filename)
                 result[speaker].append(full_path)
-        
+                
         return result
 
     def build_array_and_extract_speaker_data(self, speaker_files):

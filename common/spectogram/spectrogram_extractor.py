@@ -27,13 +27,14 @@ class SpectrogramExtractor:
         max_speakers = len(speaker_files.keys())
 
         # Crawl the base and all sub folders
-        for speaker, files in enumerate(speaker_files):
+        for speaker in speaker_files.keys():
             curr_speaker_num += 1
             speaker_names.append(speaker)
+            
             print('Extraction progress: %d/%d' % (curr_speaker_num + 1, max_speakers))
 
             # Extract files
-            for full_path in files:
+            for full_path in speaker_files[speaker]:
                 extract_mel_spectrogram(full_path, X, y, global_idx, curr_speaker_num)
                 global_idx += 1
 
@@ -50,8 +51,6 @@ def extract_mel_spectrogram(wav_path, X, y, index, curr_speaker_num):
     :param curr_speaker_num: the speaker number of the current speaker
     :return: a one (1) to increase the index
     """
-    print(wav_path)
-    return
     Sxx = spectrogram_converter.mel_spectrogram(wav_path)
     for i in range(Sxx.shape[0]):
         for j in range(Sxx.shape[1]):
