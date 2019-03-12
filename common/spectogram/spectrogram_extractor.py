@@ -10,9 +10,10 @@ import common.spectogram.spectrogram_converter as spectrogram_converter
 
 
 class SpectrogramExtractor:
-    def __init__(self, max_speakers, base_folder, valid_speakers):
+    def __init__(self, max_speakers, base_folder, audio_file_ending_filter, valid_speakers):
         self.max_speakers = max_speakers
         self.base_folder = base_folder
+        self.audio_file_ending_filter = audio_file_ending_filter
         self.valid_speakers = valid_speakers
 
     def extract_speaker_data(self, X, y):
@@ -29,23 +30,29 @@ class SpectrogramExtractor:
         global_idx = 0
         curr_speaker_num = -1
         old_speaker = ''
+        speaker = ''
 
         # Crawl the base and all sub folders
         for root, directories, filenames in os.walk(self.base_folder):
 
-            # Ignore crp and DOC folder
-            if root[-5:] not in self.valid_speakers:
+            # Ignore non speaker folders
+            _, root_name = os.path.split(root)
+            if root_name in self.valid_speakers:
+                speaker = root_name
+            elif speaker == '':
                 continue
-
+        
+            if speaker not in root.split(os.sep):
+                continue
+            
             # Check files
             for filename in filenames:
-
+                    
                 # Can't read the other wav files
-                if '_RIFF.WAV' not in filename:
+                if self.audio_file_ending_filter not in filename:
                     continue
 
                 # Extract speaker
-                speaker = root[-5:]
                 if speaker != old_speaker:
                     curr_speaker_num += 1
                     old_speaker = speaker
@@ -54,7 +61,10 @@ class SpectrogramExtractor:
 
                 if curr_speaker_num < self.max_speakers:
                     full_path = os.path.join(root, filename)
-                    global_idx += extract_mel_spectrogram(full_path, X, y, global_idx, curr_speaker_num)
+                    # print(speaker, full_path.split(os.sep)[-3:])
+
+                    extract_mel_spectrogram(full_path, X, y, global_idx, curr_speaker_num)
+                    global_idx += 1
 
         return X[0:global_idx], y[0:global_idx], speaker_names
 
@@ -75,7 +85,6 @@ def extract_mel_spectrogram(wav_path, X, y, index, curr_speaker_num):
         for j in range(Sxx.shape[1]):
             X[index, 0, i, j] = Sxx[i, j]
     y[index] = curr_speaker_num
-    return 1
 
 
 # Extracts the spectrogram and discards all padded data

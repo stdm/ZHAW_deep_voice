@@ -20,6 +20,8 @@ class SpeakerTrainSplit(object):
         self.eval_size = eval_size
         self.sentences = sentences
 
+    # Annahme für Voxceleb2 Datensatz: 1 sentence = 1 audiofile
+    #
     def __call__(self, X, y, net=None):
         valid_size = int(len(y) * self.eval_size)
         train_size = int(len(y) - valid_size)
@@ -32,7 +34,9 @@ class SpeakerTrainSplit(object):
         valid_index = 0
         # lehmacl1@2019-03-05: Muss für Voxceleb umgeschrieben werden und dynamisch nachgerechnet werden
         # anhand der Anzahl effektiver Sentences pro Sprecher
+
         nth_elem = self.sentences - self.sentences * self.eval_size
+        
         for i in range(len(y)):
             if i % self.sentences >= nth_elem:
                 X_valid[valid_index] = X[i]

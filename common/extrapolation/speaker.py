@@ -74,8 +74,13 @@ class Speaker:
         y: the filled testing data in a list of speaker_numbers
         speaker_names: the names associated with the numbers
         """
-        x = np.zeros((self.max_speakers * 20, 1, self.frequency_elements, self.max_audio_length), dtype=np.float32)
-        y = np.zeros(self.max_speakers * 20, dtype=np.int32)
+
+        # TODO: lehmacl1@2019-03-11: Wieviele Files werden insgesamt erwartet? 
+        # self.max_speakers * 10 mit dieser Zahl ersetzen
+        audio_file_count = self.max_speakers * 10
+
+        x = np.zeros((audio_file_count, 1, self.frequency_elements, self.max_audio_length), dtype=np.float32)
+        y = np.zeros(audio_file_count, dtype=np.int32)
 
         if self.dataset == "timit":
             return self.extract_timit(x, y)
@@ -100,7 +105,7 @@ class Speaker:
                 valid_speakers.append(bytes.decode(line.rstrip()))
 
         # Prepare SpectrogramExtractor
-        extractor = SpectrogramExtractor(self.max_speakers, get_training("TIMIT"), valid_speakers)
+        extractor = SpectrogramExtractor(self.max_speakers, get_training("TIMIT"), '_RIFF.WAV', valid_speakers)
 
         # Extract the spectrogram's, speaker numbers and speaker names
         return extractor.extract_speaker_data(x, y)
@@ -121,7 +126,7 @@ class Speaker:
                 valid_speakers.append(bytes.decode(line.rstrip()))
 
         # Prepare SpectrogramExtractor
-        extractor = SpectrogramExtractor(self.max_speakers, get_training("VOXCELEB2"), valid_speakers)
+        extractor = SpectrogramExtractor(self.max_speakers, get_training("VOXCELEB2"), '.wav', valid_speakers)
 
         # Extract the spectrogram's, speaker numbers and speaker names
         return extractor.extract_speaker_data(x, y)
