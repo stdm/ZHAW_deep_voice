@@ -24,7 +24,7 @@ class SpectrogramExtractor:
         speaker_names = []
         global_idx = 0
         curr_speaker_num = -1
-        max_speakers = sum(speaker_files.keys())
+        max_speakers = len(speaker_files.keys())
 
         # Crawl the base and all sub folders
         for speaker, files in enumerate(speaker_files):
