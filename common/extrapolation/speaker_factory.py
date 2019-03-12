@@ -13,7 +13,7 @@ def create_all_speakers():
     :return: yields Speakers
     """
     
-    # yield Speaker(False, 40, 'speakers_40_clustering_vs_reynolds', dataset="timit")
+    yield Speaker(False, 40, 'speakers_40_clustering_vs_reynolds', dataset="timit")
     # yield Speaker(False, 100, 'speakers_100_50w_50m_not_reynolds', dataset="timit")
     yield Speaker(True, 40, 'speakers_40_clustering_vs_reynolds', dataset="timit")
     # yield Speaker(True, 60, 'speakers_60_clustering', dataset="timit")
