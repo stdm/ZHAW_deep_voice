@@ -75,21 +75,14 @@ class Speaker:
         speaker_names: the names associated with the numbers
         """
 
-        # TODO: lehmacl1@2019-03-11: Wieviele Files werden insgesamt erwartet? 
-        # self.max_speakers * 10 mit dieser Zahl ersetzen
-        audio_file_count = self.max_speakers * 10
-
-        x = np.zeros((audio_file_count, 1, self.frequency_elements, self.max_audio_length), dtype=np.float32)
-        y = np.zeros(audio_file_count, dtype=np.int32)
-
         if self.dataset == "timit":
-            return self.extract_timit(x, y)
+            return self.extract_timit()
         elif self.dataset == "voxceleb2":
-            return self.extract_voxceleb2(x, y)
+            return self.extract_voxceleb2()
         else:
             raise ValueError("self.dataset can only be one of ('timit', 'voxceleb2'), was " + self.dataset + ".")
 
-    def extract_timit(self, x, y):
+    def extract_timit(self):
         """
         Extracts the training and testing data from the speaker list of the TIMIT Dataset
         :return:
@@ -98,25 +91,33 @@ class Speaker:
         speaker_names: the names associated with the numbers
         """
         # Add all valid speakers
-        valid_speakers = []
-        with open(get_speaker_list(self.speaker_list), 'rb') as f:
-            for line in f:
-                # Added bytes.decode() because python 2.x ignored leading b' while python 3.x doesn't
-                valid_speakers.append(bytes.decode(line.rstrip()))
-
-        # Prepare SpectrogramExtractor
-        extractor = SpectrogramExtractor(self.max_speakers, get_training("TIMIT"), '_RIFF.WAV', valid_speakers)
+        valid_speakers = self.get_valid_speakers()
+        speaker_files = self.get_speaker_list_of_files(get_training("TIMIT"), '_RIFF.WAV', valid_speakers)
 
         # Extract the spectrogram's, speaker numbers and speaker names
-        return extractor.extract_speaker_data(x, y)
+        return self.build_array_and_extract_speaker_data(speaker_files)
 
-    def extract_voxceleb2(self, x, y):
+    def extract_voxceleb2(self):
         """
         Extracts the training and testing data from the speaker list of the VoxCeleb2 Dataset
         :return:
         x: the filled training data in the 4D array [Speaker, Channel, Frequency, Time]
         y: the filled testing data in a list of speaker_numbers
         speaker_names: the names associated with the numbers
+        """
+        
+        # list the speaker files
+        valid_speakers = self.get_valid_speakers()
+        speaker_files = self.get_speaker_list_of_files(get_training("VOXCELEB2"), '.wav', valid_speakers)
+        
+        # Extract the spectrogram's, speaker numbers and speaker names
+        return self.build_array_and_extract_speaker_data(speaker_files)
+
+    def get_valid_speakers(self):
+        """
+        Return an array with all speakers
+        :return:
+        valid_speakers: array with all speakers
         """
         # Add all valid speakers
         valid_speakers = []
@@ -125,11 +126,57 @@ class Speaker:
                 # Added bytes.decode() because python 2.x ignored leading b' while python 3.x doesn't
                 valid_speakers.append(bytes.decode(line.rstrip()))
 
-        # Prepare SpectrogramExtractor
-        extractor = SpectrogramExtractor(self.max_speakers, get_training("VOXCELEB2"), '.wav', valid_speakers)
+        return valid_speakers
+
+    def get_speaker_list_of_files(self, base_folder, file_ending, valid_speakers):
+        """
+        Return a two dimensional array with all speakers and all of their audio files
+        :return:
+        speaker_files: dictionary with speaker_name as key and an array of full file paths to all audio files of that speaker
+        """
+        result = {}
+        speaker = ""
+
+        for root, _, filenames in os.walk(base_folder):
+            # Ignore non speaker folders
+            _, root_name = os.path.split(root)
+            if root_name in valid_speakers:
+                speaker = root_name
+                result[speaker] = []
+            elif speaker == '':
+                continue
+        
+            if speaker not in root.split(os.sep):
+                continue
+            
+            # Check files
+            for filename in filenames:
+                # Can't read the other wav files
+                if file_ending not in filename:
+                    continue
+
+                full_path = os.path.join(root, filename)
+                result[speaker].append(full_path)
+        
+        return result
+
+    def build_array_and_extract_speaker_data(self, speaker_files):
+        """
+        Initialises an array based on the dimensions / count of given speaker files, frequency_elements and max_audio_length
+        Extracts the spectrograms into the new array
+        :param speaker_files result of dict with array elements of get_speaker_list_of_files()
+        :return:
+        x: the filled training data in the 4D array [Speaker, Channel, Frequency, Time]
+        y: the filled testing data in a list of speaker_numbers
+        speaker_names: the names associated with the numbers
+        """
+        audio_file_count = sum(len(n) for n in speaker_files.values())
+
+        x = np.zeros((audio_file_count, 1, self.frequency_elements, self.max_audio_length), dtype=np.float32)
+        y = np.zeros(audio_file_count, dtype=np.int32)
 
         # Extract the spectrogram's, speaker numbers and speaker names
-        return extractor.extract_speaker_data(x, y)
+        return SpectrogramExtractor().extract_speaker_data(x, y, speaker_files)
 
     def is_pickle_saved(self):
         """
