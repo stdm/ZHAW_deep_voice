@@ -18,10 +18,9 @@ class SpectrogramExtractor:
         :param X: return Array that saves the mel spectrogram's
         :param y: return Array that saves the speaker numbers
         :param speaker_files: dict with speaker names as keys and audio files in an array as values
-        :return: the filled X, y and the speaker names
+        :return: the filled X, y
         """
 
-        speaker_names = []
         global_idx = 0
         curr_speaker_num = -1
         max_speakers = len(speaker_files.keys())
@@ -29,7 +28,6 @@ class SpectrogramExtractor:
         # Crawl the base and all sub folders
         for speaker in speaker_files.keys():
             curr_speaker_num += 1
-            speaker_names.append(speaker)
 
             print('Extraction progress: %d/%d' % (curr_speaker_num + 1, max_speakers))
 
@@ -38,7 +36,7 @@ class SpectrogramExtractor:
                 extract_mel_spectrogram(full_path, X, y, global_idx, curr_speaker_num)
                 global_idx += 1
 
-        return X[0:global_idx], y[0:global_idx], speaker_names
+        return X[0:global_idx], y[0:global_idx]
 
 def extract_mel_spectrogram(wav_path, X, y, index, curr_speaker_num):
     """

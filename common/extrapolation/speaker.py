@@ -13,7 +13,7 @@ from common.utils.paths import *
 
 
 class Speaker:
-    def __init__(self, split_train_test, max_speakers, speaker_list, dataset, output_name=None, sentences=10,
+    def __init__(self, split_train_test, max_speakers, speaker_list, dataset, output_name=None,
                  frequency_elements=128, max_audio_length=800):
         """
         Represents a fully defined speaker in the Speaker clustering suite.
@@ -24,10 +24,8 @@ class Speaker:
         :param speaker_list: The speaker list used to generate the pickle
         :param output_train: File name in which the train output pickle gets stored in
         :param output_test: File name in which the test output pickle gets stored in
-        :param sentences: How many sentences there are from this speaker.
         :param max_audio_length: How long the audio of the speaker can maximally be
         """
-        self.sentences = sentences
         self.frequency_elements = frequency_elements
         self.split_train_test = split_train_test
         self.max_speakers = max_speakers
@@ -47,12 +45,13 @@ class Speaker:
         print("Extracting {}".format(self.speaker_list))
 
         # Extract the spectrogram's, speaker numbers and speaker names
-        X, y, speaker_names = self.extract_data_from_speaker()
+        X, y, speaker_files = self.extract_data_from_speaker()
+        speaker_names = speaker_files.keys()
 
         # Safe Test-Data to disk
         if self.split_train_test:
-            speaker_train_split = SpeakerTrainSplit(0.2, self.sentences)
-            X_train_valid, X_test, y_train_valid, y_test = speaker_train_split(X, y)
+            speaker_train_split = SpeakerTrainSplit(0.2)
+            X_train_valid, X_test, y_train_valid, y_test = speaker_train_split(X, y, speaker_files)
 
             with open(get_speaker_pickle(self.output_name + '_train'), 'wb') as f:
                 pickle.dump((X_train_valid, y_train_valid, speaker_names), f, -1)
@@ -72,7 +71,7 @@ class Speaker:
         :return:
         x: the filled training data in the 4D array [Speaker, Channel, Frequency, Time]
         y: the filled testing data in a list of speaker_numbers
-        speaker_names: the names associated with the numbers
+        speaker_files: the names associated with the numbers and each of their audio files
         """
 
         if self.dataset == "timit":
@@ -88,14 +87,14 @@ class Speaker:
         :return:
         x: the filled training data in the 4D array [Speaker, Channel, Frequency, Time]
         y: the filled testing data in a list of speaker_numbers
-        speaker_names: the names associated with the numbers
+        speaker_files: the names associated with the numbers and each of their audio files
         """
         # Add all valid speakers
         valid_speakers = self.get_valid_speakers()
         speaker_files = self.get_speaker_list_of_files(get_training("TIMIT"), '_RIFF.WAV', valid_speakers)
 
         # Extract the spectrogram's, speaker numbers and speaker names
-        return self.build_array_and_extract_speaker_data(speaker_files)
+        return self.build_array_and_extract_speaker_data(speaker_files), speaker_files
 
     def extract_voxceleb2(self):
         """
@@ -103,7 +102,7 @@ class Speaker:
         :return:
         x: the filled training data in the 4D array [Speaker, Channel, Frequency, Time]
         y: the filled testing data in a list of speaker_numbers
-        speaker_names: the names associated with the numbers
+        speaker_files: the names associated with the numbers and each of their audio files
         """
         
         # list the speaker files
@@ -111,7 +110,7 @@ class Speaker:
         speaker_files = self.get_speaker_list_of_files(get_training("VOXCELEB2"), '.wav', valid_speakers)
         
         # Extract the spectrogram's, speaker numbers and speaker names
-        return self.build_array_and_extract_speaker_data(speaker_files)
+        return self.build_array_and_extract_speaker_data(speaker_files), speaker_files
 
     def get_valid_speakers(self):
         """
@@ -168,7 +167,6 @@ class Speaker:
         :return:
         x: the filled training data in the 4D array [Speaker, Channel, Frequency, Time]
         y: the filled testing data in a list of speaker_numbers
-        speaker_names: the names associated with the numbers
         """
         audio_file_count = sum(len(n) for n in speaker_files.values())
         
