@@ -17,17 +17,10 @@ common/data/experiments/results/*.pickle
 */__pycache__/
 *.pyc
 
-#################### TIMIT ####################
-# Because this is a payed product, we can't upload it to life github
-TIMIT/crp/
-TIMIT/DOC/
-TIMIT/TEST/
-TIMIT/TRAIN/
-common/data/training/TIMIT/
+#################### DATA ####################
+# Lets be honest, it's gonna be better that way
 
-#################### VOXCELEB2 ####################
-common/data/training/VOXCELEB2/TEST/
-common/data/training/VOXCELEB2/TRAIN/
+common/data
 
 #################### Misc ####################
 # Home made stuff not present in the gitignore project.
