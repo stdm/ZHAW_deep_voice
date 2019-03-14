@@ -10,7 +10,7 @@ np.random.seed(1337)  # for reproducibility
 import keras
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation
-from keras.layers import LSTM
+from keras.layers import CuDNNLSTM
 from keras.layers.wrappers import Bidirectional
 from .core import data_gen as dg
 from .core import pairwise_kl_divergence as kld
@@ -49,9 +49,9 @@ class bilstm_2layer_dropout(object):
 
     def create_net(self):
         model = Sequential()
-        model.add(Bidirectional(LSTM(self.n_hidden1, return_sequences=True), input_shape=self.input))
+        model.add(Bidirectional(CuDNNLSTM(self.n_hidden1, return_sequences=True), input_shape=self.input))
         model.add(Dropout(0.50))
-        model.add(Bidirectional(LSTM(self.n_hidden2)))
+        model.add(Bidirectional(CuDNNLSTM(self.n_hidden2)))
         model.add(Dense(self.n_classes * 10))
         model.add(Dropout(0.25))
         model.add(Dense(self.n_classes * 5))
@@ -73,23 +73,16 @@ class bilstm_2layer_dropout(object):
         return X_t, y_t, X_v, y_v
 
     def create_callbacks(self):
-        csv_logger = keras.callbacks.CSVLogger(get_experiment_logs(self.network_name + '.csv'))
+        csv_logger = keras.callbacks.CSVLogger(get_experiment_logs(self.network_name+'.csv'))
         net_saver = keras.callbacks.ModelCheckpoint(
             get_experiment_nets(self.network_name + "_best.h5"),
             monitor='val_loss', verbose=1, save_best_only=True)
         net_checkpoint = keras.callbacks.ModelCheckpoint(
             get_experiment_nets(self.network_name + "_{epoch:05d}.h5"), period=100)
-        tensorboard = keras.callbacks.TensorBoard(log_dir=get_experiment_tensorboard_logs(self.network_name + '.csv'),
-                                                  histogram_freq=1,
-                                                  batch_size=32,
+        tensorboard = keras.callbacks.TensorBoard(log_dir=get_experiment_tensorboard_logs(self.network_name),
                                                   write_graph=True,
                                                   write_grads=False,
-                                                  write_images=True,
-                                                  embeddings_freq=0,
-                                                  embeddings_layer_names=None,
-                                                  embeddings_metadata=None,
-                                                  embeddings_data=None,
-                                                  update_freq='epoch')
+                                                  write_images=True)
         return [csv_logger, net_saver, net_checkpoint, tensorboard]
 
     def run_network(self):
