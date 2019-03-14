@@ -94,7 +94,8 @@ class Speaker:
         speaker_files = self.get_speaker_list_of_files(get_training("TIMIT"), '_RIFF.WAV', valid_speakers)
 
         # Extract the spectrogram's, speaker numbers and speaker names
-        return self.build_array_and_extract_speaker_data(speaker_files), speaker_files
+        x, y = self.build_array_and_extract_speaker_data(speaker_files)
+        return x, y, speaker_files
 
     def extract_voxceleb2(self):
         """
@@ -110,7 +111,8 @@ class Speaker:
         speaker_files = self.get_speaker_list_of_files(get_training("VOXCELEB2"), '.wav', valid_speakers)
         
         # Extract the spectrogram's, speaker numbers and speaker names
-        return self.build_array_and_extract_speaker_data(speaker_files), speaker_files
+        x, y = self.build_array_and_extract_speaker_data(speaker_files)
+        return x, y, speaker_files
 
     def get_valid_speakers(self):
         """
