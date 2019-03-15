@@ -17,11 +17,9 @@ def plot_files(plot_file_name, files):
     :param plot_file_name: the file name stored in common/data/results
     :param files: a set of full file paths that hold result data
     """
-    curve_names, set_of_mrs, set_of_homogeneity_scores, \
-    set_of_completeness_scores, set_of_number_of_embeddings = read_result_pickle(files)
-
-    plot_curves(plot_file_name, curve_names, set_of_mrs, set_of_homogeneity_scores, set_of_completeness_scores,
-                set_of_number_of_embeddings)
+    curve_names, set_of_mrs, set_of_homogeneity_scores, set_of_completeness_scores, set_of_number_of_embeddings = read_result_pickle(files)
+    print(read_result_pickle(files))
+    plot_curves(plot_file_name, curve_names, set_of_mrs, set_of_homogeneity_scores, set_of_completeness_scores, set_of_number_of_embeddings)
 
 
 def read_result_pickle(files):
