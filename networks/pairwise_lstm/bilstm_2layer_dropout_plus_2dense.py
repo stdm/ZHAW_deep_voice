@@ -2,6 +2,8 @@ import pickle
 
 import numpy as np
 
+
+import common.spectogram.speaker_train_splitter as sts
 import common.spectogram.evaluationdata_picker as edp
 from .core import plot_saver as ps
 
@@ -34,10 +36,11 @@ from common.utils.paths import *
 
 class bilstm_2layer_dropout(object):
     def __init__(self, name, training_data, evaluation_data, n_hidden1, n_hidden2, n_classes, n_10_batches,
-                 segment_size, frequency=128):
+                 segment_size, frequency=128, legacy_evaluation=False):
         self.network_name = name
         self.training_data = training_data
         self.evaluation_data = evaluation_data
+        self.legacy_evaluation = legacy_evaluation
         self.test_data = 'test' + training_data[5:]
         self.n_hidden1 = n_hidden1
         self.n_hidden2 = n_hidden2
@@ -65,14 +68,26 @@ class bilstm_2layer_dropout(object):
                       metrics=['accuracy'])
         return model
 
+    '''
+    As of 2019,a new evaluation system exists. By setting self.legacy_evaluation, the old system still can be used.
+    This will Split the training data to a training set (80%) an evaluation set (20%).
+    The new evaluation system uses a seperate pickle file as evaluation data.
+    '''
     def create_train_data(self):
         with open(get_speaker_pickle(self.training_data), 'rb') as f:
             (X_t, y_t, speaker_names) = pickle.load(f)
 
-        with open(get_speaker_pickle(self.evaluation_data), 'rb') as f:
-            (X, y, speaker_names) = pickle.load(f)
-            eval_picker = edp.EvalData_Picker(40, 10)
-            X_v, y_v = eval_picker(X, y)
+            if self.legacy_evaluation:
+                splitter = sts.SpeakerTrainSplit(0.2, 10)
+                X_t, X_v, y_t, y_v = splitter(X_t, y_t)
+                print("legacy evaluation!")
+            else:
+
+                with open(get_speaker_pickle(self.evaluation_data), 'rb') as f:
+                    (X, y, speaker_names) = pickle.load(f)
+                    eval_picker = edp.EvalData_Picker(40, 10)
+                    X_v, y_v = eval_picker(X, y)
+                    print("new evaluation!")
 
         return X_t, y_t, X_v, y_v
 
