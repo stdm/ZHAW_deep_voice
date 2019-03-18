@@ -56,7 +56,6 @@ class bilstm_2layer_dropout(object):
         model.add(Dropout(0.25))
         model.add(Dense(self.n_classes * 5))
         model.add(Dense(self.n_classes))
-        model.add(Activation('softmax'))
         adam = keras.optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
         # ada = keras.optimizers.Adadelta(lr=1.0, rho=0.95, epsilon=1e-08, decay=0.0)
         model.compile(loss=kld.pairwise_kl_divergence,
