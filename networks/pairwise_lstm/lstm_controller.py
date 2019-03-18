@@ -70,7 +70,7 @@ class LSTMController(NetworkController):
 
             # Get a Model with the embedding layer as output and predict
             session = K.get_session()
-            weights = sess.graph.get_tensor_by_name("dense_3/kernel")
+            weights = session.graph.get_tensor_by_name("dense_3/kernel")
             print(weights)
             input('debug moar')
 
