@@ -70,7 +70,11 @@ class LSTMController(NetworkController):
             # Get a Model with the embedding layer as output and predict
 
             print(self.out_layer)
-            print(model_full.layers)
+            i = 0
+            for layer in model_full.layers:
+                print('%d:  '%i)
+                print(layer)
+                print()
             print(model_full.layers[self.out_layer])
             print(model_full.layers[self.out_layer].output)
             input('test what this is')
