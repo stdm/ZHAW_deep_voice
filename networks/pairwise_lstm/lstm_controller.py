@@ -68,7 +68,12 @@ class LSTMController(NetworkController):
             model_full.compile(loss=loss, optimizer=optimizer, metrics=metrics)
 
             # Get a Model with the embedding layer as output and predict
+
             print(self.out_layer)
+            print(model_full.layers)
+            print(model_full.layers[self.out_layer])
+            print(model_full.layers[self.out_layer].output)
+            input('test what this is')
             model_partial = Model(inputs=model_full.input, outputs=model_full.layers[self.out_layer].output)
             test_output = np.asarray(model_partial.predict(x_test))
             train_output = np.asarray(model_partial.predict(x_train))
