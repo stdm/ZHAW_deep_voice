@@ -3,6 +3,7 @@ The controller to train and test the pairwise_lstm network
 """
 
 import numpy as np
+from keras import backend as K
 from keras.models import Model
 from keras.models import load_model
 
@@ -68,20 +69,13 @@ class LSTMController(NetworkController):
             model_full.compile(loss=loss, optimizer=optimizer, metrics=metrics)
 
             # Get a Model with the embedding layer as output and predict
+            [n.name for n in K.get_session().graph.as_graph_def().node]
+            input('debug moar')
 
-            print(self.out_layer)
-            i = 0
-            for layer in model_full.layers:
-                print('%d:  '%i)
-                print(layer)
-                print()
-            print(model_full.layers[self.out_layer])
-            print(model_full.layers[self.out_layer].output)
-            input('test what this is')
             model_partial = Model(inputs=model_full.input, outputs=model_full.layers[self.out_layer].output)
             test_output = np.asarray(model_partial.predict(x_test))
             train_output = np.asarray(model_partial.predict(x_train))
-            logger.info('test_output len -> ' + str(test_output.shape))
+            logger.info('test_output len ->  ' + str(test_output.shape))
             logger.info('train_output len -> ' + str(train_output.shape))
 
             embeddings, speakers, num_embeddings = generate_embeddings(train_output, test_output, speakers_train,
