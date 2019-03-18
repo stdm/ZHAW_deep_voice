@@ -69,9 +69,8 @@ class LSTMController(NetworkController):
             model_full.compile(loss=loss, optimizer=optimizer, metrics=metrics)
 
             # Get a Model with the embedding layer as output and predict
-            session = K.get_session()
-            weights = session.graph.get_tensor_by_name("dense_3/kernel")
-            print(weights)
+            for layer in model_full.layers:
+                print(layer)
             input('debug moar')
 
             model_partial = Model(inputs=model_full.input, outputs=model_full.layers[self.out_layer].output)
