@@ -26,11 +26,11 @@ class LSTMController(NetworkController):
 
     def train_network(self):
         bilstm_2layer_dropout(
-            self.network_file, 
+            self.network_file,
             'speakers_100_50w_50m_not_reynolds_cluster',
-            n_hidden1=256, 
-            n_hidden2=256, 
-            n_classes=100, 
+            n_hidden1=256,
+            n_hidden2=256,
+            n_classes=100,
             n_10_batches=1000,
             segment_size=self.seg_size
         )
@@ -68,6 +68,7 @@ class LSTMController(NetworkController):
             model_full.compile(loss=loss, optimizer=optimizer, metrics=metrics)
 
             # Get a Model with the embedding layer as output and predict
+            print(self.out_layer)
             model_partial = Model(inputs=model_full.input, outputs=model_full.layers[self.out_layer].output)
             test_output = np.asarray(model_partial.predict(x_test))
             train_output = np.asarray(model_partial.predict(x_train))

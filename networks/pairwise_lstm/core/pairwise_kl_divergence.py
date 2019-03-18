@@ -15,10 +15,53 @@ sum_loss = tf.Variable(0.)
 
 def pairwise_kl_divergence(labels, predictions):
     x = tf.constant(0)
-    sum_loss = tf.while_loop(outerLoop_condition, outerLoop, [x, tf_l, predictions, labels, margin], swap_memory=True,
-                             parallel_iterations=10, name='outerloop')
+    '''
+    So we know what's goin on here...
+
+    x = 0
+    n = 100
+    while x < 100:
+        y = 0
+        while y < 100:
+            if y > x:
+                epsilon = 1e-16
+
+                P = epsilon + predictions[x]
+                Q = epsilon + predictions[y]
+
+                Is = 0
+                if labels[y] == labels[x]:
+                    Is = 1
+
+                Ids = abs(Is - 1)
+
+                KLPQ = sum(P * log(P / Q))
+                KLQP = sum(Q * log(Q / P))
+
+                lossPQ = (Is * KLPQ) + (Ids * max(0, margin - KLPQ))
+                lossQP = (Is * KLQP) + (Ids * max(0, margin - KLQP))
+
+                L = lossPQ + lossQP
+
+                loss = loss + L
+            y = y + 1
+        x = x + 1
+    pairs = n * (n - 1) / 2
+    loss = loss / pairs
+    '''
+
+    sum_loss = tf.while_loop(outerLoop_condition,
+                             outerLoop,
+                             [x, tf_l, predictions, labels, margin],
+                             swap_memory=True,
+                             parallel_iterations=10,
+                             name='outerloop')
+
     n = tf.constant(100.)
+
     pairs = tf.multiply(n, tf.divide(tf.subtract(n, tf.constant(1.)), tf.constant(2.)))
+
+
     loss = tf.divide(sum_loss[1], pairs)
     return loss
 
