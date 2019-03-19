@@ -7,6 +7,7 @@ from keras import activations
 from keras import initializers
 from keras import regularizers
 from keras import constraints
+from keras.engine.base_layer import InputSpec
 from keras.legacy import interfaces
 
 
