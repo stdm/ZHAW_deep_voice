@@ -2,6 +2,7 @@ from keras import backend as K
 import tensorflow as tf
 from keras.layers import Layer
 
+import math
 
 from keras import activations
 from keras import initializers
