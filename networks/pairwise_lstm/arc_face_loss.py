@@ -2,6 +2,14 @@ from keras import backend as K
 import tensorflow as tf
 from keras.layers import Layer
 
+
+from keras import activations
+from keras import initializers
+from keras import regularizers
+from keras import constraints
+from keras.legacy import interfaces
+
+
 n_classes = -1
 
 class ArcFace(Layer):
