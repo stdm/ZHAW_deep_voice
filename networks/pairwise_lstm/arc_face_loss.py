@@ -49,10 +49,10 @@ class ArcFace(Layer):
         self.built = True
 
     def call(self, inputs):
-        embds = K.l2_normalize(inputs, axis=1, name='normed_embd')
+        embds = K.l2_normalize(inputs, axis=1)
         weights = K.l2_normalize(self.kernel, axis=0)
 
-        output = K.dot(embds, weights, name='cos_t')
+        output = K.dot(embds, weights)
         return output
 
     def compute_output_shape(self, input_shape):
