@@ -74,7 +74,7 @@ class ArcFace(Layer):
         return dict(list(base_config.items()) + list(config.items()))
 
 
-    def calculate_loss(labels, predictions):
+    def calculate_loss(self, labels, predictions):
         m = 0.5
         s = 64.0
 
