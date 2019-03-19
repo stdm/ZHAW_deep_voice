@@ -13,6 +13,7 @@ loss = tf.Variable(0.)
 sum_loss = tf.Variable(0.)
 
 
+
 def pairwise_kl_divergence(labels, predictions):
     x = tf.constant(0)
     '''

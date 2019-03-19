@@ -14,6 +14,7 @@ from keras.layers import CuDNNLSTM
 from keras.layers.wrappers import Bidirectional
 from .core import data_gen as dg
 from .core import pairwise_kl_divergence as kld
+from .arc_face_loss import ArcFace
 
 from common.utils.paths import *
 
@@ -35,6 +36,7 @@ from common.utils.paths import *
 class bilstm_2layer_dropout(object):
     def __init__(self, name, training_data, n_hidden1, n_hidden2, n_classes, n_10_batches,
                  segment_size, frequency=128):
+
         self.network_name = name
         self.training_data = training_data
         self.test_data = 'test' + training_data[5:]
@@ -55,10 +57,11 @@ class bilstm_2layer_dropout(object):
         model.add(Dense(self.n_classes * 10))
         model.add(Dropout(0.25))
         model.add(Dense(self.n_classes * 5))
-        model.add(Dense(self.n_classes))
+        arcface = ArcFace(self.n_classes)
+        model.add(arcface)
         adam = keras.optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
         # ada = keras.optimizers.Adadelta(lr=1.0, rho=0.95, epsilon=1e-08, decay=0.0)
-        model.compile(loss=kld.pairwise_kl_divergence,
+        model.compile(loss=arcface.calculate_loss,
                       optimizer=adam,
                       metrics=['accuracy'])
         return model
