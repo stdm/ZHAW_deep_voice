@@ -6,6 +6,7 @@ import common.spectogram.speaker_train_splitter as sts
 from .core import plot_saver as ps
 
 np.random.seed(1337)  # for reproducibility
+import mxnet as mx
 
 import keras
 from keras.models import Sequential
@@ -35,8 +36,10 @@ from common.utils.paths import *
 
 class bilstm_2layer_dropout(object):
     def __init__(self, name, training_data, n_hidden1, n_hidden2, n_classes, n_10_batches,
-                 segment_size, frequency=128):
-
+                 segment_size, frequency=128, m, s):
+        self.ce_loss = True
+        self.batch_size = 64
+        self.per_batch_size = 32
         self.network_name = name
         self.training_data = training_data
         self.test_data = 'test' + training_data[5:]
@@ -46,24 +49,44 @@ class bilstm_2layer_dropout(object):
         self.n_10_batches = n_10_batches
         self.segment_size = segment_size
         self.input = (segment_size, frequency)
+        self.m = m
+        self.s = s
         print(self.network_name)
         self.run_network()
 
     def create_net(self):
-        model = Sequential()
-        model.add(Bidirectional(CuDNNLSTM(self.n_hidden1, return_sequences=True), input_shape=self.input))
-        model.add(Dropout(0.50))
-        model.add(Bidirectional(CuDNNLSTM(self.n_hidden2)))
-        model.add(Dense(self.n_classes * 10))
-        model.add(Dropout(0.25))
-        model.add(Dense(self.n_classes * 5))
-        arcface = ArcFace(self.n_classes)
-        model.add(arcface)
-        adam = keras.optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
-        # ada = keras.optimizers.Adadelta(lr=1.0, rho=0.95, epsilon=1e-08, decay=0.0)
-        model.compile(loss=arcface.calculate_loss,
-                      optimizer=adam,
-                      metrics=['accuracy'])
+        data = mx.sym.var('data')
+        lstm1 = mx.sym.RNN(data=data, mode='lstm', state_size=self.n_hidden1, num_layers=1)
+        drop1 = mx.sym.Dropout(data=lstm1, p=0.5)
+        lstm2 = mx.sym.RNN(data=drop1, mode='lstm', state_size=self.n_hidden2, num_layers=1)
+        dense1 = mx.sym.FullyConnected(data=lstm2, num_hidden=self.n_classes * 10)
+        drop2 = mx.sym.Dropout(data=dense1, p=0.25)
+        embedding = mx.sym.FullyConnected(data=drop2, num_hidden=self.n_classes * 5)
+
+        # ArcFace Logits
+        all_label = mx.symbol.Variable('softmax_label')
+        gt_label = all_label
+        _weight = mx.symbol.Variable("last_fc_weight", shape=(self.n_classes, self.n_classes * 5), init=mx.init.Normal(0.01))
+        s = config.loss_s
+        _weight = mx.symbol.L2Normalization(_weight, mode='instance')
+        nembedding = mx.symbol.L2Normalization(embedding, mode='instance', name='fc1n')*s
+        last_fc = mx.sym.FullyConnected(data=nembedding, weight = _weight, no_bias = True, num_hidden=self.n_classes, name='last fc')
+        s_m = s * config.loss_m3
+        gt_one_hot = mx.sym.one_hot(gt_label, depth = self.n_classes, on_value = s_m, off_value = 0.0)
+        last_fc = last_fc-gt_one_hot
+
+        out_list = [mx.symbol.BlockGrad(embedding)]
+        softmax = mx.symbol.SoftmaxOutput(data=last_fc, label = gt_label, name='softmax', normalization='valid')
+        out_list.append(softmax)
+        if self.ce_loss:
+            #ce_loss = mx.symbol.softmax_cross_entropy(data=fc7, label = gt_label, name='ce_loss')/args.per_batch_size
+            body = mx.symbol.SoftmaxActivation(data=last_fc)
+            body = mx.symbol.log(body)
+            _label = mx.sym.one_hot(gt_label, depth = self.n_classes, on_value = -1.0, off_value = 0.0)
+            body = body*_label
+            ce_loss = mx.symbol.sum(body)/self.per_batch_size
+            out_list.append(mx.symbol.BlockGrad(ce_loss))
+        model = mx.symbol.Group(out_list)
         return model
 
     def create_train_data(self):
@@ -72,38 +95,109 @@ class bilstm_2layer_dropout(object):
 
         splitter = sts.SpeakerTrainSplit(0.2, 10)
         X_t, X_v, y_t, y_v = splitter(X, y)
-        return X_t, y_t, X_v, y_v
+        train_iter = mx.io.NDArrayIter(X_t, {'label':y_t}, self.batch_size, shuffle=True)
+        test_iter = mx.io.NDArrayIter(X_v, {'label':y_v}, self.batch_size, shuffle=True)
 
-    def create_callbacks(self):
-        csv_logger = keras.callbacks.CSVLogger(get_experiment_logs(self.network_name+'.csv'))
-        net_saver = keras.callbacks.ModelCheckpoint(
-            get_experiment_nets(self.network_name + "_best.h5"),
-            monitor='val_loss', verbose=1, save_best_only=True)
-        net_checkpoint = keras.callbacks.ModelCheckpoint(
-            get_experiment_nets(self.network_name + "_{epoch:05d}.h5"), period=100)
-        tensorboard = keras.callbacks.TensorBoard(log_dir=get_experiment_tensorboard_logs(self.network_name),
-                                                  write_graph=True,
-                                                  write_grads=False,
-                                                  write_images=True)
-        return [csv_logger, net_saver, net_checkpoint, tensorboard]
+        return train_iter, test_iter
 
     def run_network(self):
         model = self.create_net()
-        calls = self.create_callbacks()
+        ctx = []
+        cvd = os.environ['CUDA_VISIBLE_DEVICES'].strip()
+        if len(cvd)>0:
+            for i in xrange(len(cvd.split(','))):
+                ctx.append(mx.gpu(i))
+        if len(ctx)==0:
+            ctx = [mx.cpu()]
+            print('use cpu')
+        else:
+            print('gpu num:', len(ctx))
 
-        X_t, y_t, X_v, y_v = self.create_train_data()
-        train_gen = dg.batch_generator_lstm(X_t, y_t, 100, segment_size=self.segment_size)
-        val_gen = dg.batch_generator_lstm(X_v, y_v, 100, segment_size=self.segment_size)
-        # batches_t = ((X_t.shape[0] + 128 - 1) // 128)
-        # batches_v = ((X_v.shape[0] + 128 - 1) // 128)
+        metric1 = AccMetric()
+        eval_metrics = [mx.metric.create(metric1)]
+            if self.ce_loss:
+                metric2 = LossValueMetric()
+                eval_metrics.append( mx.metric.create(metric2) )
 
-        history = model.fit_generator(train_gen, steps_per_epoch=10, epochs=self.n_10_batches,
-                                      verbose=2, callbacks=calls, validation_data=val_gen,
-                                      validation_steps=2, class_weight=None, max_q_size=10,
-                                      nb_worker=1, pickle_safe=False)
-        ps.save_accuracy_plot(history, self.network_name)
-        ps.save_loss_plot(history, self.network_name)
-        print("saving model")
-        model.save(get_experiment_nets(self.network_name + ".h5"))
-        # print "evaluating model"
-        # da.calculate_test_acccuracies(self.network_name, self.test_data, True, True, True, segment_size=self.segment_size)
+        train_iter, test_iter = self.create_train_data()
+
+        initializer = mx.init.Xavier(rnd_type='uniform', factor_type="in", magnitude=2)
+
+        opt = mx.optimizer.AdaDelta()
+
+        highest_acc = [0.0, 0.0]  #lfw and target
+        #for i in xrange(len(ver_list)):
+        #  highest_acc.append(0.0)
+        global_step = [0]
+        save_step = [0]
+
+
+        prefix = os.path.join(get_experiment_nets(self.network_name), '%s-%s-%s'%(args.network, args.loss, args.dataset), 'model')
+        prefix_dir = os.path.dirname(prefix)
+        print('prefix', prefix)
+        if not os.path.exists(prefix_dir):
+            os.makedirs(prefix_dir)
+
+        def ver_test(nbatch):
+            results = []
+            for i in xrange(len(ver_list)):
+                acc1, std1, acc2, std2, xnorm, embeddings_list = verification.test(ver_list[i], model, args.batch_size, 10, None, None)
+                print('[%s][%d]XNorm: %f' % (ver_name_list[i], nbatch, xnorm))
+                #print('[%s][%d]Accuracy: %1.5f+-%1.5f' % (ver_name_list[i], nbatch, acc1, std1))
+                print('[%s][%d]Accuracy-Flip: %1.5f+-%1.5f' % (ver_name_list[i], nbatch, acc2, std2))
+                results.append(acc2)
+            return results
+
+        def _batch_callback(param):
+            global_step[0]+=1
+            mbatch = global_step[0]
+            _cb(param)
+            if mbatch%100==0:
+                print('lr-batch-epoch:', param.nbatch, param.epoch)
+
+            if mbatch>=0:
+                acc_list = ver_test(mbatch)
+                save_step[0]+=1
+                msave = save_step[0]
+                do_save = False
+                is_highest = False
+                if len(acc_list)>0:
+                    #lfw_score = acc_list[0]
+                    #if lfw_score>highest_acc[0]:
+                    #  highest_acc[0] = lfw_score
+                    #  if lfw_score>=0.998:
+                    #    do_save = True
+                    score = sum(acc_list)
+                    if acc_list[-1]>=highest_acc[-1]:
+                        if acc_list[-1]>highest_acc[-1]:
+                            is_highest = True
+                        else:
+                            if score>=highest_acc[0]:
+                                is_highest = True
+                                highest_acc[0] = score
+                        highest_acc[-1] = acc_list[-1]
+                        #if lfw_score>=0.99:
+                        #  do_save = True
+                if is_highest:
+                    do_save = True
+
+                if do_save:
+                    print('saving', msave)
+                    arg, aux = model.get_params()
+                    mx.model.save_checkpoint(prefix, msave, model.symbol, arg, aux)
+                print('[%d]Accuracy-Highest: %1.5f'%(mbatch, highest_acc[-1]))
+
+        model.fit(train_iter,
+                  begin_epoch        = 0,
+                  num_epoch          = 10,
+                  eval_data          = test_iter,
+                  eval_metric        = eval_metrics,
+                  kvstore            = 'device',
+                  optimizer          = opt,
+                  #optimizer_params   = optimizer_params,
+                  initializer        = initializer,
+                  allow_missing      = True,
+                  batch_end_callback = _batch_callback)
+
+        arg, aux = model.get_params()
+        mx.model.save_checkpoint(prefix, global_step[0], model.symbol, arg, aux)
