@@ -25,7 +25,7 @@ class ArcFace(Layer):
                  **kwargs):
         if 'input_shape' not in kwargs and 'input_dim' in kwargs:
             kwargs['input_shape'] = (kwargs.pop('input_dim'),)
-        super(Dense, self).__init__(**kwargs)
+        super(ArcFace, self).__init__(**kwargs)
         self.units = units
         self.kernel_initializer = initializers.get(kernel_initializer)
         self.kernel_regularizer = regularizers.get(kernel_regularizer)
