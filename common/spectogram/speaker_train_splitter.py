@@ -30,9 +30,7 @@ class SpeakerTrainSplit(object):
 
         train_index = 0
         valid_index = 0
-        # lehmacl1@2019-03-05: Muss für Voxceleb umgeschrieben werden und dynamisch nachgerechnet werden
-        # anhand der Anzahl effektiver Sentences pro Sprecher
-
+        
         nth_elem = self.sentences - self.sentences * self.eval_size
 
         for i in range(len(y)):
