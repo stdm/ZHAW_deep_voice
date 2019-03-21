@@ -96,7 +96,7 @@ class bilstm_2layer_dropout(object):
         print()
         print()
         print()
-        mx.viz.print_summary(model, shape={'data':(32, 128, 800), 'softmax_label':(32, 100)})
+        mx.viz.print_summary(model, shape={'data':(32, 128, 800), 'softmax_label':(32, )})
         input('test')
         return model
 
