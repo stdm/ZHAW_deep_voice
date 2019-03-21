@@ -56,4 +56,4 @@ class CustomIterator(mx.io.DataIter):
                 ym[self.Y[self.cur_step]] = 1
                 y.append(ym)
                 self.cur_step += 1
-            return mx.io.DataBatch(np.array(x), np.array(y))
+            return mx.io.DataBatch([np.array(x)], [np.array(y)])
