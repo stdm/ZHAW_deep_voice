@@ -17,7 +17,7 @@ from .core import data_gen as dg
 from .core import pairwise_kl_divergence as kld
 from .arc_face_loss import ArcFace
 from .metric import *
-import .verification
+import verification
 
 from common.utils.paths import *
 
