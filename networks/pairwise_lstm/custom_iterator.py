@@ -8,7 +8,7 @@ class CustomIterator(mx.io.NDArrayIter):
         desc = []
         for k, v in self.label:
             speakers = np.amax(v) + 1
-            speakers = int(speakers[0])
+            speakers = int(speakers.tolist()[0])
             print('k:')
             print(k)
             print()
