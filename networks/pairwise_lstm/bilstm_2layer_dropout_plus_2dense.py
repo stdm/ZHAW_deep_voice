@@ -107,7 +107,7 @@ class bilstm_2layer_dropout(object):
             y = np.zeros(speakers)
             y[label] = 1
             Y.append(y)
-        return mx.io.NDArrayIter(data=np.squeeze(X), label=np.array(Y), batch_size=self.batch_size)
+        return mx.io.NDArrayIter(data=np.squeeze(X), label=np.array(labels), batch_size=self.batch_size)
 
     def create_train_data(self):
         with open(get_speaker_pickle(self.training_data), 'rb') as f:
