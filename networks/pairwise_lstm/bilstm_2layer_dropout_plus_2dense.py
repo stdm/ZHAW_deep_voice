@@ -100,9 +100,8 @@ class bilstm_2layer_dropout(object):
 
         splitter = sts.SpeakerTrainSplit(0.2, 10)
         X_t, X_v, y_t, y_v = splitter(X, y)
-        train_iter = CustomIterator(np.squeeze(X_t), {'label':prepare_labels(y_t)}, self.batch_size, shuffle=True)
-        train_iter.getlabel()
-        test_iter = CustomIterator(np.squeeze(X_v), {'label':prepare_labels(y_v)}, self.batch_size, shuffle=True)
+        train_iter = CustomIterator(np.squeeze(X_t), y_t, self.batch_size)
+        test_iter = CustomIterator(np.squeeze(X_v), y_v, self.batch_size)
 
         return train_iter, test_iter
 
