@@ -14,9 +14,6 @@ class CustomIterator(mx.io.DataIter):
         self.leftover = None
         self.cur_step = 0
 
-    def label_gen(self):
-
-
     def __iter__(self):
         return self
 
