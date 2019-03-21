@@ -146,7 +146,7 @@ class bilstm_2layer_dropout(object):
         train_iter, test_iter = self.create_train_data()
 
         initializer = mx.init.Xavier(rnd_type='uniform', factor_type="in", magnitude=2)
-        module.init_params(mx.initializer.Uniform(scale=1.0))
+        model.init_params(mx.initializer.Uniform(scale=1.0))
 
         opt = mx.optimizer.AdaDelta()
 
