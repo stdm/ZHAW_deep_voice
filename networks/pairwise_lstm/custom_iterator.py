@@ -12,7 +12,7 @@ class CustomIterator(mx.io.NDArrayIter):
             print(k)
             print()
             print('speakers:')
-            print(self.speakers)
+            print(speakers)
             print()
             print('shape:')
             print(tuple([self.batch_size] + [speakers]))
