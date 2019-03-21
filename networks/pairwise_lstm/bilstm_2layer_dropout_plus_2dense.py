@@ -9,6 +9,7 @@ np.random.seed(1337)  # for reproducibility
 import mxnet as mx
 import numpy as np
 
+from random import randint
 import sys
 import os
 import keras
@@ -94,14 +95,24 @@ class bilstm_2layer_dropout(object):
         model = mx.symbol.Group(out_list)
         return model
 
+    def prep_iter(X, labels):
+        speakers = np.amax(labels) + 1
+        Y = []
+        for label in labels:
+            y = np.zeros(speakers)
+            y[label] = 1
+            Y.append(y)
+        return mx.io.NDArrayIter(data=np.squeeze(X), label=np.array(Y), batch_size=self.batch_size)
+
     def create_train_data(self):
         with open(get_speaker_pickle(self.training_data), 'rb') as f:
             (X, y, speaker_names) = pickle.load(f)
 
         splitter = sts.SpeakerTrainSplit(0.2, 10)
         X_t, X_v, y_t, y_v = splitter(X, y)
-        train_iter = CustomIterator(np.squeeze(X_t), y_t, self.batch_size)
-        test_iter = CustomIterator(np.squeeze(X_v), y_v, self.batch_size)
+
+        train_iter = prep_iter(X_t, y_t)
+        test_iter = prep_iter(X_v, y_v)
         return train_iter, test_iter
 
     def run_network(self):
