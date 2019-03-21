@@ -7,8 +7,8 @@ class CustomIterator(mx.io.DataIter):
         self.speakers = np.amax(Y) + 1
         self._provide_data = list(zip(['data'], tuple([batch_size] + list(X.shape[1:]))))
         self._provide_label = list(zip(['data'], tuple([batch_size] + list(Y.shape[1:]) + [self.speakers])))
-        self.X = X
-        self.Y = Y
+        self.X = np.array(X)
+        self.Y = np.array(Y)
         self.batch_size = batch_size
         self.leftover = None
         self.cur_step = 0
@@ -56,4 +56,4 @@ class CustomIterator(mx.io.DataIter):
                 ym[self.Y[self.cur_step]] = 1
                 y.append(ym)
                 self.cur_step += 1
-            return mx.io.DataBatch([x], [y])
+            return mx.io.DataBatch(np.array(x), np.array(y))
