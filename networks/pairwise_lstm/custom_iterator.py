@@ -2,10 +2,7 @@ import mxnet as mx
 import numpy as np
 
 def prepare_labels(labels):
-    segments = X.shape[0]
-    bs = batch_size
     speakers = np.amax(labels) + 1
-    # build as much batches as fit into the training set
     new_labels = []
     for l in labels:
         y = np.zeros(speakers)
