@@ -20,7 +20,7 @@ from .core import data_gen as dg
 from .core import pairwise_kl_divergence as kld
 from .arc_face_loss import ArcFace
 from .metric import *
-from .custom_iterator import CustomIterator, prepare_labels
+from .custom_iterator import CustomIterator
 sys.path.append(os.path.join(os.path.dirname(__file__), 'eval'))
 
 from common.utils.paths import *
