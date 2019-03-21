@@ -56,7 +56,8 @@ class bilstm_2layer_dropout(object):
         self.input = (segment_size, frequency)
         self.m = m
         self.s = s
-        print(self.network_name)
+        print(n_classes)
+        input('wut')
         self.run_network()
 
     def create_net(self):
