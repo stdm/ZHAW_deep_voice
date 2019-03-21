@@ -31,10 +31,49 @@ class CustomIterator(mx.io.NDArrayIter):
             ]]) for x in data_source
         ]
 
+    def _batchify(self, data_source):
+        """Load data from underlying arrays, internal use only."""
+        assert self.cursor < self.num_data, 'DataIter needs reset.'
+        # first batch of next epoch with 'roll_over'
+        i = 0
+        i += 1
+        input(str(i))
+        if self.last_batch_handle == 'roll_over' and \
+            i += 1
+            input(str(i))
+            -self.batch_size < self.cursor < 0:
+            assert self._cache_data is not None or self._cache_label is not None, \
+                'next epoch should have cached data'
+            cache_data = self._cache_data if self._cache_data is not None else self._cache_label
+            second_data = self._getdata(
+                data_source, end=self.cursor + self.batch_size)
+            if self._cache_data is not None:
+                self._cache_data = None
+            else:
+                self._cache_label = None
+            return self._concat(cache_data, second_data)
+        # last batch with 'pad'
+        elif self.last_batch_handle == 'pad' and \
+            i += 1
+            input(str(i))
+            self.cursor + self.batch_size > self.num_data:
+            pad = self.batch_size - self.num_data + self.cursor
+            first_data = self._getdata(data_source, start=self.cursor)
+            second_data = self._getdata(data_source, end=pad)
+            return self._concat(first_data, second_data)
+        # normal case
+        else:
+            i += 1
+            input(str(i))
+            if self.cursor + self.batch_size < self.num_data:
+                end_idx = self.cursor + self.batch_size
+            # get incomplete last batch
+            else:
+                end_idx = self.num_data
+            return self._getdata(data_source, self.cursor, end_idx)
+
     def getlabel(self):
         """Get label."""
-        print(self.label[0])
-        input('test')
         batch = self._batchify(self.label)
         while 1:
             for i in range((segments + bs - 1) // bs):
