@@ -11,14 +11,16 @@ class AccMetric(mx.metric.EvalMetric):
     self.count = 0
 
   def update(self, labels, preds):
+    print(labels)
+    input('ejb')
+    print(preds)
+    input('ejb')
     self.count+=1
     label = labels[0]
     pred_label = preds[1]
     #print('ACC', label.shape, pred_label.shape)
     if pred_label.shape != label.shape:
         pred_label = mx.ndarray.argmax(pred_label, axis=self.axis)
-    print(pred_label)
-    input('ejb')
     pred_label = pred_label.asnumpy().astype('int32').flatten()
     label = label.asnumpy()
     if label.ndim==2:
