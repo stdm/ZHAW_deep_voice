@@ -105,7 +105,7 @@ class bilstm_2layer_dropout(object):
         return train_iter, test_iter
 
     def run_network(self):
-        model = self.create_net()
+        sym = self.create_net()
         ctx = []
         cvd = os.environ['CUDA_VISIBLE_DEVICES'].strip()
         if len(cvd)>0:
@@ -117,6 +117,10 @@ class bilstm_2layer_dropout(object):
         else:
             print('gpu num:', len(ctx))
 
+        model = mx.mod.Module(
+            context       = ctx,
+            symbol        = sym,
+        )
         metric1 = AccMetric()
         eval_metrics = [mx.metric.create(metric1)]
         if self.ce_loss:
