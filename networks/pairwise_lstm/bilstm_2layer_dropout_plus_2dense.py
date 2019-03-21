@@ -111,8 +111,8 @@ class bilstm_2layer_dropout(object):
         splitter = sts.SpeakerTrainSplit(0.2, 10)
         X_t, X_v, y_t, y_v = splitter(X, y)
 
-        train_iter = prep_iter(X_t, y_t)
-        test_iter = prep_iter(X_v, y_v)
+        train_iter = self.prep_iter(X_t, y_t)
+        test_iter = self.prep_iter(X_v, y_v)
         return train_iter, test_iter
 
     def run_network(self):
