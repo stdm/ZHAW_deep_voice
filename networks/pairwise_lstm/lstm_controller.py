@@ -33,9 +33,9 @@ class LSTMController(NetworkController):
             n_hidden2=256,
             n_classes=100,
             n_10_batches=1000,
-            segment_size=self.seg_size,
             m=0.5,
-            s=64
+            s=64,
+            segment_size=self.seg_size
         )
 
     def get_embeddings(self, out_layer, seg_size, vec_size):
