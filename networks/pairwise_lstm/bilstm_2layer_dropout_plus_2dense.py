@@ -93,6 +93,11 @@ class bilstm_2layer_dropout(object):
             ce_loss = mx.symbol.sum(body)/self.per_batch_size
             out_list.append(mx.symbol.BlockGrad(ce_loss))
         model = mx.symbol.Group(out_list)
+        print()
+        print()
+        print()
+        mx.viz.print_summary(model)
+        input('test')
         return model
 
     def prep_iter(self, X, labels):
