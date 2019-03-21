@@ -67,11 +67,11 @@ class bilstm_2layer_dropout(object):
         all_label = mx.symbol.Variable('softmax_label')
         gt_label = all_label
         _weight = mx.symbol.Variable("last_fc_weight", shape=(self.n_classes, self.n_classes * 5), init=mx.init.Normal(0.01))
-        s = config.loss_s
+        s = self.s
         _weight = mx.symbol.L2Normalization(_weight, mode='instance')
         nembedding = mx.symbol.L2Normalization(embedding, mode='instance', name='fc1n')*s
         last_fc = mx.sym.FullyConnected(data=nembedding, weight = _weight, no_bias = True, num_hidden=self.n_classes, name='last fc')
-        s_m = s * config.loss_m3
+        s_m = s * self.m
         gt_one_hot = mx.sym.one_hot(gt_label, depth = self.n_classes, on_value = s_m, off_value = 0.0)
         last_fc = last_fc-gt_one_hot
 
