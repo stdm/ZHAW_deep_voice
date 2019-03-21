@@ -115,9 +115,9 @@ class bilstm_2layer_dropout(object):
 
         metric1 = AccMetric()
         eval_metrics = [mx.metric.create(metric1)]
-            if self.ce_loss:
-                metric2 = LossValueMetric()
-                eval_metrics.append( mx.metric.create(metric2) )
+        if self.ce_loss:
+            metric2 = LossValueMetric()
+            eval_metrics.append( mx.metric.create(metric2) )
 
         train_iter, test_iter = self.create_train_data()
 
