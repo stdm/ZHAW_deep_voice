@@ -17,6 +17,8 @@ class AccMetric(mx.metric.EvalMetric):
     #print('ACC', label.shape, pred_label.shape)
     if pred_label.shape != label.shape:
         pred_label = mx.ndarray.argmax(pred_label, axis=self.axis)
+    print(pred_label)
+    input('ejb')
     pred_label = pred_label.asnumpy().astype('int32').flatten()
     label = label.asnumpy()
     if label.ndim==2:
