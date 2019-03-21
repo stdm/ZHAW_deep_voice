@@ -78,7 +78,7 @@ class bilstm_2layer_dropout(object):
         nembedding = mx.symbol.L2Normalization(embedding, mode='instance', name='fc1n')*s
         last_fc = mx.sym.FullyConnected(data=nembedding, weight = _weight, no_bias = True, num_hidden=self.n_classes, name='last fc')
         s_m = s * self.m
-        gt_one_hot = mx.sym.one_hot(gt_label, depth = self.n_classes, on_value = s_m, off_value = 0.0)
+        gt_one_hot = s_m * gt_label #mx.sym.one_hot(gt_label, depth = self.n_classes, on_value = s_m, off_value = 0.0)
         last_fc = last_fc-gt_one_hot
 
         out_list = [mx.symbol.BlockGrad(embedding)]
@@ -107,7 +107,7 @@ class bilstm_2layer_dropout(object):
             y = np.zeros(speakers)
             y[label] = 1
             Y.append(y)
-        return mx.io.NDArrayIter(data=np.squeeze(X), label=np.array(labels), batch_size=self.batch_size)
+        return mx.io.NDArrayIter(data=np.squeeze(X), label=np.array(Y), batch_size=self.batch_size)
 
     def create_train_data(self):
         with open(get_speaker_pickle(self.training_data), 'rb') as f:
