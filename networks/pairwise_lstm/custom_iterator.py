@@ -5,8 +5,8 @@ from random import randint
 class CustomIterator(mx.io.DataIter):
     def __init__(self, X, Y, batch_size):
         self.speakers = np.amax(Y) + 1
-        self._provide_data = list(zip(['data'], tuple([batch_size] + X.shape[1:])))
-        self._provide_label = list(zip(['data'], tuple([batch_size] + Y.shape[1:] + [self.speakers])))
+        self._provide_data = list(zip(['data'], tuple([batch_size] + list(X.shape[1:]))))
+        self._provide_label = list(zip(['data'], tuple([batch_size] + list(Y.shape[1:]) + [self.speakers])))
         self.num_batches = num_batches
         self.X = X
         self.Y = Y
