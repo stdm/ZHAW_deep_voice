@@ -136,7 +136,7 @@ class bilstm_2layer_dropout(object):
         save_step = [0]
 
 
-        prefix = os.path.join(get_experiment_nets(self.network_name), '%s-%s-%s'%(args.network, args.loss, args.dataset), 'model')
+        prefix = os.path.join(get_experiment_nets(self.network_name), 'test', 'model')
         prefix_dir = os.path.dirname(prefix)
         print('prefix', prefix)
         if not os.path.exists(prefix_dir):
