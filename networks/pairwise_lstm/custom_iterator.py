@@ -8,18 +8,8 @@ class CustomIterator(mx.io.NDArrayIter):
         desc = []
         for k, v in self.label:
             speakers = np.amax(v) + 1
-            speakers = speakers.asnumpy()[0]
-            print('k:')
-            print(k)
-            print()
-            print('speakers:')
-            print(speakers)
-            print()
-            print('shape:')
-            print(tuple([self.batch_size] + [speakers]))
-            print()
-            input('test')
-            desc.append(mx.io.DataDesc(k, tuple([self.batch_size] + list(v.shape[1:]) + speakers), v.dtype))
+            speakers = int(speakers.asnumpy()[0])
+            desc.append(mx.io.DataDesc(k, tuple([self.batch_size] + list(v.shape[1:]) + [speakers]), v.dtype))
         return desc
 
     def getlabel(self):
