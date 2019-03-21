@@ -69,7 +69,7 @@ class bilstm_2layer_dropout(object):
         embedding = mx.sym.FullyConnected(data=drop2, num_hidden=self.n_classes * 5)
 
         # ArcFace Logits
-        all_label = mx.symbol.Variable('softmax_label')
+        all_label = mx.symbol.Variable('label')
         gt_label = all_label
         _weight = mx.symbol.Variable("last_fc_weight", shape=(self.n_classes, self.n_classes * 5), init=mx.init.Normal(0.01))
         s = self.s
