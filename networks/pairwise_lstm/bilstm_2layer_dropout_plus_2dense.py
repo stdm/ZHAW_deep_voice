@@ -9,7 +9,6 @@ np.random.seed(1337)  # for reproducibility
 import mxnet as mx
 
 import keras
-from metric import *
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation
 from keras.layers import CuDNNLSTM
@@ -17,6 +16,7 @@ from keras.layers.wrappers import Bidirectional
 from .core import data_gen as dg
 from .core import pairwise_kl_divergence as kld
 from .arc_face_loss import ArcFace
+from .metric import *
 
 from common.utils.paths import *
 
