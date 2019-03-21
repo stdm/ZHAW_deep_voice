@@ -35,13 +35,10 @@ class CustomIterator(mx.io.NDArrayIter):
         """Load data from underlying arrays, internal use only."""
         assert self.cursor < self.num_data, 'DataIter needs reset.'
         # first batch of next epoch with 'roll_over'
-        i = 0
-        i += 1
-        input(str(i))
+        input('1')
         if self.last_batch_handle == 'roll_over' and \
-            i += 1
-            input(str(i))
             -self.batch_size < self.cursor < 0:
+            input('2')
             assert self._cache_data is not None or self._cache_label is not None, \
                 'next epoch should have cached data'
             cache_data = self._cache_data if self._cache_data is not None else self._cache_label
@@ -54,17 +51,15 @@ class CustomIterator(mx.io.NDArrayIter):
             return self._concat(cache_data, second_data)
         # last batch with 'pad'
         elif self.last_batch_handle == 'pad' and \
-            i += 1
-            input(str(i))
             self.cursor + self.batch_size > self.num_data:
+            input('3')
             pad = self.batch_size - self.num_data + self.cursor
             first_data = self._getdata(data_source, start=self.cursor)
             second_data = self._getdata(data_source, end=pad)
             return self._concat(first_data, second_data)
         # normal case
         else:
-            i += 1
-            input(str(i))
+            input('4')
             if self.cursor + self.batch_size < self.num_data:
                 end_idx = self.cursor + self.batch_size
             # get incomplete last batch
