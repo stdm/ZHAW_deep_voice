@@ -8,6 +8,7 @@ from .core import plot_saver as ps
 np.random.seed(1337)  # for reproducibility
 import mxnet as mx
 
+import sys
 import keras
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation
