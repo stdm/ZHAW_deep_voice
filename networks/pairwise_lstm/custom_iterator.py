@@ -7,8 +7,7 @@ class CustomIterator(mx.io.NDArrayIter):
         """The name and shape of label provided by this iterator."""
         desc = []
         for k, v in self.label:
-            speakers = np.amax(v) + 1
-            speakers = int(speakers.tolist()[0])
+            speakers = np.amax(v)
             print('k:')
             print(k)
             print()
