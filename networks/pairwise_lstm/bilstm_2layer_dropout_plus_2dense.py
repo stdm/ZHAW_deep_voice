@@ -17,6 +17,7 @@ from .core import data_gen as dg
 from .core import pairwise_kl_divergence as kld
 from .arc_face_loss import ArcFace
 from .metric import *
+import .verification
 
 from common.utils.paths import *
 
@@ -142,7 +143,7 @@ class bilstm_2layer_dropout(object):
         def ver_test(nbatch):
             results = []
             for i in range(len(ver_list)):
-                acc1, std1, acc2, std2, xnorm, embeddings_list = verification.test(ver_list[i], model, args.batch_size, 10, None, None)
+                acc1, std1, acc2, std2, xnorm, embeddings_list = verification.test(ver_list[i], model, self.batch_size, 10, None, None)
                 print('[%s][%d]XNorm: %f' % (ver_name_list[i], nbatch, xnorm))
                 #print('[%s][%d]Accuracy: %1.5f+-%1.5f' % (ver_name_list[i], nbatch, acc1, std1))
                 print('[%s][%d]Accuracy-Flip: %1.5f+-%1.5f' % (ver_name_list[i], nbatch, acc2, std2))
