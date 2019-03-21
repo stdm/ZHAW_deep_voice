@@ -102,9 +102,6 @@ class bilstm_2layer_dropout(object):
         X_t, X_v, y_t, y_v = splitter(X, y)
         train_iter = CustomIterator(np.squeeze(X_t), y_t, self.batch_size)
         test_iter = CustomIterator(np.squeeze(X_v), y_v, self.batch_size)
-        c = train_iter.next()
-        print(c)
-        input('wut')
         return train_iter, test_iter
 
     def run_network(self):
