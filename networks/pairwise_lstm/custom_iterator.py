@@ -15,6 +15,7 @@ class CustomIterator(mx.io.NDArrayIter):
     def _getdata(self, data_source, start=None, end=None):
         """Load data from underlying arrays."""
         print(data_source)
+        input('test')
         assert start is not None or end is not None, 'should at least specify start or end'
         start = start if start is not None else 0
         if end is None:
