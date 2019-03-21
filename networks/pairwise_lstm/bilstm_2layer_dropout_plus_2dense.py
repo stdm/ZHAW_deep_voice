@@ -56,8 +56,6 @@ class bilstm_2layer_dropout(object):
         self.input = (segment_size, frequency)
         self.m = m
         self.s = s
-        print(n_classes)
-        input('wut')
         self.run_network()
 
     def create_net(self):
@@ -101,6 +99,8 @@ class bilstm_2layer_dropout(object):
 
         splitter = sts.SpeakerTrainSplit(0.2, 10)
         X_t, X_v, y_t, y_v = splitter(X, y)
+        print(y_t.shape)
+        input('test')
         train_iter = mx.io.NDArrayIter(np.squeeze(X_t), {'label':y_t}, self.batch_size, shuffle=True)
         test_iter = mx.io.NDArrayIter(np.squeeze(X_v), {'label':y_v}, self.batch_size, shuffle=True)
 
