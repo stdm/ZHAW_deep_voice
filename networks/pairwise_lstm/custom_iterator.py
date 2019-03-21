@@ -12,6 +12,24 @@ class CustomIterator(mx.io.NDArrayIter):
             desc.append(mx.io.DataDesc(k, tuple([self.batch_size] + list(v.shape[1:]) + [speakers]), v.dtype))
         return desc
 
+    def _getdata(self, data_source, start=None, end=None):
+        """Load data from underlying arrays."""
+        print(data_source)
+        assert start is not None or end is not None, 'should at least specify start or end'
+        start = start if start is not None else 0
+        if end is None:
+            end = data_source[0][1].shape[0] if data_source else 0
+        s = slice(start, end)
+        return [
+            x[1][s]
+            if isinstance(x[1], (np.ndarray, NDArray)) else
+            # h5py (only supports indices in increasing order)
+            array(x[1][sorted(self.idx[s])][[
+                list(self.idx[s]).index(i)
+                for i in sorted(self.idx[s])
+            ]]) for x in data_source
+        ]
+
     def getlabel(self):
         """Get label."""
         print(self.label[0])
@@ -30,6 +48,4 @@ class CustomIterator(mx.io.NDArrayIter):
                     seg_idx = randint(0, spect.shape[1] - segment_size)
                     Xb[j, 0] = spect[:, seg_idx:seg_idx + segment_size]
                 yield Xb, create_pairs(yb)
-        print(batch.shape)
-        input('test')
         return batch
