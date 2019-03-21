@@ -95,7 +95,7 @@ class bilstm_2layer_dropout(object):
         model = mx.symbol.Group(out_list)
         return model
 
-    def prep_iter(X, labels):
+    def prep_iter(self, X, labels):
         speakers = np.amax(labels) + 1
         Y = []
         for label in labels:
