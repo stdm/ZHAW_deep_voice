@@ -65,7 +65,7 @@ class bilstm_2layer_dropout(object):
         state1 = mx.sym.var('state1', init=mx.init.Normal(0.01))
         statecell1 = mx.sym.var('statecell1', init=mx.init.Normal(0.01))
         param1 = mx.sym.var('param1', init=mx.init.Normal(0.01))
-        lstm1 = mx.sym.RNN(data=data, parameters=param2, state=state1, state_cell=statecell1, mode='lstm', state_size=self.n_hidden1, num_layers=1)
+        lstm1 = mx.sym.RNN(data=data, parameters=param1, state=state1, state_cell=statecell1, mode='lstm', state_size=self.n_hidden1, num_layers=1)
         drop1 = mx.sym.Dropout(data=lstm1, p=0.5)
         state2 = mx.sym.var('state2', init=mx.init.Normal(0.01))
         statecell2 = mx.sym.var('statecell2', init=mx.init.Normal(0.01))
