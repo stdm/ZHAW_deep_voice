@@ -62,9 +62,13 @@ class bilstm_2layer_dropout(object):
 
     def create_net(self):
         data = mx.sym.var('data')
-        lstm1 = mx.sym.RNN(data=data, mode='lstm', state_size=self.n_hidden1, num_layers=1)
+        state1 = mx.sym.var('state1', init=mx.init.Normal(0.01))
+        statecell1 = mx.sym.var('statecell1', init=mx.init.Normal(0.01))
+        lstm1 = mx.sym.RNN(data=data, state=state1, state_cell=statecell1, mode='lstm', state_size=self.n_hidden1, num_layers=1)
         drop1 = mx.sym.Dropout(data=lstm1, p=0.5)
-        lstm2 = mx.sym.RNN(data=drop1, mode='lstm', state_size=self.n_hidden2, num_layers=1)
+        state1 = mx.sym.var('state2', init=mx.init.Normal(0.01))
+        statecell1 = mx.sym.var('statecell2', init=mx.init.Normal(0.01))
+        lstm2 = mx.sym.RNN(data=drop1, state=state2, state_cell=statecell2, mode='lstm', state_size=self.n_hidden2, num_layers=1)
         dense1 = mx.sym.FullyConnected(data=lstm2, num_hidden=self.n_classes * 10)
         drop2 = mx.sym.Dropout(data=dense1, p=0.25)
         embedding = mx.sym.FullyConnected(data=drop2, num_hidden=self.n_classes * 5)
