@@ -7,6 +7,7 @@ from .core import plot_saver as ps
 
 np.random.seed(1337)  # for reproducibility
 import mxnet as mx
+import numpy as np
 
 import sys
 import os
@@ -99,11 +100,8 @@ class bilstm_2layer_dropout(object):
 
         splitter = sts.SpeakerTrainSplit(0.2, 10)
         X_t, X_v, y_t, y_v = splitter(X, y)
-        print(X_t.shape)
-        print(y_t.shape)
-        input('show me tha shape')
-        train_iter = mx.io.NDArrayIter(X_t, {'label':y_t}, self.batch_size, shuffle=True)
-        test_iter = mx.io.NDArrayIter(X_v, {'label':y_v}, self.batch_size, shuffle=True)
+        train_iter = mx.io.NDArrayIter(np.squeeze(X_t), {'label':y_t}, self.batch_size, shuffle=True)
+        test_iter = mx.io.NDArrayIter(np.squeeze(X_v), {'label':y_v}, self.batch_size, shuffle=True)
 
         return train_iter, test_iter
 
