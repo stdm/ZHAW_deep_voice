@@ -44,7 +44,7 @@ from common.utils.paths import *
 class bilstm_2layer_dropout(object):
     def __init__(self, name, training_data, n_hidden1, n_hidden2, n_classes, n_10_batches,
                  segment_size, m, s, frequency=128):
-        self.ce_loss = True
+        self.ce_loss = False
         self.batch_size = 64
         self.per_batch_size = 32
         self.network_name = name
