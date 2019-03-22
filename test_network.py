@@ -5,13 +5,13 @@ data = mx.sym.var('data')
 
 lstm_cell1 = mx.rnn.LSTMCell(num_hidden=256)
 begin_state1 = lstm_cell1.begin_state()
-lstm_output1, lstm_states1 = lstm_cell(data, begin_state1)
+lstm_output1, lstm_states1 = lstm_cell1(data, begin_state1)
 
 drop1 = mx.sym.Dropout(data=lstm_output1, p=0.5)
 
 lstm_cell2 = mx.rnn.LSTMCell(num_hidden=256)
 begin_state2 = lstm_cell2.begin_state()
-lstm_output2, lstm_states2 = lstm_cell(data, begin_state2)
+lstm_output2, lstm_states2 = lstm_cell2(data, begin_state2)
 
 dense1 = mx.sym.FullyConnected(data=lstm_output2, num_hidden=100 * 10)
 drop2 = mx.sym.Dropout(data=dense1, p=0.25)
