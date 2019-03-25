@@ -47,11 +47,12 @@ class ArcFaceController(NetworkController):
         metric = mx.metric.CompositeEvalMetric([AccMetric()])
 
         #loss = mx.ndarray.SoftmaxOutput
-        #loss = gluon.loss.SoftmaxCrossEntropyLoss(weight = 1.0)
+        #loss = mx.gluon.loss.SoftmaxCrossEntropyLoss(weight = 1.0)
         loss = mx.gluon.loss.SoftmaxCrossEntropyLoss()
         num_epochs = 0
         total_time = 0
-        lowest_loss = 100000
+        lowest_train_loss = 100000
+        lowest_val_loss = 100000
         while num_epochs < self.max_epochs:
             #trainer = update_learning_rate(opt.lr, trainer, epoch, opt.lr_factor, lr_steps)
             tic = time.time()
@@ -83,23 +84,47 @@ class ArcFaceController(NetworkController):
                 mean_loss = 0.0
                 for L in Ls:
                     mean_loss += L.asnumpy().mean() / float(len(Ls))
-                if mean_loss < lowest_loss:
-                    lowest_loss = mean_loss
-                    name, acc = metric.get()
-                    print('Epoch[%d] Batch [%d]\tSpeed: %f samples/sec\t%s=%f\tLoss=%f'%(
-                          num_epochs, i, self.batch_size/(time.time()-btic), name[0], acc[0], lowest_loss))
-                    #metric.reset()
+                if mean_loss < lowest_train_loss:
+                    lowest_train_loss = mean_loss
                 btic = time.time()
 
             epoch_time = time.time()-tic
+            name, train_acc = metric.get()
+
+            for i, batch in enumerate(val_iter):
+                data = mx.gluon.utils.split_and_load(batch.data[0], ctx_list=ctx, batch_axis=0)
+                label = mx.gluon.utils.split_and_load(batch.label[0], ctx_list=ctx, batch_axis=0)
+                outputs = []
+                Ls = []
+                for x, y in zip(data, label):
+                    z = net(x, y)
+                    L = loss(z, y)
+                    #L = L/args.per_batch_size
+                    Ls.append(L)
+                    outputs.append(z)
+                    # store the loss and do backward after we have done forward
+                    # on all GPUs for better speed on multiple GPUs.
+                #trainer.step(batch.data[0].shape[0], ignore_stale_grad=True)
+                #trainer.step(args.ctx_num)
+                n = batch.data[0].shape[0]
+                #print(n,n)
+                trainer.step(n)
+                metric.update(label, outputs)
+
+                mean_loss = 0.0
+                for L in Ls:
+                    mean_loss += L.asnumpy().mean() / float(len(Ls))
+                if mean_loss < lowest_val_loss:
+                    lowest_val_loss = mean_loss
 
             # First epoch will usually be much slower than the subsequent epics,
             # so don't factor into the average
             if num_epochs > 0:
                 total_time = total_time + epoch_time
 
-            name, acc = metric.get()
-            print('[Epoch %d] time cost: %f\ttraining: %s=%f\tLowest Loss=%f'%(num_epochs, epoch_time, name[0], acc[0], lowest_loss))
+            name, val_acc = metric.get()
+            print('[Epoch %d] time cost: %f\ttrain: %s=%f\tL=%f\tval: %s=%f\tL=%f'%(
+                  num_epochs, epoch_time, name[0], train_acc[0], lowest_train_loss, name[0], train_acc[0], lowest_val_loss))
             num_epochs = num_epochs + 1
             #name, val_acc = test(ctx, val_data)
             #logger.info('[Epoch %d] validation: %s=%f, %s=%f'%(epoch, name[0], val_acc[0], name[1], val_acc[1]))
