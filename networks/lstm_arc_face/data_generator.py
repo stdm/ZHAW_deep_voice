@@ -2,6 +2,8 @@ import numpy as np
 import mxnet as mx
 import random
 
+from common.utils.pickler import load
+
 def _data_splitter(x, y, val_perc):
     zipped = zip(x, y)
     random.shuffle(zipped)
