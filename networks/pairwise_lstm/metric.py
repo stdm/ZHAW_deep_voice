@@ -11,10 +11,6 @@ class AccMetric(mx.metric.EvalMetric):
     self.count = 0
 
   def update(self, labels, preds):
-    print(labels)
-    input('ejb')
-    print(self)
-    input('ejb')
     self.count+=1
     label = labels[0]
     pred_label = preds[1]
