@@ -45,7 +45,7 @@ class ArcFaceBlock(mx.gluon.HybridBlock):
             self.last_fc_weight = self.params.get('last_fc_weight', shape=(self.n_classes, input_size))
 
     def hybrid_forward(self, F, x, label, last_fc_weight):
-        embeddings = x
+        embeddings = F.BlockGrad(x)
 
         norm_embeddings = F.L2Normalization(embeddings, mode='instance')
         norm_weights = F.L2Normalization(last_fc_weight, mode='instance')
