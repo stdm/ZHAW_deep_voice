@@ -15,7 +15,9 @@ class ArcFaceController(NetworkController):
         self.train_data_name = train_data_name
         self.network_file = self.name + self.train_data_name
         self.train_data_path = get_speaker_pickle(self.train_data_name)
-        raw_batch_size = input('Please enter the batch size you wish to use:\n')
+        raw_max_epochs = input('Please enter the number of epochs:')
+        raw_batch_size = input('Please enter the batch size you wish to use:')
+        self.max_epochs = int(raw_max_epochs)
         self.batch_size = int(raw_batch_size)
 
 
@@ -49,7 +51,8 @@ class ArcFaceController(NetworkController):
         #loss = gluon.loss.SoftmaxCrossEntropyLoss()
         num_epochs = 0
         total_time = 0
-        while num_epochs < 10:
+        lowest_loss = 100000
+        while num_epochs < self.max_epochs:
             #trainer = update_learning_rate(opt.lr, trainer, epoch, opt.lr_factor, lr_steps)
             tic = time.time()
             train_iter.reset()
@@ -75,16 +78,16 @@ class ArcFaceController(NetworkController):
                 n = batch.data[0].shape[0]
                 #print(n,n)
                 trainer.step(n)
-                metric.update(label, outputs)
-                if True:
-                #if i>0 and i%20==0:
+
+                mean_loss = 0.0
+                for L in Ls:
+                    mean_loss += L / float(self.batch_size)
+                if mean_loss < lowest_loss:
+                    metric.update(label, outputs)
+                    lowest_loss = mean_loss
                     name, acc = metric.get()
-                    if len(name)==2:
-                        print('Epoch[%d] Batch [%d]\tSpeed: %f samples/sec\t%s=%f, %s=%f'%(
-                                     num_epochs, i, self.batch_size/(time.time()-btic), name[0], acc[0], name[1], acc[1]))
-                    else:
-                        print('Epoch[%d] Batch [%d]\tSpeed: %f samples/sec\t%s=%f'%(
-                                     num_epochs, i, self.batch_size/(time.time()-btic), name[0], acc[0]))
+                    print('Epoch[%d] Batch [%d]\tSpeed: %f samples/sec\t%s=%f\tLoss=%f'%(
+                          num_epochs, i, self.batch_size/(time.time()-btic), name[0], acc[0], lowest_loss))
                     #metric.reset()
                 btic = time.time()
 
@@ -95,9 +98,8 @@ class ArcFaceController(NetworkController):
             if num_epochs > 0:
                 total_time = total_time + epoch_time
 
-            #name, acc = metric.get()
-            #logger.info('[Epoch %d] training: %s=%f, %s=%f'%(num_epochs, name[0], acc[0], name[1], acc[1]))
-            print('[Epoch %d] time cost: %f'%(num_epochs, epoch_time))
+            name, acc = metric.get()
+            print('[Epoch %d] time cost: %f\ttraining: %s=%f\tLowest Loss=%f'%(num_epochs, epoch_time, name[0], acc[0], lowest_loss))
             num_epochs = num_epochs + 1
             #name, val_acc = test(ctx, val_data)
             #logger.info('[Epoch %d] validation: %s=%f, %s=%f'%(epoch, name[0], val_acc[0], name[1], val_acc[1]))
