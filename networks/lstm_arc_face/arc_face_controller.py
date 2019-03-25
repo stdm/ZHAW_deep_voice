@@ -40,7 +40,8 @@ class ArcFaceController(NetworkController):
         net.initialize(mx.init.Xavier())
         net.collect_params().reset_ctx(ctx)
 
-        kv = mx.kv.create('device')
+        #kv = mx.kv.create('device')
+        kv = mx.kv.create('local')
         trainer = mx.gluon.Trainer(net.collect_params(), mx.optimizer.AdaDelta(), kvstore=kv)
 
         loss = mx.ndarray.SoftmaxOutput
