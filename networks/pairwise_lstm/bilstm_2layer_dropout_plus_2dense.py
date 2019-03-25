@@ -172,6 +172,8 @@ class bilstm_2layer_dropout(object):
                 results.append(acc2)
             return results
 
+        _cb = mx.callback.Speedometer(self.batch_size, 1)
+
         def _batch_callback(param):
             global_step[0]+=1
             mbatch = global_step[0]
