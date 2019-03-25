@@ -72,16 +72,14 @@ class ArcFaceController(NetworkController):
                 Ls = []
                 with mx.autograd.record():
                     for x, y in zip(data, label):
-                        with mx.autograd.train_mode():
-                            z = net(x)
-                            with mx.autograd.predict_mode():
-                                az = arc_block(z, y)
-                                L = loss(az, y)
-                                #L = L/args.per_batch_size
-                                Ls.append(L)
-                                outputs.append(az)
-                                # store the loss and do backward after we have done forward
-                                # on all GPUs for better speed on multiple GPUs.
+                        z = net(x)
+                        az = arc_block(z, y)
+                        L = loss(az, y)
+                        #L = L/args.per_batch_size
+                        Ls.append(L)
+                        outputs.append(az)
+                        # store the loss and do backward after we have done forward
+                        # on all GPUs for better speed on multiple GPUs.
                     mx.autograd.backward(Ls)
                 #trainer.step(batch.data[0].shape[0], ignore_stale_grad=True)
                 #trainer.step(args.ctx_num)
