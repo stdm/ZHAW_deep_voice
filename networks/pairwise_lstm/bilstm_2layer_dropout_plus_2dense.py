@@ -8,6 +8,7 @@ from .core import plot_saver as ps
 np.random.seed(1337)  # for reproducibility
 import mxnet as mx
 import numpy as np
+import logging
 
 from random import randint
 import sys
@@ -172,6 +173,7 @@ class bilstm_2layer_dropout(object):
                 results.append(acc2)
             return results
 
+        logging.basicConfig(level=logging.DEBUG)
         _cb = mx.callback.Speedometer(self.batch_size, 1)
 
         def _batch_callback(param):
