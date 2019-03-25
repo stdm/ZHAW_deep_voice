@@ -41,7 +41,7 @@ class ArcFaceBlock(mx.gluon.HybridBlock):
         self.n_classes = n_classes
         with self.name_scope():
             self.body = nn.HybridSequential(prefix='')
-            self.last_fc_weight = self.params.get('last_fc_weight', shape=(self.n_classes, input_size))
+            self.last_fc_weight = self.params.get('last_fc_weight', shape=(self.n_classes, input_size), grad_req='null')
 
     def hybrid_forward(self, F, x, label, last_fc_weight):
         embeddings = x
