@@ -34,6 +34,7 @@ from common.utils.paths import *
 # from networks.flow_me.me_controller import MEController
 # from networks.lu_vo.luvo_controller import LuvoController
 # from networks.pairwise_kldiv.kldiv_controller import KLDivController
+from networks.lstm_arc_face.arc_face_controller import ArcFaceController
 from networks.pairwise_lstm.lstm_controller import LSTMController
 from networks.pairwise_lstm_vox.lstm_controller import LSTMVOX2Controller
 
@@ -53,10 +54,10 @@ DEFAULT_SEG_SIZE = 15
 DEFAULT_VEC_SIZE = 512
 
 class Controller(NetworkController):
-    def __init__(self, 
-                 setup=DEFAULT_SETUP, network=DEFAULT_NETWORK, train=DEFAULT_TRAIN, test=DEFAULT_TEST, 
-                 clear=DEFAULT_CLEAR, debug=DEFAULT_DEBUG, plot=DEFAULT_PLOT, best=DEFAULT_BEST, 
-                 val_number=DEFAULT_VAL_NUMBER, out_layer=DEFAULT_OUT_LAYER, seg_size=DEFAULT_SEG_SIZE, 
+    def __init__(self,
+                 setup=DEFAULT_SETUP, network=DEFAULT_NETWORK, train=DEFAULT_TRAIN, test=DEFAULT_TEST,
+                 clear=DEFAULT_CLEAR, debug=DEFAULT_DEBUG, plot=DEFAULT_PLOT, best=DEFAULT_BEST,
+                 val_number=DEFAULT_VAL_NUMBER, out_layer=DEFAULT_OUT_LAYER, seg_size=DEFAULT_SEG_SIZE,
                  vec_size=DEFAULT_VEC_SIZE):
         super().__init__("Front", "speakers_40_clustering_vs_reynolds")
         self.setup = setup
@@ -117,6 +118,7 @@ class Controller(NetworkController):
         controller_dict = {
             'pairwise_lstm_vox2': [LSTMVOX2Controller(self.out_layer, self.seg_size, self.vec_size)],
             'pairwise_lstm': [LSTMController(self.out_layer, self.seg_size, self.vec_size)],
+            'arc_face': [ArcFaceController('speakers_100_50w_50m_not_reynolds_cluster', 'speakers_40_clustering_vs_reynolds')],
 #            'pairwise_kldiv': [KLDivController()],
 #            'flow_me': [MEController(self.clear, self.debug, False)],
 #            'luvo': [LuvoController()],
@@ -165,15 +167,15 @@ if __name__ == '__main__':
     # Parse console Args
     parser = argparse.ArgumentParser(description='Controller suite for Speaker clustering')
     # add all arguments and provide descriptions for them
-    parser.add_argument('-setup', dest='setup', action='store_true', 
+    parser.add_argument('-setup', dest='setup', action='store_true',
                         help='Run project setup.')
     parser.add_argument('-n', dest='network', default=DEFAULT_NETWORK,
                         help='The network to use for training or analysis.')
-    parser.add_argument('-train', dest='train', action='store_true', 
+    parser.add_argument('-train', dest='train', action='store_true',
                         help='Train the specified network.')
-    parser.add_argument('-test', dest='test', action='store_true', 
+    parser.add_argument('-test', dest='test', action='store_true',
                         help='Test the specified network.')
-    parser.add_argument('-clear', dest='clear', action='store_true', 
+    parser.add_argument('-clear', dest='clear', action='store_true',
                         help='Clean directories before starting network.')
     parser.add_argument('-debug', dest='debug', action='store_true',
                         help='Set loglevel for TensorFlow and Logger to debug')
