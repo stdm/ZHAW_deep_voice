@@ -106,9 +106,11 @@ class ArcFaceController(NetworkController):
                 outputs = []
                 Ls = []
                 for x, y in zip(data, label):
-                    z, L1, L2 = net(x, y)
-                    Ls.append(L1)
-                    outputs.append(z)
+                    z = net(x)
+                    az = arc_block(z, y)
+                    L = loss(az, y)
+                    Ls.append(L)
+                    outputs.append(az)
                 metric.update(label, outputs)
 
                 mean_loss = 0.0
