@@ -34,11 +34,12 @@ class NetworkBlock(mx.gluon.HybridBlock):
 
 
 class ArcFaceBlock(mx.gluon.HybridBlock):
-    def __init__(self, n_classes, **kwargs):
+    def __init__(self, n_classes, batch_size, **kwargs):
         super(ArcFaceBlock, self).__init__(**kwargs)
         self.s = 64
         self.m = 0.5
         self.n_classes = n_classes
+        self.batch_size = batch_size
         with self.name_scope():
             self.body = nn.HybridSequential(prefix='')
 
@@ -68,4 +69,10 @@ class ArcFaceBlock(mx.gluon.HybridBlock):
         body = F.broadcast_mul(gt_one_hot, diff)
         last_fc = last_fc + body
         last_fc = last_fc * self.s
-        return last_fc
+
+        body = F.SoftmaxActivation(data=last_fc)
+        body = F.log(body)
+        _label = F.one_hot(label, depth = self.n_classes, on_value = -1.0, off_value = 0.0)
+        body = body*_label
+        ce_loss = F.sum(body)/self.batch_size
+        return last_fc, ce_loss

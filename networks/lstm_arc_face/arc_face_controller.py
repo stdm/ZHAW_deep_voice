@@ -47,8 +47,6 @@ class ArcFaceController(NetworkController):
         metric = mx.metric.CompositeEvalMetric([AccMetric()])
 
         #loss = mx.ndarray.SoftmaxOutput
-        #loss = mx.gluon.loss.SoftmaxCrossEntropyLoss(weight = 1.0)
-        loss = mx.gluon.loss.SoftmaxCrossEntropyLoss()
         num_epochs = 0
         total_time = 0
         lowest_train_loss = 100000
@@ -67,15 +65,10 @@ class ArcFaceController(NetworkController):
                 Ls = []
                 with mx.autograd.record():
                     for x, y in zip(data, label):
-                        z = net(x, y)
-                        L = loss(z, y)
+                        z, L = net(x, y)
                         #L = L/args.per_batch_size
                         Ls.append(L)
                         outputs.append(z)
-                        print(z)
-                        print(y)
-                        print(L)
-                        input('next')
                         # store the loss and do backward after we have done forward
                         # on all GPUs for better speed on multiple GPUs.
                     mx.autograd.backward(Ls)
