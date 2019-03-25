@@ -96,8 +96,7 @@ class ArcFaceController(NetworkController):
                 outputs = []
                 Ls = []
                 for x, y in zip(data, label):
-                    z = net(x, y)
-                    L = loss(z, y)
+                    z, L = net(x, y)
                     Ls.append(L)
                     outputs.append(z)
                 metric.update(label, outputs)
