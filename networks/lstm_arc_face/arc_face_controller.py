@@ -25,7 +25,7 @@ class ArcFaceController(NetworkController):
 
         ctx = []
         cvd = os.environ['CUDA_VISIBLE_DEVICES'].strip()
-        if len(cvd)>4:
+        if len(cvd)>0:
             for i in range(len(cvd.split(','))):
                 ctx.append(mx.gpu(i))
         if len(ctx)==0:
