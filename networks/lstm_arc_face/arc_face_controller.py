@@ -65,9 +65,9 @@ class ArcFaceController(NetworkController):
                 Ls = []
                 with mx.autograd.record():
                     for x, y in zip(data, label):
-                        z, L = net(x, y)
+                        z, L1, L2 = net(x, y)
                         #L = L/args.per_batch_size
-                        Ls.append(L)
+                        Ls.append(L1)
                         outputs.append(z)
                         # store the loss and do backward after we have done forward
                         # on all GPUs for better speed on multiple GPUs.
@@ -96,8 +96,8 @@ class ArcFaceController(NetworkController):
                 outputs = []
                 Ls = []
                 for x, y in zip(data, label):
-                    z, L = net(x, y)
-                    Ls.append(L)
+                    z, L1, L2 = net(x, y)
+                    Ls.append(L1)
                     outputs.append(z)
                 metric.update(label, outputs)
 
