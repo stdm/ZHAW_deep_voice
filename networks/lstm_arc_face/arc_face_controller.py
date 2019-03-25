@@ -54,8 +54,6 @@ class ArcFaceController(NetworkController):
         #loss = mx.ndarray.SoftmaxOutput
         num_epochs = 0
         total_time = 0
-        lowest_train_loss = 100000
-        lowest_val_loss = 100000
         while num_epochs < self.max_epochs:
             #trainer = update_learning_rate(opt.lr, trainer, epoch, opt.lr_factor, lr_steps)
             tic = time.time()
@@ -63,6 +61,8 @@ class ArcFaceController(NetworkController):
             val_iter.reset()
             metric.reset()
             btic = time.time()
+            lowest_train_loss = 100000
+            lowest_val_loss = 100000
             for i, batch in enumerate(train_iter):
                 data = mx.gluon.utils.split_and_load(batch.data[0], ctx_list=ctx, batch_axis=0)
                 label = mx.gluon.utils.split_and_load(batch.label[0], ctx_list=ctx, batch_axis=0)
