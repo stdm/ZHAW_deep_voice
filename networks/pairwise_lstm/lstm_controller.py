@@ -14,7 +14,7 @@ from common.utils.pickler import load
 from .bilstm_2layer_dropout_plus_2dense import bilstm_2layer_dropout
 from .core.data_gen import generate_test_data
 from .core.pairwise_kl_divergence import pairwise_kl_divergence
-
+from common.utils.load_config import *
 
 class LSTMController(NetworkController):
     def __init__(self, out_layer, seg_size, vec_size):
@@ -25,14 +25,15 @@ class LSTMController(NetworkController):
         self.vec_size = vec_size
 
     def train_network(self):
+        config = load_config(None, join(get_common(), 'config.cfg'))
         bilstm_2layer_dropout(
-            self.network_file, 
-            'speakers_100_50w_50m_not_reynolds_cluster',
-            'speakers_200_100m_100f_evaluation_cluster',
-            n_hidden1=256, 
-            n_hidden2=256, 
-            n_classes=100, 
-            n_10_batches=1000,
+            self.network_file,
+            config.get('train', 'pickle'),
+            config.get('train', 'val_pickle'),
+            config.get('pairwise_lstm', 'n_hidden1'),
+            config.get('pairwise_lstm', 'n_hidden2'),
+            config.get('pairwise_lstm', 'n_classes'),
+            config.get('pairwise_lstm', 'n_10_batches'),
             segment_size=self.seg_size
         )
 

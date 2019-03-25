@@ -28,6 +28,7 @@ from common.analysis.analysis import *
 from common.extrapolation.setup import setup_suite, is_suite_setup
 from common.network_controller import NetworkController
 from common.utils.paths import *
+from common.utils.load_config import *
 
 # Controllers
 # -------------------
@@ -163,6 +164,7 @@ if __name__ == '__main__':
     # Parse console Args
     parser = argparse.ArgumentParser(description='Controller suite for Speaker clustering')
     # add all arguments and provide descriptions for them
+    """
     parser.add_argument('-setup', dest='setup', action='store_true', 
                         help='Run project setup.')
     parser.add_argument('-n', dest='network', default=DEFAULT_NETWORK,
@@ -190,6 +192,13 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     print(args)
+    """
 
-    controller = Controller(args.setup, args.network, args.train, args.test, args.clear, args.debug, args.plot, args.best, args.validation_number, int(args.out_layer), int(args.seg_size), int(args.vec_size))
+    config = load_config(None, join(get_common(), 'config.cfg'))
+
+    controller = Controller(config.get('common', 'setup'), config.get('common', 'network'),
+                            config.get('common', 'train'), config.get('common', 'test'), config.get('common', 'clear'),
+                            config.get('common', 'debug'), config.get('common', 'plot'), config.get('common', 'best'),
+                            config.getint('common', 'val_number'), config.getint('common', 'out_layer'),
+                            config.getint('common', 'seg_size'), config.getint('common', 'vec_size'))
     controller.run()
