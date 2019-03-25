@@ -18,7 +18,7 @@ def _data_splitter(x, y, val_perc):
 def load_data(data_path, batch_size, val_perc=0.2):
     x, y, speaker_names = load(data_path)
 
-    x_t, y_t, x_v, y_v = data_splitter(x, y, val_perc)
+    x_t, y_t, x_v, y_v = _data_splitter(x, y, val_perc)
     num_speakers = np.amax(y) + 1
 
     train_iter = mx.io.NDArrayIter(data=np.squeeze(x_t), label=np.array(y_t), batch_size=batch_size)
