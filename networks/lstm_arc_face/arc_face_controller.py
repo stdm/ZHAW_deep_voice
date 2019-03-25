@@ -44,11 +44,11 @@ class ArcFaceController(NetworkController):
         #kv = mx.kv.create('local')
         trainer = mx.gluon.Trainer(net.collect_params(), mx.optimizer.AdaDelta(), kvstore=kv)
 
-        loss = mx.ndarray.SoftmaxOutput
         metric = mx.metric.CompositeEvalMetric([AccMetric()])
 
+        #loss = mx.ndarray.SoftmaxOutput
         #loss = gluon.loss.SoftmaxCrossEntropyLoss(weight = 1.0)
-        #loss = gluon.loss.SoftmaxCrossEntropyLoss()
+        loss = mx.gluon.loss.SoftmaxCrossEntropyLoss()
         num_epochs = 0
         total_time = 0
         lowest_loss = 100000
