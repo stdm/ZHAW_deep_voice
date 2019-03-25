@@ -71,7 +71,7 @@ class ArcFaceBlock(mx.gluon.HybridBlock):
             last_fc = last_fc + body
             last_fc = last_fc * self.s
 
-            ce_loss1 = mx.symbol.softmax_cross_entropy(data=last_fc, label = label, name='ce_loss')
+            ce_loss1 = F.softmax_cross_entropy(data=last_fc, label = label, name='ce_loss')
 
             body = F.SoftmaxActivation(data=last_fc)
             body = F.log(body)
