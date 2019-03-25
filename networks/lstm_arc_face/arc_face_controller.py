@@ -79,9 +79,8 @@ class ArcFaceController(NetworkController):
                 #print(n,n)
                 trainer.step(n)
 
-                mean_loss = 0.0
-                for L in Ls:
-                    print(L.asnumpy().mean())
+                mean_loss = Ls.asnumpy().mean()
+                print(Ls.asnumpy().mean())
                     mean_loss += L.asnumpy().mean()
                 if mean_loss < lowest_loss:
                     metric.update(label, outputs)
