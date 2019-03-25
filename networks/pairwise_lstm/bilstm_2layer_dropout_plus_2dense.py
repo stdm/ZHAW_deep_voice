@@ -163,57 +163,8 @@ class bilstm_2layer_dropout(object):
         if not os.path.exists(prefix_dir):
             os.makedirs(prefix_dir)
 
-        def ver_test(nbatch):
-            results = []
-            for i in range(len(ver_list)):
-                acc1, std1, acc2, std2, xnorm, embeddings_list = verification.test(ver_list[i], model, self.batch_size, 10, None, None)
-                print('[%s][%d]XNorm: %f' % (ver_name_list[i], nbatch, xnorm))
-                #print('[%s][%d]Accuracy: %1.5f+-%1.5f' % (ver_name_list[i], nbatch, acc1, std1))
-                print('[%s][%d]Accuracy-Flip: %1.5f+-%1.5f' % (ver_name_list[i], nbatch, acc2, std2))
-                results.append(acc2)
-            return results
-
-        logging.basicConfig(level=logging.DEBUG)
+        logging.getLogger().setLevel(logging.INFO)
         _cb = mx.callback.Speedometer(self.batch_size, 1)
-
-        def _batch_callback(param):
-            global_step[0]+=1
-            mbatch = global_step[0]
-            _cb(param)
-            if mbatch%100==0:
-                print('lr-batch-epoch:', param.nbatch, param.epoch)
-
-            if mbatch>=0:
-                acc_list = ver_test(mbatch)
-                save_step[0]+=1
-                msave = save_step[0]
-                do_save = False
-                is_highest = False
-                if len(acc_list)>0:
-                    #lfw_score = acc_list[0]
-                    #if lfw_score>highest_acc[0]:
-                    #  highest_acc[0] = lfw_score
-                    #  if lfw_score>=0.998:
-                    #    do_save = True
-                    score = sum(acc_list)
-                    if acc_list[-1]>=highest_acc[-1]:
-                        if acc_list[-1]>highest_acc[-1]:
-                            is_highest = True
-                        else:
-                            if score>=highest_acc[0]:
-                                is_highest = True
-                                highest_acc[0] = score
-                        highest_acc[-1] = acc_list[-1]
-                        #if lfw_score>=0.99:
-                        #  do_save = True
-                if is_highest:
-                    do_save = True
-
-                if do_save:
-                    print('saving', msave)
-                    arg, aux = model.get_params()
-                    mx.model.save_checkpoint(prefix, msave, model.symbol, arg, aux)
-                print('[%d]Accuracy-Highest: %1.5f'%(mbatch, highest_acc[-1]))
 
         model.fit(train_iter,
                   begin_epoch        = 0,
