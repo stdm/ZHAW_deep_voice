@@ -6,12 +6,14 @@ from common.network_controller import NetworkController
 from .data_generator import load_data
 from .model import ArcFaceBlock
 from .metrics import AccMetric
+from common.utils.paths import *
 
 class ArcFaceController(NetworkController):
     def __init__(self, train_data_name, val_data_name):
         super().__init__("arc_face", val_data_name)
-        self.network_file = self.name + train_data_name
         self.train_data_name = train_data_name
+        self.network_file = self.name + self.train_data_name
+        self.train_data_path = get_speaker_pickle(self.train_data_name)
         self.batch_size = 64
 
 
@@ -30,7 +32,7 @@ class ArcFaceController(NetworkController):
         else:
             print('gpu num:', len(ctx))
 
-        train_iter, val_iter, num_speakers = load_data(self.train_data_name, self.batch_size)
+        train_iter, val_iter, num_speakers = load_data(self.train_data_path, self.batch_size)
 
         net = ArcFaceBlock(num_speakers)
         net.hybridize()
