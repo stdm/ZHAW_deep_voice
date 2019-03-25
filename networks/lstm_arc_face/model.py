@@ -51,19 +51,20 @@ class ArcFaceBlock(mx.gluon.HybridBlock):
         return feat
 
     def hybrid_forward(self, F, x, label, last_fc_weight):
-        embedding = self.body(x)
+        embeddings = self.body(x)
 
-        norm_embeddings = F.L2Normalization(embeddings, mode='instance') * self.s
+        norm_embeddings = F.L2Normalization(embeddings, mode='instance')
         norm_weights = F.L2Normalization(last_fc_weight, mode='instance')
         last_fc = F.FullyConnected(norm_embeddings, norm_weights, no_bias = True,
                                    num_hidden=self.n_classes, name='last_fc')
 
         original_target_logit = F.pick(last_fc, label, axis=1)
-        theta = F.arccos(original_target_logit / self.s)
+        theta = F.arccos(original_target_logit)
         marginal_target_logit = F.cos(theta + self.m)
         gt_one_hot = F.one_hot(label, depth = self.n_classes, on_value = 1.0, off_value = 0.0)
         diff = marginal_target_logit - original_target_logit
         diff = F.expand_dims(diff, 1)
         body = F.broadcast_mul(gt_one_hot, diff)
         last_fc = last_fc + body
+        last_fc = last_fc * self.s
         return last_fc
