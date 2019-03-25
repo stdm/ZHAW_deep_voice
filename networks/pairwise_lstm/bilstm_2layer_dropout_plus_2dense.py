@@ -12,11 +12,6 @@ import numpy as np
 from random import randint
 import sys
 import os
-import keras
-from keras.models import Sequential
-from keras.layers import Dense, Dropout, Activation
-from keras.layers import CuDNNLSTM
-from keras.layers.wrappers import Bidirectional
 from .core import data_gen as dg
 from .core import pairwise_kl_divergence as kld
 from .arc_face_loss import ArcFace
