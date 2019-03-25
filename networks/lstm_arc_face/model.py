@@ -34,11 +34,12 @@ class NetworkBlock(mx.gluon.HybridBlock):
 
 
 class ArcFaceBlock(mx.gluon.HybridBlock):
-    def __init__(self, n_classes, input_size, **kwargs):
+    def __init__(self, n_classes, input_size, batch_size, **kwargs):
         super(ArcFaceBlock, self).__init__(**kwargs)
         self.s = 64
         self.m = 0.5
         self.n_classes = n_classes
+        self.batch_size = batch_size
         with self.name_scope():
             self.body = nn.HybridSequential(prefix='')
             self.last_fc_weight = self.params.get('last_fc_weight', shape=(self.n_classes, input_size), grad_req='null')
@@ -52,12 +53,18 @@ class ArcFaceBlock(mx.gluon.HybridBlock):
                                        num_hidden=self.n_classes, name='last_fc')
 
         original_target_logit = F.pick(last_fc, label, axis=1)
-        theta = F.arccos(original_target_logit)
+        theta = F.arccos(original_target_logit / self.s)
         marginal_target_logit = F.cos(theta + self.m)
         gt_one_hot = F.one_hot(label, depth = self.n_classes, on_value = 1.0, off_value = 0.0)
         diff = marginal_target_logit - original_target_logit
+        diff = diff * self.s
         diff = F.expand_dims(diff, 1)
         body = F.broadcast_mul(gt_one_hot, diff)
         last_fc = last_fc + body
-        last_fc = last_fc * self.s
-        return last_fc
+
+        body2 = F.SoftmaxActivation(data=last_fc)
+        body2 = F.log(body2)
+        _label = F.one_hot(label, depth = self.n_classes, on_value = -1.0, off_value = 0.0)
+        body2 = body2*_label
+        ce_loss = F.sum(body2)/self.batch_size
+        return last_fc, ce_loss

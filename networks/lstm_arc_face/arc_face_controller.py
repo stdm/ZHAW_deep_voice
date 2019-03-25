@@ -40,12 +40,10 @@ class ArcFaceController(NetworkController):
         net.initialize(mx.init.Xavier())
         net.collect_params().reset_ctx(ctx)
 
-        arc_block = ArcFaceBlock(num_speakers, net.output_size)
+        arc_block = ArcFaceBlock(num_speakers, net.output_size, self.batch_size)
         arc_block.hybridize()
         arc_block.initialize(mx.init.Xavier())
         arc_block.collect_params().reset_ctx(ctx)
-
-        loss = mx.gluon.loss.SoftmaxCrossEntropyLoss()
 
         kv = mx.kv.create('device')
         #kv = mx.kv.create('local')
@@ -73,8 +71,7 @@ class ArcFaceController(NetworkController):
                 with mx.autograd.record():
                     for x, y in zip(data, label):
                         z = net(x)
-                        az = arc_block(z, y)
-                        L = loss(az, y)
+                        az, L = arc_block(z, y)
                         #L = L/args.per_batch_size
                         Ls.append(L)
                         outputs.append(az)
@@ -106,8 +103,7 @@ class ArcFaceController(NetworkController):
                 Ls = []
                 for x, y in zip(data, label):
                     z = net(x)
-                    az = arc_block(z, y)
-                    L = loss(az, y)
+                    az, L = arc_block(z, y)
                     Ls.append(L)
                     outputs.append(az)
                 metric.update(label, outputs)
