@@ -132,3 +132,5 @@ class ArcFaceController(NetworkController):
             #save_checkpoint(epoch, val_acc[0], best_acc)
         if num_epochs > 1:
             print('Average epoch time: {}'.format(float(total_time)/(num_epochs - 1)))
+    file_name = "net.params"
+    net.save_parameters(file_name)

@@ -163,7 +163,7 @@ class bilstm_2layer_dropout(object):
 
         model.fit(train_iter,
                   begin_epoch        = 0,
-                  num_epoch          = 1000,
+                  num_epoch          = 10000,
                   eval_data          = test_iter,
                   eval_metric        = eval_metrics,
                   kvstore            = 'device',
