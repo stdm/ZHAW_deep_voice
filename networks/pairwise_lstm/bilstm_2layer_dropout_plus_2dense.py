@@ -223,7 +223,7 @@ class bilstm_2layer_dropout(object):
                   #optimizer_params   = optimizer_params,
                   initializer        = initializer,
                   allow_missing      = True,
-                  batch_end_callback = _batch_callback)
+                  batch_end_callback = _cb)
 
         arg, aux = model.get_params()
         mx.model.save_checkpoint(prefix, global_step[0], model.symbol, arg, aux)
