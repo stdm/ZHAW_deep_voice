@@ -11,7 +11,6 @@ from common.utils.paths import *
 from common.utils.pickler import load
 from .bilstm_2layer_dropout_plus_2dense import bilstm_2layer_dropout
 from .core.data_gen import generate_test_data
-from .core.pairwise_kl_divergence import pairwise_kl_divergence
 
 
 class LSTMController(NetworkController):
