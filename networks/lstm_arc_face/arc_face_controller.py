@@ -58,6 +58,18 @@ class ArcFaceController(NetworkController):
             metric.reset()
             btic = time.time()
             for i, batch in enumerate(train_iter):
+                print('batch:')
+                print(batch)
+                print()
+                print('data:')
+                print(batch.data.shape)
+                print(batch.data)
+                print()
+                print('label:')
+                print(batch.label.shape)
+                print(batch.label)
+                print()
+                input('continue')
                 data = mx.gluon.utils.split_and_load(batch.data[0], ctx_list=ctx, batch_axis=0)
                 label = mx.gluon.utils.split_and_load(batch.label[0], ctx_list=ctx, batch_axis=0)
                 outputs = []
