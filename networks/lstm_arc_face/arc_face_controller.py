@@ -78,12 +78,12 @@ class ArcFaceController(NetworkController):
                 n = batch.data[0].shape[0]
                 #print(n,n)
                 trainer.step(n)
+                metric.update(label, outputs)
 
                 mean_loss = 0.0
                 for L in Ls:
                     mean_loss += L.asnumpy().mean() / float(len(Ls))
                 if mean_loss < lowest_loss:
-                    metric.update(label, outputs)
                     lowest_loss = mean_loss
                     name, acc = metric.get()
                     print('Epoch[%d] Batch [%d]\tSpeed: %f samples/sec\t%s=%f\tLoss=%f'%(
