@@ -35,7 +35,7 @@ class ArcFaceController(NetworkController):
 
         train_iter, val_iter, num_speakers = load_data(self.train_data_path, self.batch_size)
 
-        net = ArcFaceBlock(num_speakers)
+        net = ArcFaceBlock(num_speakers, self.batch_size)
         net.hybridize()
         net.initialize(mx.init.Xavier())
         net.collect_params().reset_ctx(ctx)
