@@ -5,7 +5,7 @@ import os
 
 from common.network_controller import NetworkController
 from .data_generator import load_data
-from .model import ArcFaceBlock
+from .model import ArcFaceBlock, NetworkBlock
 from .metrics import AccMetric
 from common.utils.paths import *
 
@@ -35,10 +35,17 @@ class ArcFaceController(NetworkController):
 
         train_iter, val_iter, num_speakers = load_data(self.train_data_path, self.batch_size)
 
-        net = ArcFaceBlock(num_speakers, self.batch_size)
+        net = NetworkBlock(num_speakers)
         net.hybridize()
         net.initialize(mx.init.Xavier())
         net.collect_params().reset_ctx(ctx)
+
+        arc_block = ArcFaceBlock(num_speakers, net.output_size)
+        arc_block.hybridize()
+        arc_block.initialize(mx.init.Xavier())
+        arc_block.collect_params().reset_ctx(ctx)
+
+        loss = mx.gluon.loss.SoftmaxCrossEntropyLoss()
 
         kv = mx.kv.create('device')
         #kv = mx.kv.create('local')
@@ -65,10 +72,13 @@ class ArcFaceController(NetworkController):
                 Ls = []
                 with mx.autograd.record():
                     for x, y in zip(data, label):
-                        z, L1, L2 = net(x, y)
+                        z = net(x)
+                        with mx.autograd.pause():
+                            az = arc_block(z, y)
+                            L = loss(az, y)
                         #L = L/args.per_batch_size
-                        Ls.append(L1)
-                        outputs.append(z)
+                        Ls.append(L)
+                        outputs.append(az)
                         # store the loss and do backward after we have done forward
                         # on all GPUs for better speed on multiple GPUs.
                     mx.autograd.backward(Ls)

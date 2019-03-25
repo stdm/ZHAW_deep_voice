@@ -34,48 +34,30 @@ class NetworkBlock(mx.gluon.HybridBlock):
 
 
 class ArcFaceBlock(mx.gluon.HybridBlock):
-    def __init__(self, n_classes, batch_size, **kwargs):
+    def __init__(self, n_classes, input_size, **kwargs):
         super(ArcFaceBlock, self).__init__(**kwargs)
         self.s = 64
         self.m = 0.5
         self.n_classes = n_classes
-        self.batch_size = batch_size
         with self.name_scope():
             self.body = nn.HybridSequential(prefix='')
-
-            network_block = NetworkBlock(self.n_classes)
-            self.body.add(network_block)
-            self.last_fc_weight = self.params.get('last_fc_weight', shape=(self.n_classes, network_block.output_size))
-
-    def feature(self, x):
-        feat = self.body(x)
-        return feat
+            self.last_fc_weight = self.params.get('last_fc_weight', shape=(self.n_classes, input_size))
 
     def hybrid_forward(self, F, x, label, last_fc_weight):
-        #embeddings = x
-        embeddings = self.body(x)
-        with mx.autograd.pause():
+        embeddings = x
 
-            norm_embeddings = F.L2Normalization(embeddings, mode='instance')
-            norm_weights = F.L2Normalization(last_fc_weight, mode='instance')
-            last_fc = F.FullyConnected(norm_embeddings, norm_weights, no_bias = True,
+        norm_embeddings = F.L2Normalization(embeddings, mode='instance')
+        norm_weights = F.L2Normalization(last_fc_weight, mode='instance')
+        last_fc = F.FullyConnected(norm_embeddings, norm_weights, no_bias = True,
                                        num_hidden=self.n_classes, name='last_fc')
 
-            original_target_logit = F.pick(last_fc, label, axis=1)
-            theta = F.arccos(original_target_logit)
-            marginal_target_logit = F.cos(theta + self.m)
-            gt_one_hot = F.one_hot(label, depth = self.n_classes, on_value = 1.0, off_value = 0.0)
-            diff = marginal_target_logit - original_target_logit
-            diff = F.expand_dims(diff, 1)
-            body = F.broadcast_mul(gt_one_hot, diff)
-            last_fc = last_fc + body
-            last_fc = last_fc * self.s
-
-            ce_loss1 = F.SoftmaxCrossEntropyLoss(data=last_fc, label = label)
-
-            body = F.SoftmaxActivation(data=last_fc)
-            body = F.log(body)
-            _label = F.one_hot(label, depth = self.n_classes, on_value = -1.0, off_value = 0.0)
-            body = body*_label
-            ce_loss2 = F.sum(body)/self.batch_size
-            return last_fc, ce_loss1, ce_loss2
+        original_target_logit = F.pick(last_fc, label, axis=1)
+        theta = F.arccos(original_target_logit)
+        marginal_target_logit = F.cos(theta + self.m)
+        gt_one_hot = F.one_hot(label, depth = self.n_classes, on_value = 1.0, off_value = 0.0)
+        diff = marginal_target_logit - original_target_logit
+        diff = F.expand_dims(diff, 1)
+        body = F.broadcast_mul(gt_one_hot, diff)
+        last_fc = last_fc + body
+        last_fc = last_fc * self.s
+        return last_fc
