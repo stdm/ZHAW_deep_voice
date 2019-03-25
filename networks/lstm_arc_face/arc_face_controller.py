@@ -67,13 +67,15 @@ class ArcFaceController(NetworkController):
                 Ls = []
                 with mx.autograd.record():
                     for x, y in zip(data, label):
-                        embeddings = net.feature(x)
-                        with mx.autograd.pause():
-                            z = net(embeddings, y)
-                            L = loss(z, y)
-                            #L = L/args.per_batch_size
-                            Ls.append(L)
-                            outputs.append(z)
+                        z = net(x, y)
+                        L = loss(z, y)
+                        #L = L/args.per_batch_size
+                        Ls.append(L)
+                        outputs.append(z)
+                        print(z)
+                        print(y)
+                        print(L)
+                        input('next')
                         # store the loss and do backward after we have done forward
                         # on all GPUs for better speed on multiple GPUs.
                     mx.autograd.backward(Ls)
