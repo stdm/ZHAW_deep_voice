@@ -91,14 +91,9 @@ class bilstm_2layer_dropout(object):
             body = mx.symbol.log(body)
             _label = mx.sym.one_hot(gt_label, depth = self.n_classes, on_value = -1.0, off_value = 0.0)
             body = body*_label
-            ce_loss = mx.symbol.sum(body)/self.per_batch_size
+            ce_loss = mx.symbol.sum(body)/self.batch_size
             out_list.append(mx.symbol.BlockGrad(ce_loss))
         model = mx.symbol.Group(out_list)
-        print()
-        print()
-        print()
-        #mx.viz.print_summary(model, shape={'data':(32, 128, 800), 'softmax_label':(32,)})
-        input('test')
         return model
 
     def prep_iter(self, X, labels):
@@ -168,7 +163,7 @@ class bilstm_2layer_dropout(object):
 
         model.fit(train_iter,
                   begin_epoch        = 0,
-                  num_epoch          = 10,
+                  num_epoch          = 1000,
                   eval_data          = test_iter,
                   eval_metric        = eval_metrics,
                   kvstore            = 'device',
