@@ -39,10 +39,10 @@ class ArcFaceController(NetworkController):
         net.initialize(mx.init.Xavier())
         net.collect_params().reset_ctx(ctx)
 
-        trainer = gluon.Trainer(net.collect_params(), mx.optimizer.AdaDelta(), kvstore=kv)
+        trainer = mx.gluon.Trainer(net.collect_params(), mx.optimizer.AdaDelta(), kvstore=kv)
 
         loss = mx.ndarray.SoftmaxOutput
-        metric = mxnet.metric.CompositeEvalMetric([AccMetric()])
+        metric = mx.metric.CompositeEvalMetric([AccMetric()])
 
         #loss = gluon.loss.SoftmaxCrossEntropyLoss(weight = 1.0)
         #loss = gluon.loss.SoftmaxCrossEntropyLoss()
@@ -53,11 +53,11 @@ class ArcFaceController(NetworkController):
             metric.reset()
             btic = time.time()
             for i, batch in enumerate(train_iter):
-                data = gluon.utils.split_and_load(batch.data[0], ctx_list=ctx, batch_axis=0)
-                label = gluon.utils.split_and_load(batch.label[0], ctx_list=ctx, batch_axis=0)
+                data = mx.gluon.utils.split_and_load(batch.data[0], ctx_list=ctx, batch_axis=0)
+                label = mx.gluon.utils.split_and_load(batch.label[0], ctx_list=ctx, batch_axis=0)
                 outputs = []
                 Ls = []
-                with mxnet.autograd.record():
+                with mx.autograd.record():
                     for x, y in zip(data, label):
                         z = net(x, y)
                         L = loss(z, y)
@@ -66,7 +66,7 @@ class ArcFaceController(NetworkController):
                         outputs.append(z)
                         # store the loss and do backward after we have done forward
                         # on all GPUs for better speed on multiple GPUs.
-                    mxnet.autograd.backward(Ls)
+                    mx.autograd.backward(Ls)
                 #trainer.step(batch.data[0].shape[0], ignore_stale_grad=True)
                 #trainer.step(args.ctx_num)
                 n = batch.data[0].shape[0]
@@ -77,10 +77,10 @@ class ArcFaceController(NetworkController):
                     name, acc = metric.get()
                     if len(name)==2:
                         logger.info('Epoch[%d] Batch [%d]\tSpeed: %f samples/sec\t%s=%f, %s=%f'%(
-                                     num_epochs, i, args.batch_size/(time.time()-btic), name[0], acc[0], name[1], acc[1]))
+                                     num_epochs, i, self.batch_size/(time.time()-btic), name[0], acc[0], name[1], acc[1]))
                     else:
                         logger.info('Epoch[%d] Batch [%d]\tSpeed: %f samples/sec\t%s=%f'%(
-                                     num_epochs, i, args.batch_size/(time.time()-btic), name[0], acc[0]))
+                                     num_epochs, i, self.batch_size/(time.time()-btic), name[0], acc[0]))
                     #metric.reset()
                 btic = time.time()
 
