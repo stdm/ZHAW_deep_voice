@@ -61,6 +61,7 @@ class ArcFaceBlock(mx.gluon.HybridBlock):
         diff = F.expand_dims(diff, 1)
         body = F.broadcast_mul(gt_one_hot, diff)
         last_fc = last_fc + body
+        softmax = F.SoftmaxOutput(data=last_fc, label = label, name='softmax', normalization='valid')
 
         body2 = F.SoftmaxActivation(data=last_fc)
         body2 = F.log(body2)

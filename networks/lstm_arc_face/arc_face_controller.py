@@ -71,7 +71,7 @@ class ArcFaceController(NetworkController):
                 with mx.autograd.record():
                     for x, y in zip(data, label):
                         z = net(x)
-                        az, L = arc_block(z, y)
+                        az, L, softmax = arc_block(z, y)
                         #L = L/args.per_batch_size
                         Ls.append(L)
                         outputs.append(az)
@@ -103,7 +103,7 @@ class ArcFaceController(NetworkController):
                 Ls = []
                 for x, y in zip(data, label):
                     z = net(x)
-                    az, L = arc_block(z, y)
+                    az, L, softmax = arc_block(z, y)
                     Ls.append(L)
                     outputs.append(az)
                 metric.update(label, outputs)
