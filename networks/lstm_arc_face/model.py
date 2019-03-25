@@ -42,10 +42,10 @@ class ArcFaceBlock(mx.gluon.HybridBlock):
         self.batch_size = batch_size
         with self.name_scope():
             self.body = nn.HybridSequential(prefix='')
-            self.last_fc_weight = self.params.get('last_fc_weight', shape=(self.n_classes, input_size), grad_req='null')
+            self.last_fc_weight = self.params.get('last_fc_weight', shape=(self.n_classes, input_size))
 
     def hybrid_forward(self, F, x, label, last_fc_weight):
-        embeddings = x
+        embeddings = F.BlockGrad(x)
 
         norm_embeddings = F.L2Normalization(embeddings, mode='instance')
         norm_weights = F.L2Normalization(last_fc_weight, mode='instance')
@@ -67,4 +67,4 @@ class ArcFaceBlock(mx.gluon.HybridBlock):
         _label = F.one_hot(label, depth = self.n_classes, on_value = -1.0, off_value = 0.0)
         body2 = body2*_label
         ce_loss = F.sum(body2)/self.batch_size
-        return last_fc, ce_loss
+        return last_fc, F.BlockGrad(ce_loss)
