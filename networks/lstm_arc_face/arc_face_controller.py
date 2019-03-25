@@ -57,6 +57,7 @@ class ArcFaceController(NetworkController):
             #trainer = update_learning_rate(opt.lr, trainer, epoch, opt.lr_factor, lr_steps)
             tic = time.time()
             train_iter.reset()
+            val_iter.reset()
             metric.reset()
             btic = time.time()
             for i, batch in enumerate(train_iter):
@@ -90,6 +91,7 @@ class ArcFaceController(NetworkController):
 
             epoch_time = time.time()-tic
             name, train_acc = metric.get()
+            metric.reset()
 
             for i, batch in enumerate(val_iter):
                 data = mx.gluon.utils.split_and_load(batch.data[0], ctx_list=ctx, batch_axis=0)
@@ -99,16 +101,8 @@ class ArcFaceController(NetworkController):
                 for x, y in zip(data, label):
                     z = net(x, y)
                     L = loss(z, y)
-                    #L = L/args.per_batch_size
                     Ls.append(L)
                     outputs.append(z)
-                    # store the loss and do backward after we have done forward
-                    # on all GPUs for better speed on multiple GPUs.
-                #trainer.step(batch.data[0].shape[0], ignore_stale_grad=True)
-                #trainer.step(args.ctx_num)
-                n = batch.data[0].shape[0]
-                #print(n,n)
-                trainer.step(n)
                 metric.update(label, outputs)
 
                 mean_loss = 0.0
@@ -117,8 +111,6 @@ class ArcFaceController(NetworkController):
                 if mean_loss < lowest_val_loss:
                     lowest_val_loss = mean_loss
 
-            # First epoch will usually be much slower than the subsequent epics,
-            # so don't factor into the average
             if num_epochs > 0:
                 total_time = total_time + epoch_time
 
