@@ -20,9 +20,6 @@ class ArcFaceController(NetworkController):
 
 
     def train_network(self):
-        logger = logging.getLogger()
-        logger.setLevel(logging.INFO)
-
         ctx = []
         cvd = os.environ['CUDA_VISIBLE_DEVICES'].strip()
         if len(cvd)>0:
@@ -83,10 +80,10 @@ class ArcFaceController(NetworkController):
                 #if i>0 and i%20==0:
                     name, acc = metric.get()
                     if len(name)==2:
-                        logger.info('Epoch[%d] Batch [%d]\tSpeed: %f samples/sec\t%s=%f, %s=%f'%(
+                        print('Epoch[%d] Batch [%d]\tSpeed: %f samples/sec\t%s=%f, %s=%f'%(
                                      num_epochs, i, self.batch_size/(time.time()-btic), name[0], acc[0], name[1], acc[1]))
                     else:
-                        logger.info('Epoch[%d] Batch [%d]\tSpeed: %f samples/sec\t%s=%f'%(
+                        print('Epoch[%d] Batch [%d]\tSpeed: %f samples/sec\t%s=%f'%(
                                      num_epochs, i, self.batch_size/(time.time()-btic), name[0], acc[0]))
                     #metric.reset()
                 btic = time.time()
@@ -100,7 +97,7 @@ class ArcFaceController(NetworkController):
 
             #name, acc = metric.get()
             #logger.info('[Epoch %d] training: %s=%f, %s=%f'%(num_epochs, name[0], acc[0], name[1], acc[1]))
-            logger.info('[Epoch %d] time cost: %f'%(num_epochs, epoch_time))
+            print('[Epoch %d] time cost: %f'%(num_epochs, epoch_time))
             num_epochs = num_epochs + 1
             #name, val_acc = test(ctx, val_data)
             #logger.info('[Epoch %d] validation: %s=%f, %s=%f'%(epoch, name[0], val_acc[0], name[1], val_acc[1]))
