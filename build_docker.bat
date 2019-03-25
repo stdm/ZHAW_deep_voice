@@ -1,2 +1,2 @@
-docker build -t pa_scs ./
+docker build -t papommerman/benchmarking_speakerclustering ./
 pause
