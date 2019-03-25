@@ -79,7 +79,8 @@ class ArcFaceController(NetworkController):
                 #print(n,n)
                 trainer.step(n)
                 metric.update(label, outputs)
-                if i>0 and i%20==0:
+                if True:
+                #if i>0 and i%20==0:
                     name, acc = metric.get()
                     if len(name)==2:
                         logger.info('Epoch[%d] Batch [%d]\tSpeed: %f samples/sec\t%s=%f, %s=%f'%(
