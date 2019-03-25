@@ -47,6 +47,7 @@ class ArcFaceController(NetworkController):
 
         #loss = gluon.loss.SoftmaxCrossEntropyLoss(weight = 1.0)
         #loss = gluon.loss.SoftmaxCrossEntropyLoss()
+        num_epochs = 0
         while num_epochs < 10:
             #trainer = update_learning_rate(opt.lr, trainer, epoch, opt.lr_factor, lr_steps)
             tic = time.time()
