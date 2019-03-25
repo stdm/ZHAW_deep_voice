@@ -68,4 +68,4 @@ class ArcFaceBlock(mx.gluon.HybridBlock):
         _label = F.one_hot(label, depth = self.n_classes, on_value = -1.0, off_value = 0.0)
         body2 = body2*_label
         ce_loss = F.sum(body2)/self.batch_size
-        return last_fc, F.BlockGrad(ce_loss)
+        return last_fc, F.BlockGrad(ce_loss), softmax
