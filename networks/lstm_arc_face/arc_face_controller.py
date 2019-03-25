@@ -112,7 +112,7 @@ class ArcFaceController(NetworkController):
 
             name, val_acc = metric.get()
             print('[Epoch %d]\t time cost: %f\ttrain: %s=%f\tL=%f\tval: %s=%f\tL=%f'%(
-                  num_epochs, epoch_time, name[0], train_acc[0], lowest_train_loss, name[0], train_acc[0], lowest_val_loss))
+                  num_epochs, epoch_time, name[0], train_acc[0], lowest_train_loss, name[0], val_acc[0], lowest_val_loss))
             num_epochs = num_epochs + 1
             #name, val_acc = test(ctx, val_data)
             #logger.info('[Epoch %d] validation: %s=%f, %s=%f'%(epoch, name[0], val_acc[0], name[1], val_acc[1]))
