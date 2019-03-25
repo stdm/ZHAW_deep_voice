@@ -5,7 +5,7 @@ import random
 from common.utils.pickler import load
 
 def _data_splitter(x, y, val_perc):
-    zipped = zip(x, y)
+    zipped = list(zip(x, y))
     random.shuffle(zipped)
 
     idx = int(val_perc * len(zipped))
