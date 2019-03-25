@@ -62,14 +62,18 @@ class ArcFaceController(NetworkController):
                 print(batch)
                 print()
                 print('data:')
+                print(type(batch.data))
                 print(batch.data)
+
                 print()
                 print('label:')
+                print(type(batch.label))
                 print(batch.label)
                 print()
                 input('continue')
                 data = mx.gluon.utils.split_and_load(batch.data[0], ctx_list=ctx, batch_axis=0)
                 label = mx.gluon.utils.split_and_load(batch.label[0], ctx_list=ctx, batch_axis=0)
+
                 outputs = []
                 Ls = []
                 with mx.autograd.record():
