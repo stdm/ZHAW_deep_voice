@@ -15,7 +15,7 @@ class ArcFaceController(NetworkController):
         self.train_data_name = train_data_name
         self.network_file = self.name + self.train_data_name
         self.train_data_path = get_speaker_pickle(self.train_data_name)
-        self.batch_size = 64
+        self.batch_size = 32
 
 
     def train_network(self):
