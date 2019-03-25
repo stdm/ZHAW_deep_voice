@@ -47,7 +47,7 @@ class ArcFaceBlock(mx.gluon.HybridBlock):
             self.last_fc_weight = self.params.get('last_fc_weight', shape=(self.n_classes, input_size))
 
     def hybrid_forward(self, F, x, label, last_fc_weight):
-        embeddings = x
+        embeddings = F.BlockGrad(x)
 
         norm_embeddings = F.L2Normalization(embeddings, mode='instance')
         norm_weights = F.L2Normalization(last_fc_weight, mode='instance')
@@ -70,9 +70,11 @@ class ArcFaceBlock(mx.gluon.HybridBlock):
         body = F.broadcast_mul(gt_one_hot, diff)
         last_fc = last_fc + body
 
+        softmax = mx.symbol.SoftmaxOutput(data=last_fc, label = label, name='softmax', normalization='valid')
+
         body2 = F.SoftmaxActivation(data=last_fc)
         body2 = F.log(body2)
         _label = F.one_hot(label, depth = self.n_classes, on_value = -1.0, off_value = 0.0)
         body2 = body2*_label
         ce_loss = F.sum(body2)/self.batch_size
-        return last_fc, ce_loss
+        return last_fc, F.BlockGrad(ce_loss)
