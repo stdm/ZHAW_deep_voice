@@ -36,8 +36,10 @@ class NetworkBlock(mx.gluon.HybridBlock):
 class ArcFaceBlock(mx.gluon.HybridBlock):
     def __init__(self, n_classes, input_size, batch_size, **kwargs):
         super(ArcFaceBlock, self).__init__(**kwargs)
-        self.s = 64
-        self.m = 0.5
+        self.s = 64.0
+        self.m1 = 1.0
+        self.m2 = 0.3
+        self.m3 = 0.2
         self.n_classes = n_classes
         self.batch_size = batch_size
         with self.name_scope():
@@ -54,7 +56,13 @@ class ArcFaceBlock(mx.gluon.HybridBlock):
 
         original_target_logit = F.pick(last_fc, label, axis=1)
         theta = F.arccos(original_target_logit / self.s)
-        marginal_target_logit = F.cos(theta + self.m)
+        if self.m1!=1.0:
+            theta = theta*self.m1
+        if self.m2>0.0:
+            theta = theta+self.m2
+        marginal_target_logit = F.cos(theta)
+        if self.m3>0.0:
+            marginal_target_logit = marginal_target_logit - self.m3
         gt_one_hot = F.one_hot(label, depth = self.n_classes, on_value = 1.0, off_value = 0.0)
         diff = marginal_target_logit - original_target_logit
         diff = diff * self.s
@@ -67,4 +75,4 @@ class ArcFaceBlock(mx.gluon.HybridBlock):
         _label = F.one_hot(label, depth = self.n_classes, on_value = -1.0, off_value = 0.0)
         body2 = body2*_label
         ce_loss = F.sum(body2)/self.batch_size
-        return last_fc, F.BlockGrad(ce_loss)
+        return last_fc, ce_loss
