@@ -73,7 +73,7 @@ class ArcFaceController(NetworkController):
                 with mx.autograd.record():
                     for x, y in zip(data, label):
                         z = net(x)
-                        with mx.autograd.pause():
+                        with mx.autograd.predict_mode():
                             az = arc_block(z, y)
                             L = loss(az, y)
                         #L = L/args.per_batch_size
