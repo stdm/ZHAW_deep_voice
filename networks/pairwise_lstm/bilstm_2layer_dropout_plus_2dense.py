@@ -164,7 +164,7 @@ class bilstm_2layer_dropout(object):
             os.makedirs(prefix_dir)
 
         logging.getLogger().setLevel(logging.INFO)
-        _cb = mx.callback.Speedometer(self.batch_size, 1)
+        _cb = mx.callback.Speedometer(self.batch_size)
 
         model.fit(train_iter,
                   begin_epoch        = 0,
