@@ -2,7 +2,7 @@ import mxnet as mx
 import logging
 
 from common.network_controller import NetworkController
-from .data_gen import load_data
+from .data_generator import load_data
 from .model import ArcFaceBlock
 from .metrics import AccMetric
 
