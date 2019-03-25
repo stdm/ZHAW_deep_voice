@@ -67,11 +67,13 @@ class ArcFaceController(NetworkController):
                 Ls = []
                 with mx.autograd.record():
                     for x, y in zip(data, label):
-                        z = net(x, y)
-                        L = loss(z, y)
-                        #L = L/args.per_batch_size
-                        Ls.append(L)
-                        outputs.append(z)
+                        embeddings = net.feature(x)
+                        with mx.autograd.pause():
+                            z = net(embeddings, y)
+                            L = loss(z, y)
+                            #L = L/args.per_batch_size
+                            Ls.append(L)
+                            outputs.append(z)
                         # store the loss and do backward after we have done forward
                         # on all GPUs for better speed on multiple GPUs.
                     mx.autograd.backward(Ls)
@@ -115,7 +117,7 @@ class ArcFaceController(NetworkController):
                 total_time = total_time + epoch_time
 
             name, val_acc = metric.get()
-            print('[Epoch %d] time cost: %f\ttrain: %s=%f\tL=%f\tval: %s=%f\tL=%f'%(
+            print('[Epoch %d]\t time cost: %f\ttrain: %s=%f\tL=%f\tval: %s=%f\tL=%f'%(
                   num_epochs, epoch_time, name[0], train_acc[0], lowest_train_loss, name[0], train_acc[0], lowest_val_loss))
             num_epochs = num_epochs + 1
             #name, val_acc = test(ctx, val_data)
