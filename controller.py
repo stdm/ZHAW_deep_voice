@@ -24,6 +24,7 @@ import sys
 import matplotlib
 matplotlib.use('Agg')
 
+
 from common.analysis.analysis import *
 from common.extrapolation.setup import setup_suite, is_suite_setup
 from common.network_controller import NetworkController
