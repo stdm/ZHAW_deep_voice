@@ -73,8 +73,8 @@ class ArcFaceController(NetworkController):
         x_test, speakers_test = load_test_data(self.get_validation_test_data(), seg_size)
         x_train, speakers_train = load_test_data(self.get_validation_train_data(), seg_size)
 
-        x_test = mx.nd.array(x_test, ctx[0])
-        x_train = mx.nd.array(x_train, ctx[0])
+        x_test = mx.nd.array(x_test)
+        x_train = mx.nd.array(x_train)
 
         # Prepare return values
         set_of_embeddings = []
