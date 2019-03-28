@@ -73,8 +73,8 @@ class ArcFaceController(NetworkController):
         x_test, speakers_test = load_test_data(self.get_validation_test_data(), seg_size)
         x_train, speakers_train = load_test_data(self.get_validation_train_data(), seg_size)
 
-        x_test = mx.nd.array(x_test)
-        x_train = mx.nd.array(x_train)
+        x_test = mx.nd.array(x_test, ctx[0])
+        x_train = mx.nd.array(x_train, ctx[0])
 
         # Prepare return values
         set_of_embeddings = []
@@ -82,14 +82,11 @@ class ArcFaceController(NetworkController):
         speaker_numbers = []
 
         vector_size = vec_size #256 * 2
-        result = net.feature(x_test)
-        print(result)
-        print(result.shape)
-        input('test')
-        test_output = np.asarray(model_partial.predict(x_test))
-        train_output = np.asarray(model_partial.predict(x_train))
-        logger.info('test_output len -> ' + str(test_output.shape))
-        logger.info('train_output len -> ' + str(train_output.shape))
+        test_output = net.feature(x_test).asnumpy
+        train_output = net.feature(x_train).asnumpy
+
+        print('test_output len -> ' + str(test_output.shape))
+        print('train_output len -> ' + str(train_output.shape))
 
         embeddings, speakers, num_embeddings = generate_embeddings(train_output, test_output, speakers_train,
                                                                        speakers_test, vector_size)
@@ -99,5 +96,5 @@ class ArcFaceController(NetworkController):
         set_of_speakers.append(speakers)
         speaker_numbers.append(num_embeddings)
 
-        logger.info('Pairwise_lstm test done.')
+        print('Pairwise_lstm test done.')
         return checkpoints, set_of_embeddings, set_of_speakers, speaker_numbers
