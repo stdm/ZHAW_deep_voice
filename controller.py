@@ -35,9 +35,6 @@ from common.utils.paths import *
 # from networks.flow_me.me_controller import MEController
 # from networks.lu_vo.luvo_controller import LuvoController
 # from networks.pairwise_kldiv.kldiv_controller import KLDivController
-from networks.lstm_arc_face.arc_face_controller import ArcFaceController
-from networks.pairwise_lstm.lstm_controller import LSTMController
-from networks.pairwise_lstm_vox.lstm_controller import LSTMVOX2Controller
 
 # Constants
 # -------------------
@@ -118,10 +115,13 @@ class Controller(NetworkController):
         self.network_controllers = []
         print(self.network)
         if self.network == 'pairwise_lstm_vox2':
+            from networks.pairwise_lstm_vox.lstm_controller import LSTMVOX2Controller
             self.network_controllers.append(LSTMVOX2Controller(self.out_layer, self.seg_size, self.vec_size))
         if self.network == 'pairwise_lstm':
+            from networks.pairwise_lstm.lstm_controller import LSTMController
             self.network_controllers.append(LSTMController(self.out_layer, self.seg_size, self.vec_size))
         if self.network == 'arc_face':
+            from networks.lstm_arc_face.arc_face_controller import ArcFaceController
             self.network_controllers.append(ArcFaceController('speakers_100_50w_50m_not_reynolds_cluster', 'speakers_40_clustering_vs_reynolds'))
 
 
