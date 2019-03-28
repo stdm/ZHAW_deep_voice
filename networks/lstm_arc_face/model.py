@@ -1,5 +1,7 @@
 import mxnet as mx
 
+import os
+
 from networks.lstm_arc_face import settings
 
 from mxnet.gluon import nn
