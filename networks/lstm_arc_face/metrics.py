@@ -1,23 +1,19 @@
 import mxnet as mx
 
-class AccMetric(mx.metric.EvalMetric):
-    def __init__(self):
-        self.axis = 1
-        super(AccMetric, self).__init__('acc', axis=self.axis, output_names=None, label_names=None)
-        self.losses = []
-        self.count = 0
+class CrossEntropy(mx.metric.EvalMetric):
+    def __init__(self, eps=1e-12, name='cross-entropy', output_names=None, label_names=None):
+        super(CrossEntropy, self).__init__(name, eps=eps,output_names=output_names, label_names=label_names)
+        self.eps = eps
 
     def update(self, labels, preds):
-        self.count+=1
-        #preds = [preds[1]] #use softmax output
-        for label, pred_label in zip(labels, preds):
-            if pred_label.shape != label.shape:
-                pred_label = mx.ndarray.argmax(pred_label, axis=self.axis)
-                pred_label = pred_label.asnumpy().astype('int32').flatten()
-                label = label.asnumpy()
-                if label.ndim==2:
-                    label = label[:,0]
-                label = label.astype('int32').flatten()
-                assert label.shape==pred_label.shape
-                self.sum_metric += (pred_label.flat == label.flat).sum()
-                self.num_inst += len(pred_label.flat)
+        labels, preds = check_label_shapes(labels, preds, True)
+        for label, pred in zip(labels, preds):
+            pred = mx.nd.softmax(pred, axis=1)
+            label = label.asnumpy()
+            pred = pred.asnumpy()
+
+            label = label.ravel()
+            assert label.shape[0] == pred.shape[0]
+            prob = pred[np.arange(label.shape[0]), np.int64(label)]
+            self.sum_metric += (-np.log(prob + self.eps)).sum()
+            self.num_inst += label.shape[0]

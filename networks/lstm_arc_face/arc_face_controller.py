@@ -1,132 +1,67 @@
+import numpy as np
 import mxnet as mx
-import logging
 import time
+import math
 import os
 
-from common.network_controller import NetworkController
+from mxnet.gluon import nn
+from mxnet.gluon import rnn
+from mxnet.metric import Accuracy, TopKAccuracy, CompositeEvalMetric, check_label_shapes
+
 from .data_generator import load_data
-from .model import ArcFaceBlock, NetworkBlock
-from .metrics import AccMetric
+from .model import ArcFaceBlock
+from .metrics import CrossEntropy
+from .executor import run_epoch
+from .saver import save_epoch
+
 from common.utils.paths import *
+from common.network_controller import NetworkController
+
 
 class ArcFaceController(NetworkController):
     def __init__(self, train_data_name, val_data_name):
         super().__init__("arc_face", val_data_name)
         self.train_data_name = train_data_name
-        self.network_file = self.name + self.train_data_name
+        self.network_file = self.name + '/' + self.train_data_name
         self.train_data_path = get_speaker_pickle(self.train_data_name)
-        raw_max_epochs = input('Please enter the number of epochs:')
-        raw_batch_size = input('Please enter the batch size you wish to use:')
         self.max_epochs = int(raw_max_epochs)
         self.batch_size = int(raw_batch_size)
 
-
-    def train_network(self):
+    def train(self, train_data_path, batch_size, batches_per_epoch, max_epochs):
         ctx = []
         cvd = os.environ['CUDA_VISIBLE_DEVICES'].strip()
-        if len(cvd)>0:
+        if len(cvd) > 0:
             for i in range(len(cvd.split(','))):
                 ctx.append(mx.gpu(i))
-        if len(ctx)==0:
+        if len(ctx) == 0:
             ctx = [mx.cpu()]
-            print('use cpu')
-        else:
-            print('gpu num:', len(ctx))
 
-        train_iter, val_iter, num_speakers = load_data(self.train_data_path, self.batch_size)
+        metric = CompositeEvalMetric([Accuracy(), TopKAccuracy(5), CrossEntropy()])
+        save_rules = ['+', 'n', 'n']
 
-        net = NetworkBlock(num_speakers)
+        train_iter, val_iter, num_speakers = load_data(train_data_path, batch_size, batches_per_epoch)
+
+        net = ArcFaceBlock(num_speakers)
         net.hybridize()
         net.initialize(mx.init.Xavier())
         net.collect_params().reset_ctx(ctx)
 
-        arc_block = ArcFaceBlock(num_speakers, net.output_size, self.batch_size)
-        arc_block.hybridize()
-        arc_block.initialize(mx.init.Xavier())
-        arc_block.collect_params().reset_ctx(ctx)
-
         kv = mx.kv.create('device')
-        #kv = mx.kv.create('local')
         trainer = mx.gluon.Trainer(net.collect_params(), mx.optimizer.AdaDelta(), kvstore=kv)
 
-        metric = mx.metric.CompositeEvalMetric([AccMetric()])
+        loss = mx.gluon.loss.SoftmaxCrossEntropyLoss()
 
-        #loss = mx.ndarray.SoftmaxOutput
-        num_epochs = 0
-        total_time = 0
-        while num_epochs < self.max_epochs:
-            #trainer = update_learning_rate(opt.lr, trainer, epoch, opt.lr_factor, lr_steps)
-            tic = time.time()
-            train_iter.reset()
-            val_iter.reset()
-            metric.reset()
-            btic = time.time()
-            lowest_train_loss = 100000
-            lowest_val_loss = 100000
-            for i, batch in enumerate(train_iter):
-                data = mx.gluon.utils.split_and_load(batch.data[0], ctx_list=ctx, batch_axis=0)
-                label = mx.gluon.utils.split_and_load(batch.label[0], ctx_list=ctx, batch_axis=0)
-                outputs = []
-                Ls = []
-                with mx.autograd.record():
-                    for x, y in zip(data, label):
-                        z = net(x)
-                        az, L = arc_block(z, y)
-                        #L = L/args.per_batch_size
-                        Ls.append(L)
-                        outputs.append(az)
-                        # store the loss and do backward after we have done forward
-                        # on all GPUs for better speed on multiple GPUs.
-                    mx.autograd.backward(Ls)
-                #trainer.step(batch.data[0].shape[0], ignore_stale_grad=True)
-                #trainer.step(args.ctx_num)
-                n = batch.data[0].shape[0]
-                #print(n,n)
-                trainer.step(n)
-                metric.update(label, outputs)
+        epoch = 0
+        best_values = {}
+        with open('accs.csv', 'w+') as file:
+            file.write('epoch, train_acc, val_acc, train_loss, val_loss\n')
+        while epoch < max_epochs:
+            name, indices, mean_loss, time_used = run_epoch(net, ctx, train_iter, metric, trainer, loss, epoch, train=True)
+            best_values = save_epoch(net, self.network_file, epoch, best_values, name, indices, mean_loss, time_used, save_rules, train=True)
 
-                mean_loss = 0.0
-                for L in Ls:
-                    mean_loss += L.asnumpy().mean() / float(len(Ls))
-                if mean_loss < lowest_train_loss:
-                    lowest_train_loss = mean_loss
-                btic = time.time()
+            name, indices, mean_loss, time_used = run_epoch(net, ctx, val_iter, metric, trainer, loss, epoch, train=False)
+            best_values = save_epoch(net, self.network_file, epoch, best_values, name, indices, mean_loss, time_used, save_rules, train=False)
 
-            epoch_time = time.time()-tic
-            name, train_acc = metric.get()
-            metric.reset()
+            epoch = epoch + 1
 
-            for i, batch in enumerate(val_iter):
-                data = mx.gluon.utils.split_and_load(batch.data[0], ctx_list=ctx, batch_axis=0)
-                label = mx.gluon.utils.split_and_load(batch.label[0], ctx_list=ctx, batch_axis=0)
-                outputs = []
-                Ls = []
-                for x, y in zip(data, label):
-                    z = net(x)
-                    az, L = arc_block(z, y)
-                    Ls.append(L)
-                    outputs.append(az)
-                metric.update(label, outputs)
-
-                mean_loss = 0.0
-                for L in Ls:
-                    mean_loss += L.asnumpy().mean() / float(len(Ls))
-                if mean_loss < lowest_val_loss:
-                    lowest_val_loss = mean_loss
-
-            if num_epochs > 0:
-                total_time = total_time + epoch_time
-
-            name, val_acc = metric.get()
-            print('[Epoch %d]\t time cost: %f\ttrain: %s=%f\tL=%f\tval: %s=%f\tL=%f'%(
-                  num_epochs, epoch_time, name[0], train_acc[0], lowest_train_loss, name[0], val_acc[0], lowest_val_loss))
-            num_epochs = num_epochs + 1
-            #name, val_acc = test(ctx, val_data)
-            #logger.info('[Epoch %d] validation: %s=%f, %s=%f'%(epoch, name[0], val_acc[0], name[1], val_acc[1]))
-
-            # save model if meet requirements
-            #save_checkpoint(epoch, val_acc[0], best_acc)
-        if num_epochs > 1:
-            print('Average epoch time: {}'.format(float(total_time)/(num_epochs - 1)))
-        file_name = "net.params"
-        net.save_parameters(file_name)
+        net.save_parameters('final_epoch')

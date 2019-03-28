@@ -115,26 +115,14 @@ class Controller(NetworkController):
             self.plot_results()
 
     def generate_controllers(self):
+        self.network_controllers = []
+        if self.network == 'pairwise_lstm_vox2':
+            self.network_controllers.append(LSTMVOX2Controller(self.out_layer, self.seg_size, self.vec_size)
+        if self.network == 'pairwise_lstm':
+            self.network_controllers.append(LSTMController(self.out_layer, self.seg_size, self.vec_size))
+        if self.network == 'arc_face':
+            self.network_controllers.append(ArcFaceController('speakers_100_50w_50m_not_reynolds_cluster', 'speakers_40_clustering_vs_reynolds'))
 
-        controller_dict = {
-            'pairwise_lstm_vox2': [LSTMVOX2Controller(self.out_layer, self.seg_size, self.vec_size)],
-            'pairwise_lstm': [LSTMController(self.out_layer, self.seg_size, self.vec_size)],
-            'arc_face': [ArcFaceController('speakers_100_50w_50m_not_reynolds_cluster', 'speakers_40_clustering_vs_reynolds')],
-#            'pairwise_kldiv': [KLDivController()],
-#            'flow_me': [MEController(self.clear, self.debug, False)],
-#            'luvo': [LuvoController()],
-#            'all': [LSTMController(self.out_layer, self.seg_size, self.vec_size), KLDivController(), MEController(self.clear, self.debug, False), LuvoController()]
-        }
-
-        try:
-            self.network_controllers = controller_dict[self.network]
-            for net in self.network_controllers:
-                net.val_data = self.val_data
-
-        except KeyError:
-            print("Network " + self.network + " is not known:")
-            print("Valid Names: ", join([k for k in controller_dict.keys()]))
-            sys.exit(1)
 
     def setup_networks(self):
         if is_suite_setup():
