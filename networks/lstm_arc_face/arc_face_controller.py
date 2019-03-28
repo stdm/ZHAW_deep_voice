@@ -99,4 +99,4 @@ class ArcFaceController(NetworkController):
         speaker_numbers.append(num_embeddings)
 
         print('Pairwise_lstm test done.')
-        return checkpoints, set_of_embeddings, set_of_speakers, speaker_numbers
+        return [], set_of_embeddings, set_of_speakers, speaker_numbers
