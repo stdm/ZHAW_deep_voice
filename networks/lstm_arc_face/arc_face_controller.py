@@ -66,7 +66,6 @@ class ArcFaceController(NetworkController):
         net = ArcFaceBlock(num_speakers)
         net.hybridize()
         net.load_parameters(get_params(self.network_file))
-        net.initialize(mx.init.Xavier())
 
         ctx = get_context()
 
