@@ -118,7 +118,7 @@ class Controller(NetworkController):
         self.network_controllers = []
         print(self.network)
         if self.network == 'pairwise_lstm_vox2':
-            self.network_controllers.append(LSTMVOX2Controller(self.out_layer, self.seg_size, self.vec_size)
+            self.network_controllers.append(LSTMVOX2Controller(self.out_layer, self.seg_size, self.vec_size))
         if self.network == 'pairwise_lstm':
             self.network_controllers.append(LSTMController(self.out_layer, self.seg_size, self.vec_size))
         if self.network == 'arc_face':
