@@ -1,10 +1,10 @@
 import numpy as np
 import mxnet as mx
 import random
-import settings
 
 from random import randint
 from common.utils.pickler import load
+from networks.lstm_arc_face import settings
 
 class SimpleIter(mx.io.DataIter):
     def __init__(self, data_names, label_names, data_gen, num_batches=10):
