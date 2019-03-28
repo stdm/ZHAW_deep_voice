@@ -16,6 +16,7 @@ from .saver import save_epoch, reset_progress, save_final, get_params
 
 from common.utils.paths import *
 from common.network_controller import NetworkController
+from common.clustering.generate_embeddings import generate_embeddings
 from networks.lstm_arc_face import settings
 
 
