@@ -66,7 +66,8 @@ class ArcFaceController(NetworkController):
 
         net = ArcFaceBlock(num_speakers)
         net.hybridize()
-        net.load_parameters(get_params(self.network_file))
+        checkpoints = [get_params(self.network_file)]
+        net.load_parameters(checkpoints[0])
 
         ctx = get_context()
 
@@ -99,4 +100,4 @@ class ArcFaceController(NetworkController):
         speaker_numbers.append(num_embeddings)
 
         print('Pairwise_lstm test done.')
-        return [], set_of_embeddings, set_of_speakers, speaker_numbers
+        return checkpoints, set_of_embeddings, set_of_speakers, speaker_numbers
