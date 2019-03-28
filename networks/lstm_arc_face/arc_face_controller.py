@@ -16,6 +16,7 @@ from .saver import save_epoch
 
 from common.utils.paths import *
 from common.network_controller import NetworkController
+from networks.lstm_arc_face import settings
 
 
 class ArcFaceController(NetworkController):
@@ -24,10 +25,11 @@ class ArcFaceController(NetworkController):
         self.train_data_name = train_data_name
         self.network_file = self.name + '/' + self.train_data_name
         self.train_data_path = get_speaker_pickle(self.train_data_name)
-        self.max_epochs = int(raw_max_epochs)
-        self.batch_size = int(raw_batch_size)
+        self.max_epochs = settings.MAX_EPOCHS
+        self.batch_size = settings.BATCH_SIZE
+        self.batches_per_epoch = settings.BATCHES_PER_EPOCH
 
-    def train(self, train_data_path, batch_size, batches_per_epoch, max_epochs):
+    def train_network(self):
         ctx = []
         cvd = os.environ['CUDA_VISIBLE_DEVICES'].strip()
         if len(cvd) > 0:
@@ -39,7 +41,7 @@ class ArcFaceController(NetworkController):
         metric = CompositeEvalMetric([Accuracy(), TopKAccuracy(5), CrossEntropy()])
         save_rules = ['+', 'n', 'n']
 
-        train_iter, val_iter, num_speakers = load_data(train_data_path, batch_size, batches_per_epoch)
+        train_iter, val_iter, num_speakers = load_data(self.train_data_path, self.batch_size, self.batches_per_epoch)
 
         net = ArcFaceBlock(num_speakers)
         net.hybridize()
@@ -55,7 +57,7 @@ class ArcFaceController(NetworkController):
         best_values = {}
         with open('accs.csv', 'w+') as file:
             file.write('epoch, train_acc, val_acc, train_loss, val_loss\n')
-        while epoch < max_epochs:
+        while epoch < self.max_epochs:
             name, indices, mean_loss, time_used = run_epoch(net, ctx, train_iter, metric, trainer, loss, epoch, train=True)
             best_values = save_epoch(net, self.network_file, epoch, best_values, name, indices, mean_loss, time_used, save_rules, train=True)
 
