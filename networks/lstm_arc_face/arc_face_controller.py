@@ -8,11 +8,11 @@ from mxnet.gluon import nn
 from mxnet.gluon import rnn
 from mxnet.metric import Accuracy, TopKAccuracy, CompositeEvalMetric, check_label_shapes
 
-from .data_generator import load_data
-from .model import ArcFaceBlock
+from .data_generator import load_data, load_test_data
+from .model import ArcFaceBlock, get_context
 from .metrics import CrossEntropy
 from .executor import run_epoch
-from .saver import save_epoch, reset_progress, save_final
+from .saver import save_epoch, reset_progress, save_final, get_params
 
 from common.utils.paths import *
 from common.network_controller import NetworkController
@@ -31,14 +31,7 @@ class ArcFaceController(NetworkController):
 
     def train_network(self):
         reset_progress(self.network_file)
-        ctx = []
-        cvd = os.environ['CUDA_VISIBLE_DEVICES'].strip()
-        if len(cvd) > 0:
-            for i in range(len(cvd.split(','))):
-                ctx.append(mx.gpu(i))
-        if len(ctx) == 0:
-            ctx = [mx.cpu()]
-
+        ctx = get_context()
         metric = CompositeEvalMetric([Accuracy(), TopKAccuracy(5), CrossEntropy()])
         save_rules = ['+', 'n', 'n']
 
@@ -66,3 +59,45 @@ class ArcFaceController(NetworkController):
             epoch = epoch + 1
 
         save_final(net, self.network_file)
+
+    def get_embeddings(self, out_layer, seg_size, vec_size):
+        net = ArcFaceBlock(num_speakers)
+        net.hybridize()
+        net.load_params(get_params(self.network_file))
+        net.initialize(mx.init.Xavier())
+        net.collect_params().reset_ctx(ctx)
+
+        ctx = get_context()
+
+        # Load and prepare train/test data
+        x_test, speakers_test = load_test_data(self.get_validation_test_data(), seg_size)
+        x_train, speakers_train = load_test_data(self.get_validation_train_data(), seg_size)
+
+        x_test = mx.nd.array(x_test)
+        x_train = mx.nd.array(x_train)
+
+        # Prepare return values
+        set_of_embeddings = []
+        set_of_speakers = []
+        speaker_numbers = []
+
+        vector_size = self.vec_size #256 * 2
+        result = net.feature(x_test)
+        print(result)
+        print(result.shape)
+        input('test')
+        test_output = np.asarray(model_partial.predict(x_test))
+        train_output = np.asarray(model_partial.predict(x_train))
+        logger.info('test_output len -> ' + str(test_output.shape))
+        logger.info('train_output len -> ' + str(train_output.shape))
+
+        embeddings, speakers, num_embeddings = generate_embeddings(train_output, test_output, speakers_train,
+                                                                       speakers_test, vector_size)
+
+        # Fill the embeddings and speakers into the arrays
+        set_of_embeddings.append(embeddings)
+        set_of_speakers.append(speakers)
+        speaker_numbers.append(num_embeddings)
+
+        logger.info('Pairwise_lstm test done.')
+        return checkpoints, set_of_embeddings, set_of_speakers, speaker_numbers

@@ -5,6 +5,16 @@ from networks.lstm_arc_face import settings
 from mxnet.gluon import nn
 from mxnet.gluon import rnn
 
+def get_context():
+    ctx = []
+    cvd = os.environ['CUDA_VISIBLE_DEVICES'].strip()
+    if len(cvd) > 0:
+        for i in range(len(cvd.split(','))):
+            ctx.append(mx.gpu(i))
+    if len(ctx) == 0:
+        ctx = [mx.cpu()]
+    return ctx
+
 class NetworkBlock(mx.gluon.HybridBlock):
     def __init__(self, n_classes, **kwargs):
         super(NetworkBlock, self).__init__(**kwargs)

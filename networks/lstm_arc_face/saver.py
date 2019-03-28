@@ -2,6 +2,9 @@ import os
 
 from common.utils.paths import *
 
+def get_params(network_file):
+    return get_experiment_nets(network_file)+'/final_epoch'
+
 def reset_progress(network_file):
     log_dir = get_experiment_logs(network_file)
     if os.path.isfile(log_dir+'/train_progress.csv'):
