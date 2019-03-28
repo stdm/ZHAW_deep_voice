@@ -20,7 +20,7 @@ from networks.lstm_arc_face import settings
 
 
 class ArcFaceController(NetworkController):
-    def __init__(self, train_data_name=setting.TRAIN_DATA_NAME, val_data_name=settings.VAL_DATA_NAME):
+    def __init__(self, train_data_name=settings.TRAIN_DATA_NAME, val_data_name=settings.VAL_DATA_NAME):
         super().__init__("arc_face", val_data_name)
         self.train_data_name = train_data_name
         self.network_file = self.name + '/' + self.train_data_name
