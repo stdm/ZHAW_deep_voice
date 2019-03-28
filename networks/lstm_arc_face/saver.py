@@ -2,6 +2,13 @@ import os
 
 from common.utils.paths import *
 
+def reset_progress(network_file):
+    log_dir = get_experiment_logs(network_file)
+    if os.path.isfile(log_dir+'/train_progress.csv'):
+        os.remove(log_dir+'/train_progress.csv')
+    if os.path.isfile(log_dir+'/val_progress.csv'):
+        os.remove(log_dir+'/val_progress.csv')
+
 def save_epoch(net, network_file, epoch, best_values, name, indices, mean_loss, time_used, save_rules, train=True):
     while len(save_rules) < len(name):
         save_rules.append('n')

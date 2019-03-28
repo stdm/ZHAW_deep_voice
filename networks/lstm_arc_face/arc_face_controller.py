@@ -12,7 +12,7 @@ from .data_generator import load_data
 from .model import ArcFaceBlock
 from .metrics import CrossEntropy
 from .executor import run_epoch
-from .saver import save_epoch
+from .saver import save_epoch, reset_progress
 
 from common.utils.paths import *
 from common.network_controller import NetworkController
@@ -30,6 +30,7 @@ class ArcFaceController(NetworkController):
         self.batches_per_epoch = settings.BATCHES_PER_EPOCH
 
     def train_network(self):
+        reset_progress(self.network_file)
         ctx = []
         cvd = os.environ['CUDA_VISIBLE_DEVICES'].strip()
         if len(cvd) > 0:
