@@ -82,8 +82,8 @@ class ArcFaceController(NetworkController):
         speaker_numbers = []
 
         vector_size = vec_size #256 * 2
-        test_output = net.feature(x_test).asnumpy
-        train_output = net.feature(x_train).asnumpy
+        test_output = net.feature(x_test).asnumpy()
+        train_output = net.feature(x_train).asnumpy()
 
         print('test_output len -> ' + str(test_output.shape))
         print('train_output len -> ' + str(train_output.shape))
