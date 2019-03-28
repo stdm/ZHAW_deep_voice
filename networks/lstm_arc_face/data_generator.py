@@ -34,8 +34,8 @@ class SimpleIter(mx.io.DataIter):
         else:
             raise StopIteration
 
-
-def _generate_test_data(X, y, segment_size):
+def load_test_data(data_path, segment_size):
+    X, y, s_list = load(data_path)
     segments = X.shape[0] * 3 * (800 // segment_size)
     X_test = np.zeros((segments, 1, settings.FREQ_ELEMENTS, segment_size), dtype=np.float32)
     y_test = []
@@ -50,7 +50,8 @@ def _generate_test_data(X, y, segment_size):
             X_test[pos, 0] = spect[:, seg_idx:seg_idx + segment_size]
             pos += 1
 
-    return X_test[0:len(y_test)], np.asarray(y_test, dtype=np.int32)
+    x = X_test[0:len(y_test)]
+    return x.reshape(x.shape[0], x.shape[3], x.shape[2]), np.asarray(y_test, dtype=np.int32)
 
 def _extract(spectrogram, segment_size, frequency_elements=settings.FREQ_ELEMENTS):
     zeros = 0
