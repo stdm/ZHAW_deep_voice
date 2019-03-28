@@ -113,6 +113,17 @@ def batch_generator_lstm(X, y, batch_size=100, segment_size=15):
             yield Xb.reshape(bs, segment_size, settings.FREQ_ELEMENTS), transformy(yb, bs, speakers)
 
 
+def get_iter(bg, batches_per_epoch):
+    x, y = [], []
+    bs = 0
+    for xx, yy in bg:
+        if len(x) == batches_per_epoch:
+            bs = len(xx)
+            break
+        x.extend(xx)
+        y.extend(yy)
+    return mx.io.NDArrayIter(data=x, label=y, batch_size=bs)
+
 '''creates the a batch for LSTM networks, with Pairwise Laabels, 
 for use with core.pairwise_kl_divergence_full_labels'''
 
