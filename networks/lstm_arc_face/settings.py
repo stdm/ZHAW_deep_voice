@@ -9,6 +9,6 @@ NUM_OF_SPEAKERS = 630
 # ArcFace Configs
 
 # Controller Configs
-MAX_EPOCHS = 1000
+MAX_EPOCHS = 100
 BATCH_SIZE = 256
 BATCHES_PER_EPOCH = 100
