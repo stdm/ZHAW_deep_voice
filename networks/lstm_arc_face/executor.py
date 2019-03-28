@@ -43,7 +43,7 @@ def run_epoch(net, ctx, data, metric, trainer, loss, epoch, train=True, verbose=
     if verbose:
         text = '[Epoch %d]\t'%epoch
         text += 'training:\t' if train else 'validating:\t'
-        text += 'time=%.6f'(time_used)
+        text += 'time=%.6f'%time_used
         for i in range(len(name)):
             text += '\t%s=%.6f'%(name[i],indices[i])
         print(text)

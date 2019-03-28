@@ -55,8 +55,6 @@ class ArcFaceController(NetworkController):
 
         epoch = 0
         best_values = {}
-        with open('accs.csv', 'w+') as file:
-            file.write('epoch, train_acc, val_acc, train_loss, val_loss\n')
         while epoch < self.max_epochs:
             name, indices, mean_loss, time_used = run_epoch(net, ctx, train_iter, metric, trainer, loss, epoch, train=True)
             best_values = save_epoch(net, self.network_file, epoch, best_values, name, indices, mean_loss, time_used, save_rules, train=True)
