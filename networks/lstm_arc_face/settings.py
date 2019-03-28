@@ -7,3 +7,8 @@ SENTENCES_TRAIN = 8
 NUM_OF_SPEAKERS = 630
 
 # ArcFace Configs
+
+# Controller Configs
+settings.MAX_EPOCHS = 1000
+settings.BATCH_SIZE = 256
+settings.BATCHES_PER_EPOCH = 100
