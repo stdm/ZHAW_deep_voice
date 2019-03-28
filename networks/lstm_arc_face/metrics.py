@@ -6,7 +6,7 @@ class CrossEntropy(mx.metric.EvalMetric):
         self.eps = eps
 
     def update(self, labels, preds):
-        labels, preds = check_label_shapes(labels, preds, True)
+        labels, preds = mx.metric.check_label_shapes(labels, preds, True)
         for label, pred in zip(labels, preds):
             pred = mx.nd.softmax(pred, axis=1)
             label = label.asnumpy()
