@@ -1,4 +1,5 @@
 import mxnet as mx
+import numpy as np
 
 class CrossEntropy(mx.metric.EvalMetric):
     def __init__(self, eps=1e-12, name='cross-entropy', output_names=None, label_names=None):
