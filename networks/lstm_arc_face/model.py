@@ -46,6 +46,9 @@ class ArcFaceBlock(mx.gluon.HybridBlock):
             self.body.add(network_block)
             self.last_fc_weight = self.params.get('last_fc_weight', shape=(self.n_classes, network_block.output_size))
 
+    def feature(self, x):
+        return self.body(x)
+
     def hybrid_forward(self, F, x, label, last_fc_weight):
         embeddings = self.body(x)
 

@@ -12,7 +12,7 @@ from .data_generator import load_data
 from .model import ArcFaceBlock
 from .metrics import CrossEntropy
 from .executor import run_epoch
-from .saver import save_epoch, reset_progress
+from .saver import save_epoch, reset_progress, save_final
 
 from common.utils.paths import *
 from common.network_controller import NetworkController
@@ -20,7 +20,7 @@ from networks.lstm_arc_face import settings
 
 
 class ArcFaceController(NetworkController):
-    def __init__(self, train_data_name, val_data_name):
+    def __init__(self, train_data_name=setting.TRAIN_DATA_NAME, val_data_name=settings.VAL_DATA_NAME):
         super().__init__("arc_face", val_data_name)
         self.train_data_name = train_data_name
         self.network_file = self.name + '/' + self.train_data_name
@@ -65,4 +65,4 @@ class ArcFaceController(NetworkController):
             print('')
             epoch = epoch + 1
 
-        net.save_parameters('final_epoch')
+        save_final(net, self.network_file)

@@ -9,6 +9,12 @@ def reset_progress(network_file):
     if os.path.isfile(log_dir+'/val_progress.csv'):
         os.remove(log_dir+'/val_progress.csv')
 
+def save_final(net, network_file):
+    net_dir = get_experiment_nets(network_file)
+    if not os.path.isdir(net_dir):
+        os.makedirs(net_dir)
+    net.save_parameters(net_dir+'/final_epoch')
+
 def save_epoch(net, network_file, epoch, best_values, name, indices, mean_loss, time_used, save_rules, train=True):
     while len(save_rules) < len(name):
         save_rules.append('n')
