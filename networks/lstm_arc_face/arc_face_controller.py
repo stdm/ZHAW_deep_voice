@@ -61,7 +61,7 @@ class ArcFaceController(NetworkController):
 
             name, indices, mean_loss, time_used = run_epoch(net, ctx, val_iter, metric, trainer, loss, epoch, train=False)
             best_values = save_epoch(net, self.network_file, epoch, best_values, name, indices, mean_loss, time_used, save_rules, train=False)
-
+            print('')
             epoch = epoch + 1
 
         net.save_parameters('final_epoch')
