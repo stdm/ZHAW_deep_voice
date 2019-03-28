@@ -61,6 +61,8 @@ class ArcFaceController(NetworkController):
         save_final(net, self.network_file)
 
     def get_embeddings(self, out_layer, seg_size, vec_size):
+        _, _, num_speakers = load_data(self.train_data_path, self.batch_size, self.batches_per_epoch)
+
         net = ArcFaceBlock(num_speakers)
         net.hybridize()
         net.load_params(get_params(self.network_file))
