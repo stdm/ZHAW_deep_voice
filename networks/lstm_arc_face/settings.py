@@ -9,7 +9,7 @@ NUM_OF_SPEAKERS = 630
 # ArcFace Configs
 
 # Controller Configs
-MAX_EPOCHS = 100
+MAX_EPOCHS = 10
 BATCH_SIZE = 256
 BATCHES_PER_EPOCH = 10
 TRAIN_DATA_NAME = 'speakers_100_50w_50m_not_reynolds_cluster'
