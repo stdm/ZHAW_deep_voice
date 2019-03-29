@@ -34,8 +34,8 @@ class NetworkBlock(mx.gluon.HybridBlock):
             self.embeddings = nn.HybridSequential(prefix='')
             self.embeddings.add(rnn.LSTM(self.lstm_hidden_1, bidirectional=True))
             self.embeddings.add(nn.Dropout(self.drop_rate_1))
-            self.embeddings.add(rnn.BidirectionalCell(rnn.LSTMCell(self.lstm_hidden_2),
-                                                      rnn.LSTMCell(self.lstm_hidden_2)))
+            self.second_lstm = rnn.BidirectionalCell(rnn.LSTMCell(self.lstm_hidden_2),
+                                                     rnn.LSTMCell(self.lstm_hidden_2))
             self.body = nn.HybridSequential(prefix='')
             self.body.add(nn.Dense(self.dense_hidden_1))
             self.body.add(nn.Dropout(self.drop_rate_2))
@@ -43,10 +43,14 @@ class NetworkBlock(mx.gluon.HybridBlock):
 
     def embeddings(self, x):
         x = self.embeddings(x)
+        state = self.second_lstm.begin_state()
+        x, (_, _) = self.second_lstm(x, state)
         return x
 
     def hybrid_forward(self, F, x):
         x = self.embeddings(x)
+        state = self.second_lstm.begin_state()
+        x, (_, _) = self.second_lstm(x, state)
         x = self.body(x)
         return x
 
