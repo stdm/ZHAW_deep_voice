@@ -11,6 +11,6 @@ NUM_OF_SPEAKERS = 630
 # Controller Configs
 MAX_EPOCHS = 100
 BATCH_SIZE = 256
-BATCHES_PER_EPOCH = 100
+BATCHES_PER_EPOCH = 10
 TRAIN_DATA_NAME = 'speakers_100_50w_50m_not_reynolds_cluster'
 VAL_DATA_NAME = 'speakers_40_clustering_vs_reynolds'
