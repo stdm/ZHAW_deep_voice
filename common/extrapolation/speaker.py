@@ -50,7 +50,6 @@ class Speaker:
         X, y, speaker_names = self.extract_data_from_speaker()
 
         # Safe Test-Data to disk
-        # TODO: add flag for evaluation data, (new DataPicker)
         if self.split_train_test:
             speaker_train_split = SpeakerTrainSplit(0.2, self.sentences)
             X_train_valid, X_test, y_train_valid, y_test = speaker_train_split(X, y, None)

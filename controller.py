@@ -137,8 +137,7 @@ class Controller(NetworkController):
             print("Already fully setup.")
         else:
             print("Setting up the network suite.")
-
-        setup_suite()
+            setup_suite()
 
     def plot_results(self):
         plot_files(self.network, self.get_result_files())
