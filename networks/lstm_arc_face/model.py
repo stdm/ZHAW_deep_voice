@@ -34,8 +34,7 @@ class NetworkBlock(mx.gluon.HybridBlock):
             self.embeddings = nn.HybridSequential(prefix='')
             self.embeddings.add(rnn.LSTM(self.lstm_hidden_1, bidirectional=True))
             self.embeddings.add(nn.Dropout(self.drop_rate_1))
-            self.second_lstm = rnn.BidirectionalCell(rnn.LSTMCell(self.lstm_hidden_2),
-                                                     rnn.LSTMCell(self.lstm_hidden_2))
+            self.second_lstm = rnn.LSTMCell(self.lstm_hidden_2)
             self.body = nn.HybridSequential(prefix='')
             self.body.add(nn.Dense(self.dense_hidden_1))
             self.body.add(nn.Dropout(self.drop_rate_2))
