@@ -52,7 +52,7 @@ def create_utterances(num_speakers, vector_size, vectors, y):
     """
 
     # Prepare return variables
-    embeddings = np.zeros((num_speakers, vector_size))
+    embeddings = np.zeros(tuple([num_speakers] + vector_size))
     speakers = set(y)
 
     # Fill embeddings with utterances

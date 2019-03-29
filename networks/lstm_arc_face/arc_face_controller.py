@@ -86,7 +86,7 @@ class ArcFaceController(NetworkController):
         test_output = net.feature(x_test).asnumpy()
         train_output = net.feature(x_train).asnumpy()
 
-        vector_size = train_output.shape[-1]
+        vector_size = list(train_output.shape[1:])
 
         print('test_output len -> ' + str(test_output.shape))
         print('train_output len -> ' + str(train_output.shape))
