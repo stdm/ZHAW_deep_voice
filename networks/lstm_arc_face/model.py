@@ -31,15 +31,21 @@ class NetworkBlock(mx.gluon.HybridBlock):
         self.output_size = self.dense_hidden_2
 
         with self.name_scope():
+            self.embeddings = nn.HybridSequential(prefix='')
+            self.embeddings.add(rnn.LSTM(self.lstm_hidden_1, bidirectional=True))
+            self.embeddings.add(nn.Dropout(self.drop_rate_1))
+            self.embeddings.add(rnn.LSTM(self.lstm_hidden_2, bidirectional=True))
             self.body = nn.HybridSequential(prefix='')
-            self.body.add(rnn.LSTM(self.lstm_hidden_1, bidirectional=True))
-            self.body.add(nn.Dropout(self.drop_rate_1))
-            self.body.add(rnn.LSTM(self.lstm_hidden_2, bidirectional=True))
             self.body.add(nn.Dense(self.dense_hidden_1))
             self.body.add(nn.Dropout(self.drop_rate_2))
             self.body.add(nn.Dense(self.dense_hidden_2))
 
+    def embeddings(self, x):
+        x = self.embeddings(x)
+        return x
+
     def hybrid_forward(self, F, x):
+        x = self.embeddings(x)
         x = self.body(x)
         return x
 
@@ -54,12 +60,12 @@ class ArcFaceBlock(mx.gluon.HybridBlock):
         self.n_classes = n_classes
         with self.name_scope():
             self.body = nn.HybridSequential(prefix='')
-            network_block = NetworkBlock(self.n_classes)
+            self.network_block = NetworkBlock(self.n_classes)
             self.body.add(network_block)
             self.last_fc_weight = self.params.get('last_fc_weight', shape=(self.n_classes, network_block.output_size))
 
     def feature(self, x):
-        return self.body(x)
+        return self.network_block.embeddings(x)
 
     def hybrid_forward(self, F, x, label, last_fc_weight):
         embeddings = self.body(x)
