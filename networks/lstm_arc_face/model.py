@@ -58,11 +58,11 @@ class ArcFaceBlock(mx.gluon.HybridBlock):
         self.m2 = 0.3
         self.m3 = 0.2
         self.n_classes = n_classes
-        self.network_block = NetworkBlock(self.n_classes)
         with self.name_scope():
             self.body = nn.HybridSequential(prefix='')
+            self.network_block = NetworkBlock(self.n_classes)
             self.body.add(self.network_block)
-            self.last_fc_weight = self.params.get('last_fc_weight', shape=(self.n_classes, network_block.output_size))
+            self.last_fc_weight = self.params.get('last_fc_weight', shape=(self.n_classes, self.network_block.output_size))
 
     def feature(self, x):
         return self.network_block.embeddings(x)
