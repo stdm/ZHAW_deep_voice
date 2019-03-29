@@ -195,9 +195,9 @@ if __name__ == '__main__':
 
     config = load_config(None, join(get_common(), 'config.cfg'))
 
-    controller = Controller(config.get('common', 'setup'), config.get('common', 'network'),
-                            config.get('common', 'train'), config.get('common', 'test'), config.get('common', 'clear'),
-                            config.get('common', 'debug'), config.get('common', 'plot'), config.get('common', 'best'),
+    controller = Controller(config.getboolean('common', 'setup'), config.get('common', 'network'),
+                            config.getboolean('common', 'train'), config.getboolean('common', 'test'), config.getboolean('common', 'clear'),
+                            config.getboolean('common', 'debug'), config.getboolean('common', 'plot'), config.getboolean('common', 'best'),
                             config.getint('common', 'val_number'), config.getint('common', 'out_layer'),
                             config.getint('common', 'seg_size'), config.getint('common', 'vec_size'))
     controller.run()
