@@ -60,7 +60,7 @@ class ArcFaceBlock(mx.gluon.HybridBlock):
         self.n_classes = n_classes
         with self.name_scope():
             self.body = nn.HybridSequential(prefix='')
-            self.network_block = NetworkBlock(self.n_classes)
+            network_block = NetworkBlock(self.n_classes)
             self.body.add(network_block)
             self.last_fc_weight = self.params.get('last_fc_weight', shape=(self.n_classes, network_block.output_size))
 
