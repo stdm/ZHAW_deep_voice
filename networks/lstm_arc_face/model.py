@@ -42,7 +42,9 @@ class NetworkBlock(mx.gluon.HybridBlock):
 
     def embeddings(self, x):
         x = self.embedding(x)
+        print(x.shape)
         x = mx.sym.slice_axis(x, axis=1, begin=-1, end=None)
+        print(x.shape)
         return x
 
     def hybrid_forward(self, F, x):
