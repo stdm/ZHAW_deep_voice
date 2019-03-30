@@ -21,12 +21,12 @@ class NetworkBlock(mx.gluon.HybridBlock):
     def __init__(self, n_classes, **kwargs):
         super(NetworkBlock, self).__init__(**kwargs)
 
-        self.lstm_hidden_1 = 256
-        self.lstm_hidden_2 = 256
-        self.dense_hidden_1 = n_classes * 10
-        self.dense_hidden_2 = n_classes * 5
-        self.drop_rate_1 = 0.5
-        self.drop_rate_2 = 0.25
+        self.lstm_hidden_1 = settings.LSTM_HIDDEN_1
+        self.lstm_hidden_2 = settings.LSTM_HIDDEN_2
+        self.dense_hidden_1 = n_classes * settings.DENSE_HIDDEN_1
+        self.dense_hidden_2 = n_classes * settings.DENSE_HIDDEN_2
+        self.drop_rate_1 = settings.DROP_RATE_1
+        self.drop_rate_2 = settings.DROP_RATE_2
 
         self.output_size = self.dense_hidden_2
 
@@ -55,10 +55,10 @@ class NetworkBlock(mx.gluon.HybridBlock):
 class ArcFaceBlock(mx.gluon.HybridBlock):
     def __init__(self, n_classes, **kwargs):
         super(ArcFaceBlock, self).__init__(**kwargs)
-        self.s = 1.0
-        self.m1 = 1.0
-        self.m2 = 0.3
-        self.m3 = 0.2
+        self.s = settings.MARGIN_S
+        self.m1 = settings.MARGIN_M1
+        self.m2 = settings.MARGIN_M2
+        self.m3 = settings.MARGIN_M3
         self.n_classes = n_classes
         with self.name_scope():
             self.body = nn.HybridSequential(prefix='')

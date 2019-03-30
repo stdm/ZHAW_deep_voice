@@ -3,7 +3,7 @@ import os
 from common.utils.paths import *
 
 def get_params(network_file):
-    return get_experiment_nets(network_file)+'/final_epoch'
+    return get_experiment_nets(network_file)+'/bes_val_acc'
 
 def reset_progress(network_file):
     log_dir = get_experiment_logs(network_file)
