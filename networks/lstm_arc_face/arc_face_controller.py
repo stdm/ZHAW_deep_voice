@@ -83,8 +83,8 @@ class ArcFaceController(NetworkController):
         set_of_speakers = []
         speaker_numbers = []
 
-        test_output = net.feature(x_test).asnumpy()
-        train_output = net.feature(x_train).asnumpy()
+        test_output = np.squeeze(net.feature(x_test).asnumpy())
+        train_output = np.squeeze(net.feature(x_train).asnumpy())
 
         vector_size = list(train_output.shape[1:])
 
