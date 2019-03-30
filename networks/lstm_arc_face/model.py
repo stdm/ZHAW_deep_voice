@@ -31,22 +31,22 @@ class NetworkBlock(mx.gluon.HybridBlock):
         self.output_size = self.dense_hidden_2
 
         with self.name_scope():
-            self.embeddings = nn.HybridSequential(prefix='')
-            self.embeddings.add(rnn.LSTM(self.lstm_hidden_1, bidirectional=True))
-            self.embeddings.add(nn.Dropout(self.drop_rate_1))
-            self.embeddings.add(rnn.LSTM(self.lstm_hidden_1, bidirectional=True))
+            self.embedding = nn.HybridSequential(prefix='')
+            self.embedding.add(rnn.LSTM(self.lstm_hidden_1, bidirectional=True))
+            self.embedding.add(nn.Dropout(self.drop_rate_1))
+            self.embedding.add(rnn.LSTM(self.lstm_hidden_1, bidirectional=True))
             self.body = nn.HybridSequential(prefix='')
             self.body.add(nn.Dense(self.dense_hidden_1))
             self.body.add(nn.Dropout(self.drop_rate_2))
             self.body.add(nn.Dense(self.dense_hidden_2))
 
     def embeddings(self, x):
-        x = self.embeddings(x)
-        print(x.shape)
+        x = self.embedding(x)
+        x = mx.sym.slice_axis(x, axis=1, begin=-1, end=None)
         return x
 
     def hybrid_forward(self, F, x):
-        x = self.embeddings(x)
+        x = self.embedding(x)
         x = F.slice_axis(x, axis=1, begin=-1, end=None)
         x = self.body(x)
         return x
