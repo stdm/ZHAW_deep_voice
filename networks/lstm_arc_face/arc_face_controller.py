@@ -81,7 +81,7 @@ class ArcFaceController(NetworkController):
 
     def test_network(self, out_layer, seg_size, vec_size):
         for settings in get_trained_settings():
-            test_settings(settings)
+            self.test_settings(settings)
 
     def get_embeddings(self, settings):
         _, _, num_speakers = load_train_data(settings)
