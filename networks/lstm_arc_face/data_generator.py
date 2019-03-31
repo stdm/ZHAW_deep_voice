@@ -87,7 +87,7 @@ def _batch_generator_lstm(X, y, settings):
                 speaker_idx = randint(0, len(X) - 1)
                 if y is not None:
                     yb.append(y[speaker_idx])
-                spect = _extract(X[speaker_idx, 0], settings['SEGMENT_SIZE'], settings['FREQ_ELEMENTS'])
+                spect = _extract(X[speaker_idx, 0], settings)
                 seg_idx = randint(0, spect.shape[1] - settings['SEGMENT_SIZE'])
                 Xb.append(np.transpose(spect[:, seg_idx:seg_idx + settings['SEGMENT_SIZE']]))
             yield Xb, yb
@@ -105,7 +105,7 @@ def _load_test_data(data_path, settings):
 
     pos = 0
     for i in range(len(X)):
-        spect = _extract(X[i, 0], settings['SEGMENT_SIZE'], settings['FREQ_ELEMENTS'])
+        spect = _extract(X[i, 0], settings)
 
         for j in range(int(spect.shape[1] / settings['SEGMENT_SIZE'])):
             y_test.append(y[i])
