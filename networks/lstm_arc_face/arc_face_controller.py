@@ -23,7 +23,7 @@ from common.analysis.analysis import *
 
 class ArcFaceController(NetworkController):
     def __init__(self):
-        super().__init__("arc_face", val_data_name)
+        super().__init__("arc_face", 'empty')
 
     def train_network(self):
         for settings in get_untrained_settings():
