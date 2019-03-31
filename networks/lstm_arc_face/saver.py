@@ -2,34 +2,30 @@ import os
 
 from common.utils.paths import *
 
-def get_params(network_file):
-    return get_experiment_nets(network_file)+'/val_best_accuracy'
+def reset_progress(settings):
+    net_dir = get_experiment_nets(settings['SAVE_PATH'])
+    if os.path.isfile(net_dir+'/train_progress.csv'):
+        os.remove(net_dir+'/train_progress.csv')
+    if os.path.isfile(net_dir+'/val_progress.csv'):
+        os.remove(net_dir+'/val_progress.csv')
 
-def reset_progress(network_file):
-    log_dir = get_experiment_logs(network_file)
-    if os.path.isfile(log_dir+'/train_progress.csv'):
-        os.remove(log_dir+'/train_progress.csv')
-    if os.path.isfile(log_dir+'/val_progress.csv'):
-        os.remove(log_dir+'/val_progress.csv')
-
-def save_final(net, network_file):
-    net_dir = get_experiment_nets(network_file)
+def save_final(net, settings):
+    net_dir = get_experiment_nets(settings['SAVE_PATH'])
     if not os.path.isdir(net_dir):
         os.makedirs(net_dir)
     net.save_parameters(net_dir+'/final_epoch')
+    with open(net_dir + '/settings.json', 'w') as f:
+        json.dump(settings, f)
 
-def save_epoch(net, network_file, epoch, best_values, name, indices, mean_loss, time_used, save_rules, train=True):
+def save_epoch(net, settings, epoch, best_values, name, indices, mean_loss, time_used, save_rules, train=True):
     while len(save_rules) < len(name):
         save_rules.append('n')
     mode = 'train' if train else 'val'
 
-    log_dir = get_experiment_logs(network_file)
-    net_dir = get_experiment_nets(network_file)
-    if not os.path.isdir(log_dir):
-        os.makedirs(log_dir)
+    net_dir = get_experiment_nets(settings['SAVE_PATH'])
     if not os.path.isdir(net_dir):
         os.makedirs(net_dir)
-    progress_file = log_dir + '/' + mode + '_progress.csv'
+    progress_file = net_dir + '/' + mode + '_progress.csv'
 
     if not os.path.isfile(progress_file):
         with open(progress_file, 'w+') as f:

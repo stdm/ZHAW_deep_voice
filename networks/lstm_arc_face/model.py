@@ -2,8 +2,6 @@ import mxnet as mx
 
 import os
 
-from networks.lstm_arc_face import settings
-
 from mxnet.gluon import nn
 from mxnet.gluon import rnn
 
@@ -18,15 +16,15 @@ def get_context():
     return ctx
 
 class NetworkBlock(mx.gluon.HybridBlock):
-    def __init__(self, n_classes, **kwargs):
+    def __init__(self, n_classes, settings, **kwargs):
         super(NetworkBlock, self).__init__(**kwargs)
 
-        self.lstm_hidden_1 = settings.LSTM_HIDDEN_1
-        self.lstm_hidden_2 = settings.LSTM_HIDDEN_2
-        self.dense_hidden_1 = n_classes * settings.DENSE_HIDDEN_1
-        self.dense_hidden_2 = n_classes * settings.DENSE_HIDDEN_2
-        self.drop_rate_1 = settings.DROP_RATE_1
-        self.drop_rate_2 = settings.DROP_RATE_2
+        self.lstm_hidden_1 = settings['LSTM_HIDDEN_1']
+        self.lstm_hidden_2 = settings['LSTM_HIDDEN_2']
+        self.dense_hidden_1 = n_classes * settings['DENSE_HIDDEN_1']
+        self.dense_hidden_2 = n_classes * settings['DENSE_HIDDEN_2']
+        self.drop_rate_1 = settings['DROP_RATE_1']
+        self.drop_rate_2 = settings['DROP_RATE_2']
 
         self.output_size = self.dense_hidden_2
 
@@ -53,16 +51,16 @@ class NetworkBlock(mx.gluon.HybridBlock):
 
 
 class ArcFaceBlock(mx.gluon.HybridBlock):
-    def __init__(self, n_classes, **kwargs):
+    def __init__(self, n_classes, settings, **kwargs):
         super(ArcFaceBlock, self).__init__(**kwargs)
-        self.s = settings.MARGIN_S
-        self.m1 = settings.MARGIN_M1
-        self.m2 = settings.MARGIN_M2
-        self.m3 = settings.MARGIN_M3
+        self.s = settings['MARGIN_S']
+        self.m1 = settings['MARGIN_M1']
+        self.m2 = settings['MARGIN_M2']
+        self.m3 = settings['MARGIN_M3']
         self.n_classes = n_classes
         with self.name_scope():
             self.body = nn.HybridSequential(prefix='')
-            self.network_block = NetworkBlock(self.n_classes)
+            self.network_block = NetworkBlock(self.n_classes, settings)
             self.body.add(self.network_block)
             self.last_fc_weight = self.params.get('last_fc_weight', shape=(self.n_classes, self.network_block.output_size))
 

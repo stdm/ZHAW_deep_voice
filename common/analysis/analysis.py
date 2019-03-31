@@ -115,6 +115,7 @@ def plot_curves(plot_file_name, curve_names, mrs, homogeneity_scores, completene
     # fig1.show()
     fig1.savefig(get_result_png(plot_file_name))
     fig1.savefig(get_result_png(plot_file_name + '.svg'), format='svg')
+    return fig1
 
 
 def add_cluster_subplot(fig, position, y_lable):
