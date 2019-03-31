@@ -4,6 +4,7 @@ import random
 
 from random import randint
 from common.utils.pickler import load
+from common.utils.paths import *
 
 class SimpleIter(mx.io.DataIter):
     def __init__(self, data_gen, settings):
