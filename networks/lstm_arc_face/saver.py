@@ -23,11 +23,13 @@ def plot_progress(settings):
         dic['val'][t] = []
         dic['train'][t] = []
     for i in range(len(t_l)):
-        t = t_l[i].split(',')
-        v = v_l[i].split(',')
-        for j in len(t):
-            dic['val'][title[j]] = float(v[j])
-            dic['train'][title[j]] = float(t[j])
+        print(t_l[i])
+        if t_l[i].strip() != '':
+            t = t_l[i].split(',')
+            v = v_l[i].split(',')
+            for j in len(t):
+                dic['val'][title[j]] = float(v[j])
+                dic['train'][title[j]] = float(t[j])
     x = dic['train'][title[0]]
     for i in range(len(title)) - 1:
         t = title[1+i]
