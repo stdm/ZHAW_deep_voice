@@ -56,7 +56,7 @@ class ArcFaceController(NetworkController):
                 best_values = save_epoch(net, settings, epoch, best_values, name, indices, mean_loss, time_used, save_rules, train=False)
                 print('')
                 epoch = epoch + 1
-            test_settings(settings)
+            self.test_settings(settings)
             save_final(net, settings)
 
     def test_settings(self, settings):
