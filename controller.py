@@ -113,7 +113,6 @@ class Controller(NetworkController):
 
     def generate_controllers(self):
         self.network_controllers = []
-        print(self.network)
         if self.network == 'pairwise_lstm_vox2':
             from networks.pairwise_lstm_vox.lstm_controller import LSTMVOX2Controller
             self.network_controllers.append(LSTMVOX2Controller(self.out_layer, self.seg_size, self.vec_size))

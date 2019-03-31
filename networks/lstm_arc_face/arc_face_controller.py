@@ -27,6 +27,7 @@ class ArcFaceController(NetworkController):
 
     def train_network(self):
         for settings in get_untrained_settings():
+            print(settings['SAVE_PATH'])
             reset_progress(settings)
             ctx = get_context()
             metric = CompositeEvalMetric([Accuracy(), TopKAccuracy(5), CrossEntropy()])
