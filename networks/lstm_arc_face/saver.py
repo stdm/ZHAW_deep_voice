@@ -33,12 +33,7 @@ def plot_progress(settings):
     for i in range(len(title) - 1):
         t = title[1+i]
         fig = plt.figure()
-        sub = fig.add_subplot()
-        print(t)
-        print(dic['train'][t])
-        print(dic['val'][t])
-
-        sub.plot(x, dic['train'][t], x, dic['val'][t])
+        plt.plot(x, dic['train'][t], x, dic['val'][t])
         fig.savefig(net_dir+'/'+t)
         fig.savefig(net_dir+'/'+t+'.svg', format='svg')
 
