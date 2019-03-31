@@ -26,6 +26,7 @@ def plot_progress(settings):
         print(t_l[i])
         if t_l[i].strip() != '':
             t = t_l[i].split(',')
+            print(t)
             v = v_l[i].split(',')
             for j in len(t):
                 dic['val'][title[j]] = float(v[j])
