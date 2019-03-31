@@ -32,7 +32,7 @@ def plot_progress(settings):
     x = dic['train'][title[0]]
     for i in range(len(title) - 1):
         t = title[1+i]
-        fig = plt.figure()
+        fig = plt.figure(2, clear=True)
         plt.plot(x, dic['train'][t], x, dic['val'][t])
         fig.savefig(net_dir+'/'+t)
         fig.savefig(net_dir+'/'+t+'.svg', format='svg')
@@ -49,7 +49,6 @@ def save_final(net, settings):
     if not os.path.isdir(net_dir):
         os.makedirs(net_dir)
     net.save_parameters(net_dir+'/final_epoch')
-    plot_progress(settings)
     with open(net_dir + '/settings.json', 'w') as f:
         json.dump(settings, f)
 

@@ -56,28 +56,32 @@ class ArcFaceController(NetworkController):
                 best_values = save_epoch(net, settings, epoch, best_values, name, indices, mean_loss, time_used, save_rules, train=False)
                 print('')
                 epoch = epoch + 1
+            test_settings(settings)
             save_final(net, settings)
+
+    def test_settings(self, settings):
+        plot_progress(settings)
+        checkpoint_names, set_of_embeddings, set_of_true_clusters, embeddings_numbers = self.get_embeddings(settings)
+        set_of_predicted_clusters = cluster_embeddings(set_of_embeddings)
+
+        set_of_mrs = []
+        set_of_homogeneity_scores = []
+        set_of_completeness_scores = []
+
+        for index, predicted_clusters in enumerate(set_of_predicted_clusters):
+            mrs, homogeneity_scores, completeness_scores = calculate_analysis_values(predicted_clusters, set_of_true_clusters[index])
+
+            set_of_mrs.append(mrs)
+            set_of_homogeneity_scores.append(homogeneity_scores)
+            set_of_completeness_scores.append(completeness_scores)
+
+        fig = plot_curves('temp', [settings['SAVE_PATH']], set_of_mrs, set_of_homogeneity_scores, set_of_completeness_scores, embeddings_numbers)
+        fig.savefig(get_experiment_nets(settings['SAVE_PATH'] + '/clustering_results'))
+        fig.savefig(get_experiment_nets(settings['SAVE_PATH'] + '/clustering_results.svg'), format='svg')
 
     def test_network(self, out_layer, seg_size, vec_size):
         for settings in get_trained_settings():
-            plot_progress(settings)
-            checkpoint_names, set_of_embeddings, set_of_true_clusters, embeddings_numbers = self.get_embeddings(settings)
-            set_of_predicted_clusters = cluster_embeddings(set_of_embeddings)
-
-            set_of_mrs = []
-            set_of_homogeneity_scores = []
-            set_of_completeness_scores = []
-
-            for index, predicted_clusters in enumerate(set_of_predicted_clusters):
-                mrs, homogeneity_scores, completeness_scores = calculate_analysis_values(predicted_clusters, set_of_true_clusters[index])
-
-                set_of_mrs.append(mrs)
-                set_of_homogeneity_scores.append(homogeneity_scores)
-                set_of_completeness_scores.append(completeness_scores)
-
-            fig = plot_curves('temp', settings['SAVE_PATH'], set_of_mrs, set_of_homogeneity_scores, set_of_completeness_scores, embeddings_numbers)
-            fig.savefig(get_experiment_nets(settings['SAVE_PATH'] + '/plot'))
-            fig.savefig(get_experiment_nets(settings['SAVE_PATH'] + '/plot.svg'), format='svg')
+            test_settings(settings)
 
     def get_embeddings(self, settings):
         _, _, num_speakers = load_train_data(settings)

@@ -84,7 +84,7 @@ def plot_curves(plot_file_name, curve_names, mrs, homogeneity_scores, completene
     colors = [color_map(i) for i in np.linspace(0, 1, number_of_lines)]
 
     # Define number of figures
-    fig1 = plt.figure(1)
+    fig1 = plt.figure(1, clear=True)
     fig1.set_size_inches(16, 8)
 
     # Define Plots
