@@ -53,7 +53,7 @@ def _load_children(settings):
             curr_dict['SAVE_PATH'] += '/' + child
             for k in settings['CHILDREN'][child]:
                 curr_dict[k] = settings['CHILDREN'][child][k]
-            dicts.extend(load_children(curr_dict))
+            dicts.extend(_load_children(curr_dict))
     else:
         dicts.append(settings)
     return dicts
