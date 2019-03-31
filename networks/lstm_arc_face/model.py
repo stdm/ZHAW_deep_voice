@@ -19,6 +19,7 @@ class NetworkBlock(mx.gluon.HybridBlock):
     def __init__(self, n_classes, settings, **kwargs):
         super(NetworkBlock, self).__init__(**kwargs)
 
+        self.settings = settings
         self.lstm_hidden_1 = settings['LSTM_HIDDEN_1']
         self.lstm_hidden_2 = settings['LSTM_HIDDEN_2']
         self.dense_hidden_1 = n_classes * settings['DENSE_HIDDEN_1']
@@ -40,12 +41,16 @@ class NetworkBlock(mx.gluon.HybridBlock):
 
     def embeddings(self, x):
         x = self.embedding(x)
-        x = mx.ndarray.slice_axis(x, axis=1, begin=-1, end=None)
+        if self.settings['EMBEDDINGS_FROM'] == 'LSTM':
+            x = mx.ndarray.slice_axis(x, axis=1, begin=-1, end=None)
+        elif self.settings['EMBEDDINGS_FROM'] == 'DENSE':
+            x = self.body(x)
         return x
 
     def hybrid_forward(self, F, x):
         x = self.embedding(x)
-        x = F.slice_axis(x, axis=1, begin=-1, end=None)
+        if self.settings['EMBEDDINGS_FROM'] == 'LSTM':
+            x = mx.ndarray.slice_axis(x, axis=1, begin=-1, end=None)
         x = self.body(x)
         return x
 
