@@ -12,7 +12,7 @@ from .data_generator import load_train_data, load_test_data
 from .model import ArcFaceBlock, get_context
 from .metrics import CrossEntropy
 from .executor import run_epoch
-from .saver import save_epoch, reset_progress, save_final
+from .saver import save_epoch, reset_progress, save_final, plot_progress
 from .loader import get_untrained_settings, get_trained_settings, get_params
 
 from common.utils.paths import *
@@ -55,11 +55,11 @@ class ArcFaceController(NetworkController):
                 best_values = save_epoch(net, settings, epoch, best_values, name, indices, mean_loss, time_used, save_rules, train=False)
                 print('')
                 epoch = epoch + 1
-
             save_final(net, settings)
 
     def test_network(self, out_layer, seg_size, vec_size):
         for settings in get_trained_settings():
+            plot_progress(settings)
             checkpoint_names, set_of_embeddings, set_of_true_clusters, embeddings_numbers = self.get_embeddings(settings)
             set_of_predicted_clusters = cluster_embeddings(set_of_embeddings)
 
@@ -73,6 +73,7 @@ class ArcFaceController(NetworkController):
                 set_of_mrs.append(mrs)
                 set_of_homogeneity_scores.append(homogeneity_scores)
                 set_of_completeness_scores.append(completeness_scores)
+
             fig = plot_curves('temp', settings['SAVE_PATH'], set_of_mrs, set_of_homogeneity_scores, set_of_completeness_scores, embeddings_numbers)
             fig.savefig(get_experiment_nets(settings['SAVE_PATH'] + '/plot'))
             fig.savefig(get_experiment_nets(settings['SAVE_PATH'] + '/plot.svg'), format='svg')

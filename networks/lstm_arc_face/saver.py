@@ -1,7 +1,41 @@
 import json
 import os
 
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+
 from common.utils.paths import *
+
+def plot_progress(settings):
+    net_dir = get_experiment_nets(settings['SAVE_PATH'])
+    train_path = net_dir+'/train_progress.csv'
+    val_path = net_dir+'/val_progress.csv'
+    t_l, v_l = [], []
+    with open(train_path, 'r') as f:
+        t_l = f.readlines()
+    with open(val_path, 'r') as f:
+        v_l = f.readlines()
+    title = t_l[0].split(',')
+    t_l, v_l = t_l[1:], v_l[1:]
+    dic = {'val': {}, 'train': {}}
+    for t in title:
+        dic['val'][t] = []
+        dic['train'][t] = []
+    for i in range(len(t_l)):
+        t = t_l[i].split(',')
+        v = v_l[i].split(',')
+        for j in len(t):
+            dic['val'][title[j]] = float(v[j])
+            dic['train'][title[j]] = float(t[j])
+    x = dic['train'][title[0]]
+    for i in range(len(title)) - 1:
+        t = title[1+i]
+        fig = plt.figure()
+        sub = fig.add_subplot()
+        sub.plot(x, dic['train'][t], x, dic['val'][t])
+        fig.savefig(net_dir+'/'+t)
+        fig.savefig(net_dir+'/'+t+'.svg', format='svg')
 
 def reset_progress(settings):
     net_dir = get_experiment_nets(settings['SAVE_PATH'])
@@ -15,6 +49,7 @@ def save_final(net, settings):
     if not os.path.isdir(net_dir):
         os.makedirs(net_dir)
     net.save_parameters(net_dir+'/final_epoch')
+    plot_progress(settings)
     with open(net_dir + '/settings.json', 'w') as f:
         json.dump(settings, f)
 
