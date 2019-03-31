@@ -121,7 +121,7 @@ class Controller(NetworkController):
             self.network_controllers.append(LSTMController(self.out_layer, self.seg_size, self.vec_size))
         if self.network == 'arc_face':
             from networks.lstm_arc_face.arc_face_controller import ArcFaceController
-            self.network_controllers.append(ArcFaceController('speakers_100_50w_50m_not_reynolds_cluster', 'speakers_40_clustering_vs_reynolds'))
+            self.network_controllers.append(ArcFaceController())
 
 
     def setup_networks(self):
