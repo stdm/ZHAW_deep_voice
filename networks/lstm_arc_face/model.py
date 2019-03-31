@@ -50,7 +50,7 @@ class NetworkBlock(mx.gluon.HybridBlock):
     def hybrid_forward(self, F, x):
         x = self.embedding(x)
         if self.settings['EMBEDDINGS_FROM'] == 'LSTM':
-            x = mx.ndarray.slice_axis(x, axis=1, begin=-1, end=None)
+            x = F.slice_axis(x, axis=1, begin=-1, end=None)
         x = self.body(x)
         return x
 
