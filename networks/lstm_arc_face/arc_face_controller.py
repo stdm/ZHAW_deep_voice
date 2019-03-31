@@ -18,6 +18,7 @@ from .loader import get_untrained_settings, get_trained_settings, get_params
 from common.utils.paths import *
 from common.network_controller import NetworkController
 from common.clustering.generate_embeddings import generate_embeddings
+from common.clustering.generate_clusters import cluster_embeddings
 from common.analysis.analysis import *
 
 
