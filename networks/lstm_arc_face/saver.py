@@ -30,7 +30,7 @@ def plot_progress(settings):
                 dic['val'][title[j]] = float(v[j].strip())
                 dic['train'][title[j]] = float(t[j].strip())
     x = dic['train'][title[0]]
-    for i in range(len(title)) - 1:
+    for i in range(len(title) - 1):
         t = title[1+i]
         fig = plt.figure()
         sub = fig.add_subplot()
