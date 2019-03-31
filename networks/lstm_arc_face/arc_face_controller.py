@@ -47,7 +47,7 @@ class ArcFaceController(NetworkController):
 
             epoch = 0
             best_values = {}
-            while epoch < self.max_epochs:
+            while epoch < settings['MAX_EPOCHS']:
                 name, indices, mean_loss, time_used = run_epoch(net, ctx, train_iter, metric, trainer, loss, epoch, train=True)
                 best_values = save_epoch(net, settings, epoch, best_values, name, indices, mean_loss, time_used, save_rules, train=True)
 
