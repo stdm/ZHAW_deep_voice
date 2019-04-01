@@ -91,7 +91,7 @@ def _batch_generator_lstm(X, y, settings):
                     yb[j] = (y[speaker_idx])
                 spect = _extract(X[speaker_idx, 0], settings)
                 seg_idx = randint(0, spect.shape[1] - settings['SEGMENT_SIZE'])
-                Xb[j] = (np.transpose(spect[:, seg_idx:seg_idx + settings['SEGMENT_SIZE']]))
+                Xb[j] = (nd.transpose(spect[:, seg_idx:seg_idx + settings['SEGMENT_SIZE']]))
             yield Xb, yb
 
 def load_test_data(settings):
