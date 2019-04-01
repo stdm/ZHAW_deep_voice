@@ -83,7 +83,7 @@ def _batch_generator_lstm(X, y, settings):
     frequencies = _extract(X[0, 0], settings).shape[0]
 
     bs = settings['BATCH_SIZE']
-    Xb = nd.zeros((bs, segments, frequencies), mx.gpu(0))
+    Xb = nd.zeros((bs, settings['SEGMENT_SIZE'], frequencies), mx.gpu(0))
     print(Xb)
     yb = nd.zeros(bs, mx.gpu(0))
     print(yb)
