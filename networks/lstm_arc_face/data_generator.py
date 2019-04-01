@@ -80,11 +80,13 @@ def _batch_generator_lstm(X, y, settings):
     speakers = np.amax(y) + 1
     y = nd.array(list(y), mx.gpu(0))
     segments = X.shape[0]
-    print(_extract(X[0, 0], settings).shape[0])
+    frequencies = _extract(X[0, 0], settings).shape[0]
 
     bs = settings['BATCH_SIZE']
-    Xb = nd.zeros(bs, mx.gpu(0))
+    Xb = nd.zeros((bs, segments, frequencies), mx.gpu(0))
+    print(Xb)
     yb = nd.zeros(bs, mx.gpu(0))
+    print(yb)
     while 1:
         for i in range((segments + bs - 1) // bs):
             for j in range(0, bs):
