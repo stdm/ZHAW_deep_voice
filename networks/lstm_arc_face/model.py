@@ -82,7 +82,7 @@ class ArcFaceBlock(mx.gluon.HybridBlock):
 
         original_target_logit = F.pick(last_fc, label, axis=1)
         theta = original_target_logit / self.s
-        if self.m1 != 1.0 and self.m2 > 0.0:
+        if self.m1 != 1.0 or self.m2 > 0.0:
             theta = F.arccos(theta)
             theta = theta*self.m1
             theta = theta+self.m2
