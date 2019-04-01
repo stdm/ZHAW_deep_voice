@@ -11,7 +11,7 @@ class SimpleIter(mx.io.DataIter):
         n = next(data_gen)
         self._provide_data = [('data', np.array(n[0]).shape)]
         self._provide_label = [('softmax_label', np.array(n[1]).shape)]
-        self.num_batches = settings['BATCHES_PER_EPOCH_']
+        self.num_batches = settings['BATCHES_PER_EPOCH']
         self.data_gen = data_gen
         self.cur_batch = 0
 
