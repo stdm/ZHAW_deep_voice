@@ -84,9 +84,7 @@ def _batch_generator_lstm(X, y, settings):
 
     bs = settings['BATCH_SIZE']
     Xb = nd.zeros((bs, settings['SEGMENT_SIZE'], frequencies), mx.gpu(0))
-    print(Xb)
     yb = nd.zeros(bs, mx.gpu(0))
-    print(yb)
     while 1:
         for i in range((segments + bs - 1) // bs):
             for j in range(0, bs):
@@ -97,6 +95,8 @@ def _batch_generator_lstm(X, y, settings):
                 seg_idx = randint(0, spect.shape[1] - settings['SEGMENT_SIZE'])
                 spect = spect[:, seg_idx:seg_idx + settings['SEGMENT_SIZE']]
                 Xb[j] = nd.transpose(spect)
+                print(Xb)
+                input('test')
             yield Xb, yb
 
 def load_test_data(settings):
