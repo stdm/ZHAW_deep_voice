@@ -22,6 +22,8 @@ from common.utils.logger import *
 from common.utils.pickler import load, save
 from .segment_batchiterator import SegmentBatchIterator
 from .. import settings
+from common.utils.load_config import *
+from common.utils.paths import *
 
 
 class SpectrogramCnn:
@@ -86,17 +88,18 @@ def prepare_predict(net):
     return theano.function([input_var], y)
 
 def create_net(paper):
+    config = load_config(None, join(get_common(), 'config.cfg'))
     # Setup the neural network
     net = NeuralNet(
         layers=paper,
 
         # learning rate parameters
-        update_learning_rate=0.001,
-        update_momentum=0.9,
-        regression=False,
+        update_learning_rate=config.getfloat('luvo', 'update_learning_rate'),
+        update_momentum=config.getfloat('luvo', 'update_momentum'),
+        regression=config.get('luvo', 'regression'),
 
-        max_epochs=1000,
-        verbose=1,
+        max_epochs=config.getint('luvo', 'max_epochs'),
+        verbose=config.getint('luvo', 'verbose'),
     )
 
     return net

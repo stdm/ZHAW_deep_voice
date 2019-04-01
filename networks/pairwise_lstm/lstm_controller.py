@@ -29,11 +29,10 @@ class LSTMController(NetworkController):
         bilstm_2layer_dropout(
             self.network_file,
             config.get('train', 'pickle'),
-            config.get('train', 'val_pickle'),
-            config.get('pairwise_lstm', 'n_hidden1'),
-            config.get('pairwise_lstm', 'n_hidden2'),
-            config.get('pairwise_lstm', 'n_classes'),
-            config.get('pairwise_lstm', 'n_10_batches'),
+            config.getint('pairwise_lstm', 'n_hidden1'),
+            config.getint('pairwise_lstm', 'n_hidden2'),
+            config.getint('pairwise_lstm', 'n_classes'),
+            config.getint('pairwise_lstm', 'n_10_batches'),
             segment_size=self.seg_size
         )
 

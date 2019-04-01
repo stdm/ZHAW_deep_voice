@@ -9,6 +9,7 @@ from common.utils.paths import *
 from .analysis.run_analysis_network import run_analysis_network
 from .network_training.clustering_network import create_and_train
 from .network_training.network_factory import *
+from common.utils.load_config import *
 
 
 class KLDivController(NetworkController):
@@ -17,13 +18,16 @@ class KLDivController(NetworkController):
         self.checkpoints = ["pairwise_kldiv_100.pickle"]
 
     def train_network(self):
+        config = load_config(None, join(get_common(), 'config.cfg'))
         net_file = get_experiment_nets(self.checkpoints[0])
-        train_file = get_speaker_pickle("speakers_100_50w_50m_not_reynolds_cluster")
+        train_file = get_speaker_pickle(config.get('train', 'pickle'),)
 
-        create_and_train(network_params_file_in=None,
+        create_and_train(num_epochs=config.getint('pairwise_kldiv', 'num_epochs'),
+                         batch_size=config.getint('pairwise_kldiv', 'batch_size'),
+                         network_params_file_in=None,
                          network_params_file_out=net_file,
                          train_file=train_file,
-                         epoch_batches=30,
+                         epoch_batches=config.getint('pairwise_kldiv', 'epoch_batches'),
                          network_fun=create_network_100_speakers, with_validation=False)
 
     def get_embeddings(self):

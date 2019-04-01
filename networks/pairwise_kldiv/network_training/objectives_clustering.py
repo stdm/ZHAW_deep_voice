@@ -11,18 +11,21 @@ import lasagne
 import theano
 import theano.tensor as T
 from theano.ifelse import ifelse
+from common.utils.load_config import *
+from common.utils.paths import *
 
 epsilon = 1e-16  # to avoid log(0) or division by 0
 
 
 def create_loss_functions_kl_div(input_var, network, target_var, margin):
+    config = load_config(None, join(get_common(), 'config.cfg'))
     # define loss expression
     prediction = lasagne.layers.get_output(network)
     loss = mean_loss_kl_div(prediction, target_var, margin)
 
     # define update expression for training
     params = lasagne.layers.get_all_params(network, trainable=True)
-    updates = lasagne.updates.adadelta(loss, params, learning_rate=1.0, rho=0.95, epsilon=1e-6)
+    updates = lasagne.updates.adadelta(loss, params, config.getfloat('pairwise_kldiv', 'adadelta_learning_rate'), config.getfloat('pairwise_kldiv', 'adadelta_rho'), config.getfloat('pairwise_kldiv', 'adadelta_epsilon'))
     # updates = lasagne.updates.adagrad(loss, params, learning_rate=1.0, epsilon=1e-6)
     # updates = lasagne.updates.adam(loss, params, learning_rate=0.001, beta1=0.9, beta2 = 0.999, epsilon = 1e-8)
     # updates = lasagne.updates.nesterov_momentum(loss, params, learning_rate=0.001)
