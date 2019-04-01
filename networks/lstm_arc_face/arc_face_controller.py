@@ -77,7 +77,7 @@ class ArcFaceController(NetworkController):
             set_of_homogeneity_scores.append(homogeneity_scores)
             set_of_completeness_scores.append(completeness_scores)
 
-        fig = plot_curves('temp', [settings['SAVE_PATH']], set_of_mrs, set_of_homogeneity_scores, set_of_completeness_scores, embeddings_numbers)
+        fig = plot_curves('temp', [settings['NAME']], set_of_mrs, set_of_homogeneity_scores, set_of_completeness_scores, embeddings_numbers)
         fig.savefig(get_experiment_nets(settings['SAVE_PATH'] + '/clustering_results'))
         fig.savefig(get_experiment_nets(settings['SAVE_PATH'] + '/clustering_results.svg'), format='svg')
 
