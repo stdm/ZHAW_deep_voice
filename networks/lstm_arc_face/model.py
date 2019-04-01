@@ -90,9 +90,22 @@ class ArcFaceBlock(mx.gluon.HybridBlock):
         if self.m3>0.0:
             marginal_target_logit = marginal_target_logit - self.m3
         gt_one_hot = F.one_hot(label, depth = self.n_classes, on_value = 1.0, off_value = 0.0)
-        diff = marginal_target_logit - original_target_logit
-        diff = diff * self.s
+        diff = marginal_target_logit * self.s
+        diff = diff - original_target_logit
         diff = F.expand_dims(diff, 1)
         body = F.broadcast_mul(gt_one_hot, diff)
         out = last_fc + body
         return out, last_fc
+
+class SoftmaxLoss(mx.gluon.HybridBlock):
+    def __init__(self, n_classes, settings, **):
+        self.n_classes = n_classes
+        self.batch_size = settings['BATCH_SIZE']
+
+    def hybrid_forward(self, F, x, label):
+        body = F.SoftmaxActivation(x)
+        body = F.log(body)
+        gt_one_hot = F.one_hot(label, depth=self.n_classes, on_value=-1.0, off_value=0.0)
+        body = body * gt_one_hot
+        ce_loss = F.sum(body) / self.batch_size
+        return ce_loss

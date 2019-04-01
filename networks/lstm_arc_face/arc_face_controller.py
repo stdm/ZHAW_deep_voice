@@ -9,7 +9,7 @@ from mxnet.gluon import rnn
 from mxnet.metric import Accuracy, TopKAccuracy, CompositeEvalMetric, check_label_shapes
 
 from .data_generator import load_train_data, load_test_data
-from .model import ArcFaceBlock, get_context
+from .model import ArcFaceBlock, get_context, SoftmaxLoss
 from .metrics import CrossEntropy
 from .executor import run_epoch
 from .saver import save_epoch, reset_progress, save_final, plot_progress
@@ -44,8 +44,10 @@ class ArcFaceController(NetworkController):
             kv = mx.kv.create('device')
             trainer = mx.gluon.Trainer(net.collect_params(), mx.optimizer.AdaDelta(), kvstore=kv)
 
-            loss = mx.gluon.loss.SoftmaxCrossEntropyLoss()
-
+            if settings['SOFTMAX'] == 'GLUON':
+                loss = mx.gluon.loss.SoftmaxCrossEntropyLoss()
+            elif settings['SOFTMAX'] == 'CUSTOM':
+                loss = SoftmaxLoss(num_speakers, settings)
             epoch = 0
             best_values = {}
             while epoch < settings['MAX_EPOCHS']:
