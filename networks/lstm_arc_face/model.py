@@ -81,14 +81,15 @@ class ArcFaceBlock(mx.gluon.HybridBlock):
                                        num_hidden=self.n_classes, name='last_fc')
 
         original_target_logit = F.pick(last_fc, label, axis=1)
-        theta = F.arccos(original_target_logit / self.s)
-        if self.m1!=1.0:
+        theta = original_target_logit / self.s
+        if self.m1 != 1.0 and self.m2 > 0.0:
+            theta = F.arccos(theta)
             theta = theta*self.m1
-        if self.m2>0.0:
             theta = theta+self.m2
-        marginal_target_logit = F.cos(theta)
+            theta = F.cos(theta)
         if self.m3>0.0:
-            marginal_target_logit = marginal_target_logit - self.m3
+            theta = theta - self.m3
+        marginal_target_logit = theta
         gt_one_hot = F.one_hot(label, depth = self.n_classes, on_value = 1.0, off_value = 0.0)
         diff = marginal_target_logit * self.s
         diff = diff - original_target_logit

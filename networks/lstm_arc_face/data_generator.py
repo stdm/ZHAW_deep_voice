@@ -1,5 +1,6 @@
 import numpy as np
 import mxnet as mx
+import mxnet.nd as nd
 import random
 
 from random import randint
@@ -30,7 +31,7 @@ class SimpleIter(mx.io.DataIter):
         if self.cur_batch < self.num_batches:
             self.cur_batch += 1
             n = next(self.data_gen)
-            return mx.io.DataBatch([mx.nd.array(n[0], mx.gpu(0))], [mx.nd.array(n[1], mx.gpu(0))])
+            return mx.io.DataBatch([n[0]], [n[1]])
         else:
             raise StopIteration
 
@@ -74,22 +75,23 @@ def _data_splitter(x, y, settings):
     return x_t, y_t, x_v, y_v
 
 def _batch_generator_lstm(X, y, settings):
-    X = np.array(list(X))
+    X = nd.array(list(X), mx.gpu(0))
     y = np.array(list(y))
+    speakers = np.amax(y) + 1
+    y = nd.array(list(y), mx.gpu(0))
     segments = X.shape[0]
     bs = settings['BATCH_SIZE']
-    speakers = np.amax(y) + 1
+    Xb = nd.zeros(bs, mx.gpu(0))
+    yb = nd.zeros(bs, mx.gpu(0))
     while 1:
         for i in range((segments + bs - 1) // bs):
-            Xb = []
-            yb = []
             for j in range(0, bs):
                 speaker_idx = randint(0, len(X) - 1)
                 if y is not None:
-                    yb.append(y[speaker_idx])
+                    yb[j] = (y[speaker_idx])
                 spect = _extract(X[speaker_idx, 0], settings)
                 seg_idx = randint(0, spect.shape[1] - settings['SEGMENT_SIZE'])
-                Xb.append(np.transpose(spect[:, seg_idx:seg_idx + settings['SEGMENT_SIZE']]))
+                Xb[j] = (np.transpose(spect[:, seg_idx:seg_idx + settings['SEGMENT_SIZE']]))
             yield Xb, yb
 
 def load_test_data(settings):
