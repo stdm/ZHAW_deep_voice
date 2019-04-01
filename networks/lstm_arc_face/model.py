@@ -98,7 +98,8 @@ class ArcFaceBlock(mx.gluon.HybridBlock):
         return out, last_fc
 
 class SoftmaxLoss(mx.gluon.HybridBlock):
-    def __init__(self, n_classes, settings, **):
+    def __init__(self, n_classes, settings, **kwargs):
+        super(SoftmaxLoss, self).__init__(**kwargs)
         self.n_classes = n_classes
         self.batch_size = settings['BATCH_SIZE']
 
