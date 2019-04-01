@@ -96,7 +96,7 @@ def create_net(paper):
         # learning rate parameters
         update_learning_rate=config.getfloat('luvo', 'update_learning_rate'),
         update_momentum=config.getfloat('luvo', 'update_momentum'),
-        regression=config.get('luvo', 'regression'),
+        regression=config.getboolean('luvo', 'regression'),
 
         max_epochs=config.getint('luvo', 'max_epochs'),
         verbose=config.getint('luvo', 'verbose'),
