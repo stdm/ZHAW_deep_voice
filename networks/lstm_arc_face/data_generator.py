@@ -83,10 +83,10 @@ def _batch_generator_lstm(X, y, settings):
     frequencies = _extract(X[0, 0], settings).shape[0]
 
     bs = settings['BATCH_SIZE']
-    Xb = nd.zeros((bs, settings['SEGMENT_SIZE'], frequencies), mx.gpu(0))
-    yb = nd.zeros(bs, mx.gpu(0))
     while 1:
         for i in range((segments + bs - 1) // bs):
+            Xb = nd.zeros((bs, settings['SEGMENT_SIZE'], frequencies), mx.gpu(0))
+            yb = nd.zeros(bs, mx.gpu(0))
             for j in range(0, bs):
                 speaker_idx = randint(0, len(X) - 1)
                 if y is not None:
