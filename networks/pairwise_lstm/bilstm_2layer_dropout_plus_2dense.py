@@ -4,7 +4,6 @@ import numpy as np
 
 
 import common.spectogram.speaker_train_splitter as sts
-import common.spectogram.evaluationdata_picker as edp
 from .core import plot_saver as ps
 
 np.random.seed(1337)  # for reproducibility
@@ -16,6 +15,7 @@ from keras.layers import LSTM
 from keras.layers.wrappers import Bidirectional
 from .core import data_gen as dg
 from .core import pairwise_kl_divergence as kld
+from common.utils.load_config import *
 
 from common.utils.paths import *
 
@@ -35,12 +35,10 @@ from common.utils.paths import *
 
 
 class bilstm_2layer_dropout(object):
-    def __init__(self, name, training_data, evaluation_data, n_hidden1, n_hidden2, n_classes, n_10_batches,
-                 segment_size, frequency=128, legacy_evaluation=False):
+    def __init__(self, name, training_data, n_hidden1, n_hidden2, n_classes, n_10_batches,
+                 segment_size, frequency=128):
         self.network_name = name
         self.training_data = training_data
-        self.evaluation_data = evaluation_data
-        self.legacy_evaluation = legacy_evaluation
         self.test_data = 'test' + training_data[5:]
         self.n_hidden1 = n_hidden1
         self.n_hidden2 = n_hidden2
@@ -52,6 +50,7 @@ class bilstm_2layer_dropout(object):
         self.run_network()
 
     def create_net(self):
+        config = load_config(None, join(get_common(), 'config.cfg'))
         model = Sequential()
         model.add(Bidirectional(LSTM(self.n_hidden1, return_sequences=True), input_shape=self.input))
         model.add(Dropout(0.50))
@@ -61,33 +60,20 @@ class bilstm_2layer_dropout(object):
         model.add(Dense(self.n_classes * 5))
         model.add(Dense(self.n_classes))
         model.add(Activation('softmax'))
-        adam = keras.optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
+        adam = keras.optimizers.Adam(config.getfloat('pairwise_lstm', 'adam_lr'), config.getfloat('pairwise_lstm', 'adam_beta_1'), config.getfloat('pairwise_lstm', 'adam_beta_2'), config.getfloat('pairwise_lstm', 'adam_epsilon'), config.getfloat('pairwise_lstm', 'adam_decay'))
         # ada = keras.optimizers.Adadelta(lr=1.0, rho=0.95, epsilon=1e-08, decay=0.0)
         model.compile(loss=kld.pairwise_kl_divergence,
                       optimizer=adam,
                       metrics=['accuracy'])
         return model
 
-    '''
-    As of 2019,a new evaluation system exists. By setting self.legacy_evaluation, the old system still can be used.
-    This will Split the training data to a training set (80%) an evaluation set (20%).
-    The new evaluation system uses a seperate pickle file as evaluation data.
-    '''
+
     def create_train_data(self):
         with open(get_speaker_pickle(self.training_data), 'rb') as f:
-            (X_t, y_t, speaker_names) = pickle.load(f)
+            (X, y, speaker_names) = pickle.load(f)
 
-            if self.legacy_evaluation:
-                splitter = sts.SpeakerTrainSplit(0.2, 10)
-                X_t, X_v, y_t, y_v = splitter(X_t, y_t)
-                print("legacy evaluation!")
-            else:
-
-                with open(get_speaker_pickle(self.evaluation_data), 'rb') as f:
-                    (X, y, speaker_names) = pickle.load(f)
-                    eval_picker = edp.EvalData_Picker(40, 10)
-                    X_v, y_v = eval_picker(X, y)
-                    print("new evaluation!")
+            splitter = sts.SpeakerTrainSplit(0.2, 10)
+            X_t, X_v, y_t, y_v = splitter(X, y)
 
         return X_t, y_t, X_v, y_v
 
