@@ -1,6 +1,6 @@
 import numpy as np
 import mxnet as mx
-import mxnet.nd as nd
+import mxnet.ndarray as nd
 import random
 
 from random import randint
