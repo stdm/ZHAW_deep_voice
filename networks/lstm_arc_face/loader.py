@@ -49,10 +49,9 @@ def _load_children(settings, save_structure):
     if 'CHILDREN' in settings:
         for child in settings['CHILDREN']:
             curr_dict = settings.copy()
-            settings['CHILDREN'][child]
             curr_dict.pop('CHILDREN', None)
-            for k in settings['CHILDREN'][child]:
-                curr_dict[k] = settings['CHILDREN'][child][k]
+            for k in child:
+                curr_dict[k] = child[k]
             dicts.extend(_load_children(curr_dict, save_structure))
     else:
         curr_dict = settings.copy()
