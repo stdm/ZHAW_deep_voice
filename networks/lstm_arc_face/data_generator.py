@@ -1,10 +1,15 @@
 import numpy as np
 import mxnet as mx
 import random
+import thread
 
 from random import randint
 from common.utils.pickler import load
 from common.utils.paths import *
+
+def _get_next(iter):
+    n = iter.data_gen.next()
+    iter.next_el = ([mx.nd.array(n[0], mx.gpu(0))], [mx.nd.array(n[1], mx.gpu(0))])
 
 class SimpleIter(mx.io.DataIter):
     def __init__(self, data_gen, settings):
@@ -14,6 +19,8 @@ class SimpleIter(mx.io.DataIter):
         self.num_batches = settings['BATCHES_PER_EPOCH']
         self.data_gen = data_gen
         self.cur_batch = 0
+        self.next_el = None
+        _get_next(self)
 
     def reset(self):
         self.cur_batch = 0
@@ -29,8 +36,13 @@ class SimpleIter(mx.io.DataIter):
     def next(self):
         if self.cur_batch < self.num_batches:
             self.cur_batch += 1
-            n = next(self.data_gen)
-            return mx.io.DataBatch([mx.nd.array(n[0], mx.gpu(0))], [mx.nd.array(n[1], mx.gpu(0))])
+            while self.next_el is None:
+                pass
+            n = self.next_el
+            db = mx.io.DataBatch(n[0], n[1])
+            self.next_el = None
+            thread.start_new_thread(_get_next, (self,) )
+            return db
         else:
             raise StopIteration
 
