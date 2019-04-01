@@ -12,7 +12,8 @@ def get_untrained_settings():
     if filename:
         with open(filename, 'r') as f:
             settings_tree = json.load(f)
-    all_settings = _load_children(settings_tree['DEFAULT'])
+    save_structure = settings_tree['SAVE_STRUCTURE']
+    all_settings = _load_children(settings_tree['DEFAULT'], save_structure)
     trained_settings = get_trained_settings()
     untrained_settings = []
     for settings1 in all_settings:
@@ -43,17 +44,24 @@ def _get_children(path):
             settings.extend(_get_children(path+'/'+child))
     return settings
 
-def _load_children(settings):
+def _load_children(settings, save_structure):
     dicts = []
     if 'CHILDREN' in settings:
         for child in settings['CHILDREN']:
             curr_dict = settings.copy()
             settings['CHILDREN'][child]
             curr_dict.pop('CHILDREN', None)
-            curr_dict['SAVE_PATH'] += '/' + child
             for k in settings['CHILDREN'][child]:
                 curr_dict[k] = settings['CHILDREN'][child][k]
-            dicts.extend(_load_children(curr_dict))
+            dicts.extend(_load_children(curr_dict, save_structure))
     else:
-        dicts.append(settings)
+        curr_dict = settings.copy()
+        path = curr_dict['SAVE_PATH']
+        for folder_struct in save_structure:
+            folder_name = ''
+            for k in folder_struct:
+                folder_name += k+'='+str(settings[k])+';'
+            path += '/'+folder_name[:-1]
+        curr_dict['SAVE_PATH'] = path
+        dicts.append(curr_dict)
     return dicts
