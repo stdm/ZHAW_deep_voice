@@ -90,8 +90,8 @@ def _batch_generator_lstm(X, y, settings):
                 if y is not None:
                     yb[j] = y[speaker_idx]
                 spect = _extract(X[speaker_idx, 0], settings)
-                print(spect)
                 seg_idx = randint(0, spect.shape[1] - settings['SEGMENT_SIZE'])
+                print(spect[:, seg_idx:seg_idx + settings['SEGMENT_SIZE']])
                 Xb[j] = nd.transpose(spect[:, seg_idx:seg_idx + settings['SEGMENT_SIZE']])
             yield Xb, yb
 
