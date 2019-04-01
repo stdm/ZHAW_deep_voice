@@ -75,10 +75,10 @@ def _data_splitter(x, y, settings):
     return x_t, y_t, x_v, y_v
 
 def _batch_generator_lstm(X, y, settings):
-    X = nd.array(list(X), mx.gpu(0))
+    X = nd.array(list(X))
     y = np.array(list(y))
     speakers = np.amax(y) + 1
-    y = nd.array(list(y), mx.gpu(0))
+    y = nd.array(list(y))
     segments = X.shape[0]
     frequencies = _extract(X[0, 0], settings).shape[0]
 
@@ -95,8 +95,6 @@ def _batch_generator_lstm(X, y, settings):
                 seg_idx = randint(0, spect.shape[1] - settings['SEGMENT_SIZE'])
                 spect = spect[:, seg_idx:seg_idx + settings['SEGMENT_SIZE']]
                 Xb[j] = nd.transpose(spect)
-                print(Xb)
-                input('test')
             yield Xb, yb
 
 def load_test_data(settings):
