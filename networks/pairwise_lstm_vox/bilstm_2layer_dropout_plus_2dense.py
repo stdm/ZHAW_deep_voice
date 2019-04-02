@@ -8,9 +8,10 @@ from .core import plot_saver as ps
 np.random.seed(1337)  # for reproducibility
 
 import keras
+from keras import backend
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation
-from keras.layers import LSTM
+from keras.layers import LSTM, CuDNNLSTM
 from keras.layers.wrappers import Bidirectional
 from .core import data_gen as dg
 from .core import pairwise_kl_divergence as kld
@@ -48,10 +49,21 @@ class bilstm_2layer_dropout(object):
         self.run_network()
 
     def create_net(self):
+        tensorflow_gpus_available = len(backend.tensorflow_backend._get_available_gpus()) > 0
+        
         model = Sequential()
-        model.add(Bidirectional(LSTM(self.n_hidden1, return_sequences=True), input_shape=self.input))
+        if (tensorflow_gpus_available):
+            model.add(Bidirectional(CuDNNLSTM(self.n_hidden1, return_sequences=True), input_shape=self.input))
+        else:
+            model.add(Bidirectional(LSTM(self.n_hidden1, return_sequences=True), input_shape=self.input))
+
         model.add(Dropout(0.50))
-        model.add(Bidirectional(LSTM(self.n_hidden2)))
+
+        if (tensorflow_gpus_available):
+            model.add(Bidirectional(CuDNNLSTM(self.n_hidden2)))
+        else:
+            model.add(Bidirectional(LSTM(self.n_hidden2)))
+            
         model.add(Dense(self.n_classes * 10))
         model.add(Dropout(0.25))
         model.add(Dense(self.n_classes * 5))

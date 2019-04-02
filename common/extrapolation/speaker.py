@@ -174,7 +174,7 @@ class Speaker:
         
         x = np.zeros((audio_file_count, 1, self.frequency_elements, self.max_audio_length), dtype=np.float32)
         y = np.zeros(audio_file_count, dtype=np.int32)
-        print(x.shape)
+        print('build_array_and_extract_speaker_data', x.shape)
 
         # Extract the spectrogram's, speaker numbers and speaker names
         return SpectrogramExtractor().extract_speaker_data(x, y, speaker_files)
