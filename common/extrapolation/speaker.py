@@ -46,7 +46,8 @@ class Speaker:
 
         # Extract the spectrogram's, speaker numbers and speaker names
         X, y, speaker_files = self.extract_data_from_speaker()
-        speaker_names = list(speaker_files.keys()) # can't pickle dict.keys() directly
+        #speaker_names = list(speaker_files.keys()) # can't pickle dict.keys() directly
+        speaker_names = speaker_files
 
         # Safe Test-Data to disk
         if self.split_train_test:

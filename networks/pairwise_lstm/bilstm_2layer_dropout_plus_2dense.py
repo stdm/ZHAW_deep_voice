@@ -68,8 +68,8 @@ class bilstm_2layer_dropout(object):
         with open(get_speaker_pickle(self.training_data), 'rb') as f:
             (X, y, speaker_names) = pickle.load(f)
 
-        splitter = sts.SpeakerTrainSplit(0.2, 10)
-        X_t, X_v, y_t, y_v = splitter(X, y)
+        splitter = sts.SpeakerTrainSplit(0.2)
+        X_t, X_v, y_t, y_v = splitter(X, y, speaker_names)
         return X_t, y_t, X_v, y_v
 
     def create_callbacks(self):

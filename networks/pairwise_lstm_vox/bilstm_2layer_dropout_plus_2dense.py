@@ -11,7 +11,8 @@ import keras
 from keras import backend
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation
-from keras.layers import LSTM, CuDNNLSTM
+from keras.layers import LSTM
+from keras.layers import CuDNNLSTM
 from keras.layers.wrappers import Bidirectional
 from .core import data_gen as dg
 from .core import pairwise_kl_divergence as kld
@@ -63,7 +64,7 @@ class bilstm_2layer_dropout(object):
             model.add(Bidirectional(CuDNNLSTM(self.n_hidden2)))
         else:
             model.add(Bidirectional(LSTM(self.n_hidden2)))
-            
+
         model.add(Dense(self.n_classes * 10))
         model.add(Dropout(0.25))
         model.add(Dense(self.n_classes * 5))
@@ -78,11 +79,13 @@ class bilstm_2layer_dropout(object):
         return model
 
     def create_train_data(self):
+        print('create_train_data', self.training_data)
+        print('create_train_data', get_speaker_pickle(self.training_data))
         with open(get_speaker_pickle(self.training_data), 'rb') as f:
             (X, y, speaker_names) = pickle.load(f)
 
-        splitter = sts.SpeakerTrainSplit(0.2, 10)
-        X_t, X_v, y_t, y_v = splitter(X, y)
+        splitter = sts.SpeakerTrainSplit(0.2)
+        X_t, X_v, y_t, y_v = splitter(X, y, speaker_names)
         return X_t, y_t, X_v, y_v
 
     def create_callbacks(self):
