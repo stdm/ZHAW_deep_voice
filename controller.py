@@ -48,16 +48,12 @@ DEFAULT_DEBUG = False
 DEFAULT_PLOT = False
 DEFAULT_BEST = False
 DEFAULT_VAL_NUMBER = 40
-DEFAULT_OUT_LAYER = 2
-DEFAULT_SEG_SIZE = 15
-DEFAULT_VEC_SIZE = 512
 
 class Controller(NetworkController):
     def __init__(self, 
                  setup=DEFAULT_SETUP, network=DEFAULT_NETWORK, train=DEFAULT_TRAIN, test=DEFAULT_TEST, 
                  clear=DEFAULT_CLEAR, debug=DEFAULT_DEBUG, plot=DEFAULT_PLOT, best=DEFAULT_BEST, 
-                 val_number=DEFAULT_VAL_NUMBER, out_layer=DEFAULT_OUT_LAYER, seg_size=DEFAULT_SEG_SIZE, 
-                 vec_size=DEFAULT_VEC_SIZE):
+                 val_number=DEFAULT_VAL_NUMBER):
         super().__init__("Front")
         self.setup = setup
         self.network = network
@@ -68,9 +64,6 @@ class Controller(NetworkController):
         self.network_controllers = []
         self.plot = plot
         self.best = best
-        self.out_layer = out_layer
-        self.seg_size = seg_size
-        self.vec_size = vec_size
 
         validation_data = {
             40: "speakers_40_clustering_vs_reynolds",
@@ -86,7 +79,7 @@ class Controller(NetworkController):
 
     def test_network(self):
         for network_controller in self.network_controllers:
-            network_controller.test_network(self.out_layer, self.seg_size, self.vec_size)
+            network_controller.test_network()
 
     def get_embeddings(self):
         return None, None, None, None
@@ -115,11 +108,11 @@ class Controller(NetworkController):
     def generate_controllers(self):
 
         controller_dict = {
-            'pairwise_lstm': [LSTMController(self.out_layer, self.seg_size, self.vec_size)],
+            'pairwise_lstm': [LSTMController()],
             'pairwise_kldiv': [KLDivController()],
             'flow_me': [MEController(self.clear, self.debug, False)],
             'luvo': [LuvoController()],
-            'all': [LSTMController(self.out_layer, self.seg_size, self.vec_size), KLDivController(), MEController(self.clear, self.debug, False), LuvoController()]
+            'all': [LSTMController(), KLDivController(), MEController(self.clear, self.debug, False), LuvoController()]
         }
 
         try:
@@ -198,6 +191,5 @@ if __name__ == '__main__':
     controller = Controller(config.getboolean('common', 'setup'), config.get('common', 'network'),
                             config.getboolean('common', 'train'), config.getboolean('common', 'test'), config.getboolean('common', 'clear'),
                             config.getboolean('common', 'debug'), config.getboolean('common', 'plot'), config.getboolean('common', 'best'),
-                            config.getint('common', 'val_number'), config.getint('common', 'out_layer'),
-                            config.getint('common', 'seg_size'), config.getint('common', 'vec_size'))
+                            config.getint('common', 'val_number'))
     controller.run()
