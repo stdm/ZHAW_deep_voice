@@ -47,17 +47,20 @@ DEFAULT_CLEAR = False
 DEFAULT_DEBUG = False
 DEFAULT_PLOT = False
 DEFAULT_BEST = False
-DEFAULT_VAL_NUMBER = 40
+DEFAULT_VAL_DATA_SIZE = 40
 DEFAULT_OUT_LAYER = 2
 DEFAULT_SEG_SIZE = 15
 DEFAULT_VEC_SIZE = 512
+DEFAULT_DEV_MODE = True
+DEFAULT_VAL_DATA = 'speakers_80_stratified_dev_train'
+DEFAULT_DEV_VAL_DATA = 'speakers_80_stratified_dev_train'
 
 class Controller(NetworkController):
     def __init__(self, 
                  setup=DEFAULT_SETUP, network=DEFAULT_NETWORK, train=DEFAULT_TRAIN, test=DEFAULT_TEST, 
                  clear=DEFAULT_CLEAR, debug=DEFAULT_DEBUG, plot=DEFAULT_PLOT, best=DEFAULT_BEST, 
-                 val_number=DEFAULT_VAL_NUMBER, out_layer=DEFAULT_OUT_LAYER, seg_size=DEFAULT_SEG_SIZE, 
-                 vec_size=DEFAULT_VEC_SIZE):
+                 out_layer=DEFAULT_OUT_LAYER, seg_size=DEFAULT_SEG_SIZE,
+                 vec_size=DEFAULT_VEC_SIZE, val_data=DEFAULT_VAL_DATA, dev_val_data=DEFAULT_DEV_VAL_DATA, val_data_size=DEFAULT_VAL_DATA_SIZE, dev_mode=DEFAULT_DEV_MODE):
         super().__init__("Front")
         self.setup = setup
         self.network = network
@@ -71,14 +74,11 @@ class Controller(NetworkController):
         self.out_layer = out_layer
         self.seg_size = seg_size
         self.vec_size = vec_size
+        self.val_data = val_data
+        self.dev_val_data = dev_val_data
+        self.val_data_size = val_data_size
+        self.dev_mode = dev_mode
 
-        validation_data = {
-            40: "speakers_40_clustering_vs_reynolds",
-            60: "speakers_60_clustering",
-            80: "speakers_80_clustering"
-        }
-
-        self.val_data = validation_data[val_number]
 
     def train_network(self):
         for network_controller in self.network_controllers:
@@ -126,6 +126,9 @@ class Controller(NetworkController):
             self.network_controllers = controller_dict[self.network]
             for net in self.network_controllers:
                 net.val_data = self.val_data
+                net.dev_val_data = self.dev_val_data
+                net.dev_mode = self.dev_mode
+                net.val_data_size = self.val_data_size
 
         except KeyError:
             print("Network " + self.network + " is not known:")
@@ -198,6 +201,7 @@ if __name__ == '__main__':
     controller = Controller(config.getboolean('common', 'setup'), config.get('common', 'network'),
                             config.getboolean('common', 'train'), config.getboolean('common', 'test'), config.getboolean('common', 'clear'),
                             config.getboolean('common', 'debug'), config.getboolean('common', 'plot'), config.getboolean('common', 'best'),
-                            config.getint('common', 'val_number'), config.getint('common', 'out_layer'),
-                            config.getint('common', 'seg_size'), config.getint('common', 'vec_size'))
+                            config.getint('common', 'out_layer'), config.getint('common', 'seg_size'), config.getint('common', 'vec_size'),
+                            config.get('validation', 'test_pickle'), config.get('validation', 'dev_pickle'),
+                            config.getint('validation', 'dev_total_speakers'), config.getboolean('validation', 'dev_mode'))
     controller.run()

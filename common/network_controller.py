@@ -15,13 +15,22 @@ class NetworkController:
 
     def __init__(self, name):
         self.val_data = "speakers_40_clustering_vs_reynolds"
+        self.dev_val_data = 'speakers_80_stratified_dev'
+        self.val_data_size = 40
         self.name = name
+        self.dev_mode = True
 
     def get_validation_train_data(self):
-        return get_speaker_pickle(self.val_data + "_train")
+        if self.dev_mode:
+            return get_speaker_pickle(self.dev_val_data + "_train")
+        else:
+            return get_speaker_pickle(self.val_data + "_train")
 
     def get_validation_test_data(self):
-        return get_speaker_pickle(self.val_data + "_test")
+        if self.dev_mode:
+            return get_speaker_pickle(self.dev_val_data + "_test")
+        else:
+            return get_speaker_pickle(self.val_data + "_test")
 
     @abc.abstractmethod
     def train_network(self):
