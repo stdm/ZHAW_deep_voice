@@ -1,7 +1,7 @@
 from sklearn.metrics import confusion_matrix
 import numpy as np
 
-def acp(y_true, y_pred):
+def average_cluster_purity(y_true, y_pred):
     cm = confusion_matrix(y_true, y_pred)
     N = np.sum(cm)
     acp = 0.
