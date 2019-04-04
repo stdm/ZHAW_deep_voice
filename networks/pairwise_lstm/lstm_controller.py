@@ -3,6 +3,7 @@ The controller to train and test the pairwise_lstm network
 """
 
 import numpy as np
+import random
 from keras.models import Model
 from keras.models import load_model
 
@@ -44,8 +45,12 @@ class LSTMController(NetworkController):
         logger.info('vec_size -> ' + str(self.vec_size))
 
         # Load and prepare train/test data
-        x_test, speakers_test = load_and_prepare_data(self.get_validation_test_data(), self.seg_size)
-        x_train, speakers_train = load_and_prepare_data(self.get_validation_train_data(), self.seg_size)
+        if self.dev_mode:
+            x_train, speakers_train, x_test, speakers_test = \
+                load_dev_test_data(self.get_validation_train_data(), self.get_validation_test_data(), self.seg_size, self.val_data_size)
+        else:
+            x_test, speakers_test = load_and_prepare_data(self.get_validation_test_data(), self.seg_size)
+            x_train, speakers_train = load_and_prepare_data(self.get_validation_train_data(), self.seg_size)
 
         # Prepare return values
         set_of_embeddings = []
@@ -85,6 +90,57 @@ class LSTMController(NetworkController):
 
         logger.info('Pairwise_lstm test done.')
         return checkpoints, set_of_embeddings, set_of_speakers, speaker_numbers
+
+'''
+This method randomly chooses a number of speakers out of a test set.
+As of now, this method should only be used for dev-tests to prevent overfitting during development. (see BA_2019 for details)
+'''
+def load_dev_test_data(long_utterance_path, short_utterance_path, segment_size, number_speakers):
+    x_train, y_train, s_list_train = load(long_utterance_path)
+    x_test, y_test, s_list_test = load(short_utterance_path)
+
+    if number_speakers == 80:
+        x_test, speakers_test = generate_test_data(x_test[:(number_speakers*2)], y_test[:(number_speakers*2)], segment_size)
+        x_train, speakers_train = generate_test_data(x_train[:number_speakers*8], y_train[:(number_speakers*2)], segment_size)
+        return x_train.reshape(x_train.shape[0], x_train.shape[3], x_train.shape[2]), speakers_train, x_test.reshape(x_test.shape[0], x_test.shape[3], x_test.shape[2]), speakers_test
+    else:
+        x_train_sampled = np.zeros(x_train.shape)
+        y_train_sampled = np.zeros(y_train.shape)
+        x_test_sampled = np.zeros(x_test.shape)
+        y_test_sampled = np.zeros(y_test.shape)
+        for i in range(number_speakers):
+            index = random.randrange(80-i)
+
+            x_sampled, y_sampled, x_train, y_train = get_sentences_for_speaker_index(x_train, y_train, index, i, 8)
+            x_train_sampled[i*8:i*8+8] = x_sampled
+            y_train_sampled[i*8:i*8+8] = y_sampled
+            x_sampled, y_sampled, x_test, y_test = get_sentences_for_speaker_index(x_test, y_test, index, i, 2)
+            x_test_sampled[i*2:i*2+2] = x_sampled
+            y_test_sampled[i * 2:i * 2 + 2] = y_sampled
+
+        x_test, speakers_test = generate_test_data(x_test[:(number_speakers*2)], y_test[:(number_speakers*2)], segment_size)
+        x_train, speakers_train = generate_test_data(x_train[:(number_speakers * 2)], y_train[:(number_speakers * 2)], segment_size)
+
+        return x_train.reshape(x_train.shape[0], x_train.shape[3], x_train.shape[2]), speakers_train, x_test.reshape(
+            x_test.shape[0], x_test.shape[3], x_test.shape[2]), speakers_test
+
+
+'''
+In this method, all sentences from a speaker with a given id are extracted.
+The sentences will be put at the place of the last element (or the number of picks away from the end) and the updated
+list of speakers will be returned as well! 
+'''
+def get_sentences_for_speaker_index(x, y, index, pick, sentences):
+    x_sampled = np.zeros(x.shape)
+    y_sampled = np.zeros(y.shape)
+    size = len(x)
+    for j in range(0, sentences):
+        x_sampled[j] = x[index*sentences+j]
+        y_sampled[j] = y[index * sentences + j]
+        x[index*sentences + j] = x[size-sentences-pick*sentences+j]
+        y[index * sentences + j] = y[size-sentences-pick*sentences+j]
+
+    return x_sampled[:sentences], y_sampled[:sentences], x, y
 
 
 def load_and_prepare_data(data_path, segment_size):
