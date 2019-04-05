@@ -23,16 +23,15 @@ def plot_files(plot_file_name, files):
     curve_names, set_of_mrs, set_of_acps, set_of_aris, set_of_homogeneity_scores, \
         set_of_completeness_scores, set_of_number_of_embeddings = _read_result_pickle(files)
 
-    #Todo: Plot acps and aris
-    _plot_curves(plot_file_name, curve_names, set_of_mrs, set_of_homogeneity_scores, set_of_completeness_scores,
-                set_of_number_of_embeddings)
+    _plot_curves(plot_file_name, curve_names, set_of_mrs, set_of_acps, set_of_aris,
+                 set_of_homogeneity_scores, set_of_completeness_scores, set_of_number_of_embeddings)
 
 
 def _read_result_pickle(files):
     """
     Reads the results of a network from these files.
     :param files: can be 1-n files that contain a result.
-    :return: curve names, thresholds, mrs, homogeneity scores, completeness scores and number of embeddings
+    :return: curve names, thresholds, mrs, acps, aris, homogeneity scores, completeness scores and number of embeddings
     """
     logger = get_logger('analysis', logging.INFO)
     logger.info('Read result pickle')
@@ -63,12 +62,15 @@ def _read_result_pickle(files):
     return curve_names, set_of_mrs, set_of_acps, set_of_aris, set_of_homogeneity_scores, set_of_completeness_scores, set_of_number_of_embeddings
 
 
-def _plot_curves(plot_file_name, curve_names, mrs, homogeneity_scores, completeness_scores, number_of_embeddings):
+def _plot_curves(plot_file_name, curve_names, mrs, acps, aris,
+                 homogeneity_scores, completeness_scores, number_of_embeddings):
     """
     Plots all specified curves and saves the plot into a file.
     :param plot_file_name: String value of save file name
     :param curve_names: Set of names used in legend to describe this curve
     :param mrs: 2D Matrix, each row describes one dataset of misclassification rates for a curve
+    :param acps: 2D Matrix, each row describes one dataset of average cluster purities for a curve
+    :param aris: 2D Matrix, each row describes one dataset of adjusted RAND indexes for a curve
     :param homogeneity_scores: 2D Matrix, each row describes one dataset of homogeneity scores for a curve
     :param completeness_scores: 2D Matrix, each row describes one dataset of completeness scores for a curve
     :param number_of_embeddings: set of integers, each integer describes how many embeddings is in this curve
@@ -92,19 +94,24 @@ def _plot_curves(plot_file_name, curve_names, mrs, homogeneity_scores, completen
 
     # Define number of figures
     fig1 = plt.figure(1)
-    fig1.set_size_inches(16, 8)
+    fig1.set_size_inches(16, 16)
 
     # Define Plots
-    mr_plot = plt.subplot2grid((2, 3), (0, 0), colspan=2)
-    mr_plot.set_ylabel('MR')
-    mr_plot.set_xlabel('number of clusters')
+    plot_grid = (4,3)
+
+    mr_plot = _add_cluster_subplot(plot_grid, (0, 0), 'MR', 2)
     plt.ylim([-0.02, 1.02])
 
-    completeness_scores_plot = _add_cluster_subplot(fig1, 234, 'completeness_scores')
-    homogeneity_scores_plot = _add_cluster_subplot(fig1, 235, 'homogeneity_scores')
+    acp_plot = _add_cluster_subplot(plot_grid, (1,0), 'ACP', 2)
+    ari_plot = _add_cluster_subplot(plot_grid, (2,0), 'ARI', 2)
+
+    completeness_scores_plot = _add_cluster_subplot(plot_grid, (3, 0), 'completeness_scores')
+    homogeneity_scores_plot = _add_cluster_subplot(plot_grid, (3, 1), 'homogeneity_scores')
 
     # Define curves and their values
     curves = [[mr_plot, mrs],
+              [acp_plot, acps],
+              [ari_plot, aris],
               [homogeneity_scores_plot, homogeneity_scores],
               [completeness_scores_plot, completeness_scores]]
 
@@ -124,16 +131,17 @@ def _plot_curves(plot_file_name, curve_names, mrs, homogeneity_scores, completen
     fig1.savefig(get_result_png(plot_file_name + '.svg'), format='svg')
 
 
-def _add_cluster_subplot(fig, position, y_label):
+def _add_cluster_subplot(grid, position, y_label, colspan=1):
     """
-    Adds a cluster subplot to the given figure.
+    Adds a cluster subplot to the current figure.
 
-    :param fig: the figure which gets a new subplot
+    :param grid: a tuple that contains number of rows as the first entry and number of columns as the second entry
     :param position: the position of this subplot
-    :param title: the title of the subplot
+    :param y_label: the label of the y axis
+    :param colspan: number of columns for the x axis, default is 1
     :return: the subplot itself
     """
-    subplot = fig.add_subplot(position)
+    subplot = plt.subplot2grid(grid, position, colspan=colspan)
     subplot.set_ylabel(y_label)
     subplot.set_xlabel('number of clusters')
     return subplot
@@ -183,7 +191,8 @@ def _calculate_analysis_values(predicted_clusters, true_cluster):
 
     :param predicted_clusters: The predicted Clusters of the Network.
     :param true_clusters: The validation clusters
-    :return: misclassification rate, homogeneity Score, completeness score and the thresholds.
+    :return: misclassification rate, average cluster purity, adjusted RAND index,
+        homogeneity Score, completeness score and the thresholds.
     """
     logger = get_logger('analysis', logging.INFO)
     logger.info('Calculate scores')
