@@ -23,9 +23,8 @@ def plot_files(plot_file_name, files):
     curve_names, set_of_mrs, set_of_acps, set_of_aris, set_of_homogeneity_scores, \
         set_of_completeness_scores, set_of_number_of_embeddings = _read_result_pickle(files)
 
-    #Todo: Plot acps and aris
-    _plot_curves(plot_file_name, curve_names, set_of_mrs, set_of_homogeneity_scores, set_of_completeness_scores,
-                set_of_number_of_embeddings)
+    _plot_curves(plot_file_name, curve_names, set_of_mrs, set_of_acps, set_of_aris,
+                 set_of_homogeneity_scores, set_of_completeness_scores, set_of_number_of_embeddings)
 
 
 def _read_result_pickle(files):
@@ -63,12 +62,15 @@ def _read_result_pickle(files):
     return curve_names, set_of_mrs, set_of_acps, set_of_aris, set_of_homogeneity_scores, set_of_completeness_scores, set_of_number_of_embeddings
 
 
-def _plot_curves(plot_file_name, curve_names, mrs, homogeneity_scores, completeness_scores, number_of_embeddings):
+def _plot_curves(plot_file_name, curve_names, mrs, acps, aris,
+                 homogeneity_scores, completeness_scores, number_of_embeddings):
     """
     Plots all specified curves and saves the plot into a file.
     :param plot_file_name: String value of save file name
     :param curve_names: Set of names used in legend to describe this curve
     :param mrs: 2D Matrix, each row describes one dataset of misclassification rates for a curve
+    :param acps: 2D Matrix, each row describes one dataset of average cluster purities for a curve
+    :param aris: 2D Matrix, each row describes one dataset of adjusted RAND indexes for a curve
     :param homogeneity_scores: 2D Matrix, each row describes one dataset of homogeneity scores for a curve
     :param completeness_scores: 2D Matrix, each row describes one dataset of completeness scores for a curve
     :param number_of_embeddings: set of integers, each integer describes how many embeddings is in this curve
@@ -92,19 +94,24 @@ def _plot_curves(plot_file_name, curve_names, mrs, homogeneity_scores, completen
 
     # Define number of figures
     fig1 = plt.figure(1)
-    fig1.set_size_inches(16, 8)
+    fig1.set_size_inches(16, 16)
 
     # Define Plots
-    plot_grid = (2,3)
+    plot_grid = (4,3)
 
     mr_plot = _add_cluster_subplot(plot_grid, (0, 0), 'MR', 2)
     plt.ylim([-0.02, 1.02])
 
-    completeness_scores_plot = _add_cluster_subplot(plot_grid, (1, 0), 'completeness_scores')
-    homogeneity_scores_plot = _add_cluster_subplot(plot_grid, (1, 1), 'homogeneity_scores')
+    acp_plot = _add_cluster_subplot(plot_grid, (1,0), 'ACP', 2)
+    ari_plot = _add_cluster_subplot(plot_grid, (2,0), 'ARI', 2)
+
+    completeness_scores_plot = _add_cluster_subplot(plot_grid, (3, 0), 'completeness_scores')
+    homogeneity_scores_plot = _add_cluster_subplot(plot_grid, (3, 1), 'homogeneity_scores')
 
     # Define curves and their values
     curves = [[mr_plot, mrs],
+              [acp_plot, acps],
+              [ari_plot, aris],
               [homogeneity_scores_plot, homogeneity_scores],
               [completeness_scores_plot, completeness_scores]]
 
