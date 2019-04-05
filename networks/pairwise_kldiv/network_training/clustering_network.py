@@ -114,7 +114,7 @@ def train(X, y, num_epochs, train_fn, val_fn=None, train_iterator=None, validati
         sys.stdout.flush()
 
 
-def generate_output(X, y, network_params_file_in=None, output_file_out=None, network_fun=None,
+def generate_output(X, y, speaker_names, network_params_file_in=None, output_file_out=None, network_fun=None,
                     get_conv_output=None, output_layer=None, overlapping=False):
 
     X_cluster, y_cluster = generate_cluster_data(X, y, overlapping=overlapping)

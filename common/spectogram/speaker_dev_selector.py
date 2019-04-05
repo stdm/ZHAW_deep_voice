@@ -5,7 +5,7 @@ from common.utils.pickler import load
 
 def load_test_data(data_path):
     x, y, s_list = load(data_path)
-    return x,y
+    return x,y, s_list
 
 
 '''
@@ -27,7 +27,7 @@ def load_dev_test_data(data_path, number_speakers, sentences):
 
         X, speakers = X_sampled[:(number_speakers * sentences)], y_sampled[:(number_speakers * sentences)]
 
-    return X, speakers
+    return X, speakers, s_list
 
 
 '''
