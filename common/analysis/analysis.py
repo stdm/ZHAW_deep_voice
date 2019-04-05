@@ -81,9 +81,9 @@ def _plot_curves(plot_file_name, curve_names, mrs, acps, aris,
     for mr in mrs:
         min_mrs.append(np.min(mr))
 
-    min_mrs, curve_names, mrs, homogeneity_scores, completeness_scores, number_of_embeddings = \
+    min_mrs, curve_names, mrs, acps, aris, homogeneity_scores, completeness_scores, number_of_embeddings = \
         (list(t) for t in
-         zip(*sorted(zip(min_mrs, curve_names, mrs, homogeneity_scores, completeness_scores, number_of_embeddings))))
+         zip(*sorted(zip(min_mrs, curve_names, mrs, acps, aris, homogeneity_scores, completeness_scores, number_of_embeddings))))
 
     # How many lines to plot
     number_of_lines = len(curve_names)
