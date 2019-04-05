@@ -11,6 +11,7 @@ common/data/experiments/plots/*.svg
 common/data/experiments/nets/*.h5
 common/data/experiments/logs/*.csv
 common/data/experiments/results/*.pickle
+common/data/experiments/nets/*.pickle
 
 #################### Python ####################
 # Byte-compiled / optimized / DLL files

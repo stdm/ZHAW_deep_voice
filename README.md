@@ -9,22 +9,37 @@ This data also needs to be processed using the [sph2pipe tool](https://www.ldc.u
  If you simply want to use it, you can let docker do the work for you and let it import all needed packages.
  
  In any way, whether you fork and pull the source code or let docker handle it for you, the whole suite is controllable over a one file interface, controller.py.
- It can be run from console with the following calling structure:
-  controller.py [-h] [-setup] [-n network] [-train] [-test] [-plot] [-clear] [-debug] [-best] [-val# ne]
-  - -help Display the help screen you are seeing here
-  - -setup Create all 
-  - -n specifiy which network should be used. Available:
+ 
+ To configure the suite, there is a config file located at common/config.cfg. All neural networks can be configured in this file.
+ There are some general flag that can be set:
+  - setup Create all 
+  - network specifiy which network should be used. Available:
   'pairwise_lstm', 'pairwise_kldiv', 'flow_me', 'luvo' and 'all' (without the single quotes)
-  - -train Specify to train the chosen network
-  - -test Specify to test the chosen network
-  - -plot Specify to plot the results of the chosen network. If network is 'all', all results will be displayed in one single plot
-  - -clear Clear the folder in experiments
-  - -debug Set the logging level of Tensorflow to Debug
-  - -best Just the best results of the networks will be used in -plot
-  - -val# specify which speaker number you want to use (40, 60, 80) to test the networks
+  - train Specify to train the chosen network
+  - test Specify to test the chosen network
+  - plot Specify to plot the results of the chosen network. If network is 'all', all results will be displayed in one single plot
+  - clear Clear the folder in experiments
+  - debug Set the logging level of Tensorflow to Debug
+  - best Just the best results of the networks will be used in -plot
+  - val_number specify which speaker number you want to use (40, 60, 80) to test the networks
   
+There are further parameters to configure for every neural network in this suite.
+
 As an example, you want to train, and test but not plot the network pairwise_lstm. you would call:
-> controller.py -n pairwise_lstm -train -test
+> controller.py 
+While using the following configuration in the config-file:
+
+[common]
+setup = False
+network = pairwise_lst
+train = True
+test = True
+clear = False
+debug = False
+plot = False
+best = False
+
+...
 
 ### General remarks
 Before you start with your training you should run the controller once with the setup flag. This can take a while, approximately around 10 minutes.

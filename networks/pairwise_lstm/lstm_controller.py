@@ -19,31 +19,32 @@ from common.utils.load_config import *
 from common.spectogram.speaker_dev_selector import get_sentences_for_speaker_index
 
 class LSTMController(NetworkController):
-    def __init__(self, out_layer, seg_size, vec_size):
+    def __init__(self):
         super().__init__("pairwise_lstm")
         self.network_file = self.name + "_100"
-        self.out_layer = out_layer
-        self.seg_size = seg_size
-        self.vec_size = vec_size
+        self.config = load_config(None, join(get_common(), 'config.cfg'))
 
     def train_network(self):
-        config = load_config(None, join(get_common(), 'config.cfg'))
         bilstm_2layer_dropout(
             self.network_file,
-            config.get('train', 'pickle'),
-            config.getint('pairwise_lstm', 'n_hidden1'),
-            config.getint('pairwise_lstm', 'n_hidden2'),
-            config.getint('pairwise_lstm', 'n_classes'),
-            config.getint('pairwise_lstm', 'n_10_batches'),
-            segment_size=self.seg_size
+            self.config.get('train', 'pickle'),
+            self.config.getint('pairwise_lstm', 'n_hidden1'),
+            self.config.getint('pairwise_lstm', 'n_hidden2'),
+            self.config.getint('pairwise_lstm', 'n_classes'),
+            self.config.getint('pairwise_lstm', 'n_10_batches'),
+            segment_size=self.config.getint('pairwise_lstm', 'seg_size')
         )
 
-    def get_embeddings(self, out_layer, seg_size, vec_size):
+    def get_embeddings(self):
+        out_layer = self.config.getint('pairwise_lstm', 'out_layer')
+        seg_size = self.config.getint('pairwise_lstm', 'seg_size')
+        vec_size = self.config.getint('pairwise_lstm', 'vec_size')
+
         logger = get_logger('lstm', logging.INFO)
         logger.info('Run pairwise_lstm test')
-        logger.info('out_layer -> ' + str(self.out_layer))
-        logger.info('seg_size -> ' + str(self.seg_size))
-        logger.info('vec_size -> ' + str(self.vec_size))
+        logger.info('out_layer -> ' + str(out_layer))
+        logger.info('seg_size -> ' + str(seg_size))
+        logger.info('vec_size -> ' + str(vec_size))
 
         # Load and prepare train/test data
         if self.dev_mode:
@@ -52,6 +53,7 @@ class LSTMController(NetworkController):
         else:
             x_test, speakers_test = load_and_prepare_data(self.get_validation_test_data(), self.seg_size)
             x_train, speakers_train = load_and_prepare_data(self.get_validation_train_data(), self.seg_size)
+
 
         # Prepare return values
         set_of_embeddings = []
@@ -64,7 +66,7 @@ class LSTMController(NetworkController):
         loss = pairwise_kl_divergence
         custom_objects = {'pairwise_kl_divergence': pairwise_kl_divergence}
         optimizer = 'rmsprop'
-        vector_size = self.vec_size #256 * 2
+        vector_size = vec_size #256 * 2
 
         # Fill return values
         for checkpoint in checkpoints:
@@ -75,7 +77,7 @@ class LSTMController(NetworkController):
             model_full.compile(loss=loss, optimizer=optimizer, metrics=metrics)
 
             # Get a Model with the embedding layer as output and predict
-            model_partial = Model(inputs=model_full.input, outputs=model_full.layers[self.out_layer].output)
+            model_partial = Model(inputs=model_full.input, outputs=model_full.layers[out_layer].output)
             test_output = np.asarray(model_partial.predict(x_test))
             train_output = np.asarray(model_partial.predict(x_train))
             logger.info('test_output len -> ' + str(test_output.shape))

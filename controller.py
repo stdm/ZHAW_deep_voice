@@ -47,6 +47,7 @@ DEFAULT_CLEAR = False
 DEFAULT_DEBUG = False
 DEFAULT_PLOT = False
 DEFAULT_BEST = False
+<<<<<<< HEAD
 DEFAULT_VAL_DATA_SIZE = 40
 DEFAULT_OUT_LAYER = 2
 DEFAULT_SEG_SIZE = 15
@@ -54,13 +55,20 @@ DEFAULT_VEC_SIZE = 512
 DEFAULT_DEV_MODE = True
 DEFAULT_VAL_DATA = 'speakers_80_stratified_dev_train'
 DEFAULT_DEV_VAL_DATA = 'speakers_80_stratified_dev_train'
+=======
+DEFAULT_VAL_NUMBER = 40
+>>>>>>> 31e0fdece0e54411d957a8523b0e51485d223e1d
 
 class Controller(NetworkController):
     def __init__(self, 
                  setup=DEFAULT_SETUP, network=DEFAULT_NETWORK, train=DEFAULT_TRAIN, test=DEFAULT_TEST, 
                  clear=DEFAULT_CLEAR, debug=DEFAULT_DEBUG, plot=DEFAULT_PLOT, best=DEFAULT_BEST, 
+<<<<<<< HEAD
                  out_layer=DEFAULT_OUT_LAYER, seg_size=DEFAULT_SEG_SIZE,
                  vec_size=DEFAULT_VEC_SIZE, val_data=DEFAULT_VAL_DATA, dev_val_data=DEFAULT_DEV_VAL_DATA, val_data_size=DEFAULT_VAL_DATA_SIZE, dev_mode=DEFAULT_DEV_MODE):
+=======
+                 val_number=DEFAULT_VAL_NUMBER):
+>>>>>>> 31e0fdece0e54411d957a8523b0e51485d223e1d
         super().__init__("Front")
         self.setup = setup
         self.network = network
@@ -71,6 +79,7 @@ class Controller(NetworkController):
         self.network_controllers = []
         self.plot = plot
         self.best = best
+<<<<<<< HEAD
         self.out_layer = out_layer
         self.seg_size = seg_size
         self.vec_size = vec_size
@@ -78,6 +87,8 @@ class Controller(NetworkController):
         self.dev_val_data = dev_val_data
         self.val_data_size = val_data_size
         self.dev_mode = dev_mode
+=======
+>>>>>>> 31e0fdece0e54411d957a8523b0e51485d223e1d
 
 
     def train_network(self):
@@ -86,7 +97,7 @@ class Controller(NetworkController):
 
     def test_network(self):
         for network_controller in self.network_controllers:
-            network_controller.test_network(self.out_layer, self.seg_size, self.vec_size)
+            network_controller.test_network()
 
     def get_embeddings(self):
         return None, None, None, None
@@ -115,11 +126,11 @@ class Controller(NetworkController):
     def generate_controllers(self):
 
         controller_dict = {
-            'pairwise_lstm': [LSTMController(self.out_layer, self.seg_size, self.vec_size)],
+            'pairwise_lstm': [LSTMController()],
             'pairwise_kldiv': [KLDivController()],
             'flow_me': [MEController(self.clear, self.debug, False)],
             'luvo': [LuvoController()],
-            'all': [LSTMController(self.out_layer, self.seg_size, self.vec_size), KLDivController(), MEController(self.clear, self.debug, False), LuvoController()]
+            'all': [LSTMController(), KLDivController(), MEController(self.clear, self.debug, False), LuvoController()]
         }
 
         try:
@@ -201,7 +212,11 @@ if __name__ == '__main__':
     controller = Controller(config.getboolean('common', 'setup'), config.get('common', 'network'),
                             config.getboolean('common', 'train'), config.getboolean('common', 'test'), config.getboolean('common', 'clear'),
                             config.getboolean('common', 'debug'), config.getboolean('common', 'plot'), config.getboolean('common', 'best'),
+<<<<<<< HEAD
                             config.getint('common', 'out_layer'), config.getint('common', 'seg_size'), config.getint('common', 'vec_size'),
                             config.get('validation', 'test_pickle'), config.get('validation', 'dev_pickle'),
                             config.getint('validation', 'dev_total_speakers'), config.getboolean('validation', 'dev_mode'))
+=======
+                            config.getint('common', 'val_number'))
+>>>>>>> 31e0fdece0e54411d957a8523b0e51485d223e1d
     controller.run()
