@@ -16,6 +16,7 @@ from .bilstm_2layer_dropout_plus_2dense import bilstm_2layer_dropout
 from .core.data_gen import generate_test_data
 from .core.pairwise_kl_divergence import pairwise_kl_divergence
 from common.utils.load_config import *
+from common.spectogram.speaker_dev_selector import get_sentences_for_speaker_index
 
 class LSTMController(NetworkController):
     def __init__(self, out_layer, seg_size, vec_size):
@@ -124,23 +125,6 @@ def load_dev_test_data(long_utterance_path, short_utterance_path, segment_size, 
         return x_train.reshape(x_train.shape[0], x_train.shape[3], x_train.shape[2]), speakers_train, x_test.reshape(
             x_test.shape[0], x_test.shape[3], x_test.shape[2]), speakers_test
 
-
-'''
-In this method, all sentences from a speaker with a given id are extracted.
-The sentences will be put at the place of the last element (or the number of picks away from the end) and the updated
-list of speakers will be returned as well! 
-'''
-def get_sentences_for_speaker_index(x, y, index, pick, sentences):
-    x_sampled = np.zeros(x.shape)
-    y_sampled = np.zeros(y.shape)
-    size = len(x)
-    for j in range(0, sentences):
-        x_sampled[j] = x[index*sentences+j]
-        y_sampled[j] = y[index * sentences + j]
-        x[index*sentences + j] = x[size-sentences-pick*sentences+j]
-        y[index * sentences + j] = y[size-sentences-pick*sentences+j]
-
-    return x_sampled[:sentences], y_sampled[:sentences], x, y
 
 
 def load_and_prepare_data(data_path, segment_size):
