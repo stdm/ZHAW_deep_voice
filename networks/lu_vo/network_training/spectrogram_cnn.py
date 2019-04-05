@@ -63,9 +63,9 @@ class SpectrogramCnn:
         # network_helper.save(net, '../../data/experiments/paper/networks/net_100_81_not_reynolds.pickle')
         save(net, self.net_path)
 
-    def create_embeddings(self, train_data, test_data):
-        x_train_cluster, y_train_cluster = load_and_prepare_data(train_data)
-        x_test_cluster, y_test_cluster = load_and_prepare_data(test_data)
+    def create_embeddings(self, X_train, y_train, X_test, y_test):
+        x_train_cluster, y_train_cluster = generate_cluster_data(X_train, y_train)
+        x_test_cluster, y_test_cluster = generate_cluster_data(X_test, y_test)
 
         # Load the network and add Batchiterator
         net = load(self.net_path)
@@ -81,11 +81,13 @@ class SpectrogramCnn:
 
         return generate_embeddings(output_train, output_test, y_train_cluster, y_test_cluster, output_train.shape[1])
 
+
 def prepare_predict(net):
     input_var = T.tensor4('x')
     conv_network = net.get_all_layers()[7]
     y = get_output(conv_network, input_var)
     return theano.function([input_var], y)
+
 
 def create_net(paper):
     config = load_config(None, join(get_common(), 'config.cfg'))
@@ -103,12 +105,6 @@ def create_net(paper):
     )
 
     return net
-
-
-def load_and_prepare_data(data_path):
-    # Load and generate test data
-    x, y, s_list = load(data_path)
-    return generate_cluster_data(x, y)
 
 
 def generate_cluster_data(X, y):

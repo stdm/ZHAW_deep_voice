@@ -1,5 +1,33 @@
 import numpy as np
+import random
+from common.utils.pickler import load
 
+
+def load_test_data(data_path):
+    x, y, s_list = load(data_path)
+    return x,y, s_list
+
+
+'''
+This method randomly chooses a number of speakers out of a test set.
+As of now, this method should only be used for dev-tests to prevent overfitting during development. (see BA_2019 for details)
+'''
+def load_dev_test_data(data_path, number_speakers, sentences):
+    X, y, s_list = load(data_path)
+
+    if number_speakers < 80:
+        X_sampled = np.zeros(X.shape)
+        y_sampled = np.zeros(y.shape)
+        for i in range(number_speakers):
+            index = random.randrange(80-i)
+
+            X_extraced, y_extracted, X, y = get_sentences_for_speaker_index(X, y, index, i, sentences)
+            X_sampled[i*sentences:i*sentences+sentences] = X_extraced
+            y_sampled[i*sentences:i*sentences+sentences] = y_extracted
+
+        X, speakers = X_sampled[:(number_speakers * sentences)], y_sampled[:(number_speakers * sentences)]
+
+    return X, speakers, s_list
 
 
 '''
@@ -18,3 +46,4 @@ def get_sentences_for_speaker_index(x, y, index, pick, sentences):
         y[index * sentences + j] = y[size-sentences-pick*sentences+j]
 
     return x_sampled[:sentences], y_sampled[:sentences], x, y
+

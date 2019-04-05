@@ -10,6 +10,7 @@ from .analysis.run_analysis_network import run_analysis_network
 from .network_training.clustering_network import create_and_train
 from .network_training.network_factory import *
 from common.utils.load_config import *
+from common.spectogram.speaker_dev_selector import load_test_data, load_dev_test_data
 
 
 class KLDivController(NetworkController):
@@ -34,8 +35,13 @@ class KLDivController(NetworkController):
         logger = get_logger('kldiv', logging.INFO)
         logger.info('Run pairwise_kldiv')
         checkpoints = self.checkpoints
-        train_data_file = self.get_validation_train_data()
-        test_data_file = self.get_validation_test_data()
+
+        if self.dev_mode:
+            X_train, y_train, s_list_train = load_dev_test_data(self.get_validation_train_data(), self.val_data_size, 8)
+            X_test, y_test, s_list_test = load_dev_test_data(self.get_validation_test_data(), self.val_data_size, 2)
+        else:
+            X_train, y_train, s_list_train = load_test_data(self.get_validation_train_data())
+            X_test, y_test, s_list_test = load_test_data(self.get_validation_test_data())
 
         # Prepare return value
         set_of_embeddings = []
@@ -46,7 +52,7 @@ class KLDivController(NetworkController):
             logger.info('Run checkpoint: ' + checkpoint)
             network_file = get_experiment_nets(checkpoint)
             X_train, y_train, \
-            X_test, y_test = run_analysis_network(network_file, train_data_file, test_data_file, self.dev_mode)
+            X_test, y_test = run_analysis_network(network_file, X_train, y_train, s_list_train, X_test, y_test, s_list_test)
             embeddings, speakers, num_embeddings = generate_embeddings(X_train, X_test, y_train, y_test,
                                                                        X_train.shape[1])
             # Fill return values
