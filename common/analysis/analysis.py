@@ -1,5 +1,8 @@
 import matplotlib
 
+from common.analysis.acp import average_cluster_purity
+from common.analysis.ari import adjusted_rand_index
+
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from sklearn.metrics import *
@@ -17,14 +20,15 @@ def plot_files(plot_file_name, files):
     :param plot_file_name: the file name stored in common/data/results
     :param files: a set of full file paths that hold result data
     """
-    curve_names, set_of_mrs, set_of_homogeneity_scores, \
-    set_of_completeness_scores, set_of_number_of_embeddings = read_result_pickle(files)
+    curve_names, set_of_mrs, set_of_acps, set_of_aris, set_of_homogeneity_scores, \
+        set_of_completeness_scores, set_of_number_of_embeddings = _read_result_pickle(files)
 
-    plot_curves(plot_file_name, curve_names, set_of_mrs, set_of_homogeneity_scores, set_of_completeness_scores,
+    #Todo: Plot acps and aris
+    _plot_curves(plot_file_name, curve_names, set_of_mrs, set_of_homogeneity_scores, set_of_completeness_scores,
                 set_of_number_of_embeddings)
 
 
-def read_result_pickle(files):
+def _read_result_pickle(files):
     """
     Reads the results of a network from these files.
     :param files: can be 1-n files that contain a result.
@@ -37,25 +41,29 @@ def read_result_pickle(files):
     # Initialize result sets
     set_of_thresholds = []
     set_of_mrs = []
+    set_of_acps = []
+    set_of_aris = []
     set_of_homogeneity_scores = []
     set_of_completeness_scores = []
     set_of_number_of_embeddings = []
 
     # Fill result sets
     for file in files:
-        curve_name, mrs, homogeneity_scores, completeness_scores, number_of_embeddings = load(file)
+        curve_name, mrs, acps, aris, homogeneity_scores, completeness_scores, number_of_embeddings = load(file)
 
         for index, curve_name in enumerate(curve_name):
             set_of_mrs.append(mrs[index])
+            set_of_acps.append(acps[index])
+            set_of_aris.append(aris[index])
             set_of_homogeneity_scores.append(homogeneity_scores[index])
             set_of_completeness_scores.append(completeness_scores[index])
             set_of_number_of_embeddings.append(number_of_embeddings[index])
             curve_names.append(curve_name)
 
-    return curve_names, set_of_mrs, set_of_homogeneity_scores, set_of_completeness_scores, set_of_number_of_embeddings
+    return curve_names, set_of_mrs, set_of_acps, set_of_aris, set_of_homogeneity_scores, set_of_completeness_scores, set_of_number_of_embeddings
 
 
-def plot_curves(plot_file_name, curve_names, mrs, homogeneity_scores, completeness_scores, number_of_embeddings):
+def _plot_curves(plot_file_name, curve_names, mrs, homogeneity_scores, completeness_scores, number_of_embeddings):
     """
     Plots all specified curves and saves the plot into a file.
     :param plot_file_name: String value of save file name
@@ -92,8 +100,8 @@ def plot_curves(plot_file_name, curve_names, mrs, homogeneity_scores, completene
     mr_plot.set_xlabel('number of clusters')
     plt.ylim([-0.02, 1.02])
 
-    completeness_scores_plot = add_cluster_subplot(fig1, 234, 'completeness_scores')
-    homogeneity_scores_plot = add_cluster_subplot(fig1, 235, 'homogeneity_scores')
+    completeness_scores_plot = _add_cluster_subplot(fig1, 234, 'completeness_scores')
+    homogeneity_scores_plot = _add_cluster_subplot(fig1, 235, 'homogeneity_scores')
 
     # Define curves and their values
     curves = [[mr_plot, mrs],
@@ -116,7 +124,7 @@ def plot_curves(plot_file_name, curve_names, mrs, homogeneity_scores, completene
     fig1.savefig(get_result_png(plot_file_name + '.svg'), format='svg')
 
 
-def add_cluster_subplot(fig, position, y_lable):
+def _add_cluster_subplot(fig, position, y_label):
     """
     Adds a cluster subplot to the given figure.
 
@@ -126,7 +134,7 @@ def add_cluster_subplot(fig, position, y_lable):
     :return: the subplot itself
     """
     subplot = fig.add_subplot(position)
-    subplot.set_ylabel(y_lable)
+    subplot.set_ylabel(y_label)
     subplot.set_xlabel('number of clusters')
     return subplot
 
@@ -146,26 +154,30 @@ def analyse_results(network_name, checkpoint_names, set_of_predicted_clusters, s
     logger = get_logger('analysis', logging.INFO)
     logger.info('Run analysis')
     set_of_mrs = []
+    set_of_acps = []
+    set_of_aris = []
     set_of_homogeneity_scores = []
     set_of_completeness_scores = []
 
     for index, predicted_clusters in enumerate(set_of_predicted_clusters):
         logger.info('Analysing checkpoint:' + checkpoint_names[index])
 
-        mrs, homogeneity_scores, completeness_scores = calculate_analysis_values(predicted_clusters,
+        mrs, acps, aris, homogeneity_scores, completeness_scores = _calculate_analysis_values(predicted_clusters,
                                                                                  set_of_true_clusters[index])
         set_of_mrs.append(mrs)
+        set_of_acps.append(acps)
+        set_of_aris.append(aris)
         set_of_homogeneity_scores.append(homogeneity_scores)
         set_of_completeness_scores.append(completeness_scores)
 
-    write_result_pickle(network_name, checkpoint_names, set_of_mrs, set_of_homogeneity_scores,
-                        set_of_completeness_scores, embedding_numbers)
-    save_best_results(network_name, checkpoint_names, set_of_mrs, set_of_homogeneity_scores,
-                      set_of_completeness_scores, embedding_numbers)
+    _write_result_pickle(network_name, checkpoint_names, set_of_mrs, set_of_acps, set_of_aris,
+                        set_of_homogeneity_scores, set_of_completeness_scores, embedding_numbers)
+    _save_best_results(network_name, checkpoint_names, set_of_mrs, set_of_acps, set_of_aris,
+                      set_of_homogeneity_scores, set_of_completeness_scores, embedding_numbers)
     logger.info('Analysis done')
 
 
-def calculate_analysis_values(predicted_clusters, true_cluster):
+def _calculate_analysis_values(predicted_clusters, true_cluster):
     """
     Calculates the analysis values out of the predicted_clusters.
 
@@ -178,6 +190,8 @@ def calculate_analysis_values(predicted_clusters, true_cluster):
 
     # Initialize output
     mrs = np.ones(len(true_cluster))
+    acps = np.zeros(len(true_cluster))
+    aris = np.zeros(len(true_cluster))
     homogeneity_scores = np.ones(len(true_cluster))
     completeness_scores = np.ones(len(true_cluster))
 
@@ -185,16 +199,18 @@ def calculate_analysis_values(predicted_clusters, true_cluster):
     for i, predicted_cluster in enumerate(predicted_clusters):
         # Calculate different analysis's
         mrs[i] = misclassification_rate(true_cluster, predicted_cluster)
+        acps[i] = average_cluster_purity(true_cluster, predicted_cluster)
+        aris[i] = adjusted_rand_index(true_cluster, predicted_cluster)
         homogeneity_scores[i] = homogeneity_score(true_cluster, predicted_cluster)
         completeness_scores[i] = completeness_score(true_cluster, predicted_cluster)
 
-    return mrs, homogeneity_scores, completeness_scores
+    return mrs, acps, aris, homogeneity_scores, completeness_scores
 
 
-def save_best_results(network_name, checkpoint_names, set_of_mrs, set_of_homogeneity_scores,
-                      set_of_completeness_scores, speaker_numbers):
+def _save_best_results(network_name, checkpoint_names, set_of_mrs, set_of_acps, set_of_aris,
+                      set_of_homogeneity_scores, set_of_completeness_scores, speaker_numbers):
     if len(set_of_mrs) == 1:
-        write_result_pickle(network_name + "_best", checkpoint_names, set_of_mrs,
+        _write_result_pickle(network_name + "_best", checkpoint_names, set_of_mrs, set_of_acps, set_of_aris,
                             set_of_homogeneity_scores, set_of_completeness_scores, speaker_numbers)
     else:
 
@@ -207,6 +223,8 @@ def save_best_results(network_name, checkpoint_names, set_of_mrs, set_of_homogen
 
         best_checkpoint_name = []
         set_of_best_mrs = []
+        set_of_best_acps = []
+        set_of_best_aris = []
         set_of_best_homogeneity_scores = []
         set_of_best_completeness_scores = []
         best_speaker_numbers = []
@@ -214,28 +232,32 @@ def save_best_results(network_name, checkpoint_names, set_of_mrs, set_of_homogen
             if min_mr == min_mr_over_all:
                 best_checkpoint_name.append(checkpoint_names[index])
                 set_of_best_mrs.append(set_of_mrs[index])
+                set_of_best_acps.append(set_of_acps[index])
+                set_of_best_aris.append(set_of_aris[index])
                 set_of_best_homogeneity_scores.append(set_of_homogeneity_scores[index])
                 set_of_best_completeness_scores.append(set_of_completeness_scores[index])
                 best_speaker_numbers.append(speaker_numbers[index])
 
-        write_result_pickle(network_name + "_best", best_checkpoint_name, set_of_best_mrs,
+        _write_result_pickle(network_name + "_best", best_checkpoint_name,
+                            set_of_best_mrs, set_of_best_acps, set_of_best_aris,
                             set_of_best_homogeneity_scores, set_of_best_completeness_scores, best_speaker_numbers)
 
 
-def write_result_pickle(network_name, checkpoint_names, set_of_mrs, set_of_homogeneity_scores,
-                        set_of_completeness_scores, number_of_embeddings):
+def _write_result_pickle(network_name, checkpoint_names, set_of_mrs, set_of_acps, set_of_aris,
+                        set_of_homogeneity_scores, set_of_completeness_scores, number_of_embeddings):
     logger = get_logger('analysis', logging.INFO)
     logger.info('Write result pickle')
-    save((checkpoint_names, set_of_mrs, set_of_homogeneity_scores, set_of_completeness_scores,
-          number_of_embeddings), get_result_pickle(network_name))
+    save((checkpoint_names, set_of_mrs, set_of_acps, set_of_aris, set_of_homogeneity_scores,
+          set_of_completeness_scores, number_of_embeddings), get_result_pickle(network_name))
 
 
-def read_and_safe_best_results():
-    checkpoint_names, set_of_mrs, set_of_homogeneity_scores, set_of_completeness_scores, speaker_numbers = read_result_pickle(
-        [get_result_pickle('flow_me')])
-    save_best_results('flow_me', checkpoint_names, set_of_mrs, set_of_homogeneity_scores,
-                      set_of_completeness_scores, speaker_numbers)
+def _read_and_safe_best_results():
+    checkpoint_names, set_of_mrs, set_of_acps, set_of_aris,\
+        set_of_homogeneity_scores, set_of_completeness_scores, speaker_numbers =\
+        _read_result_pickle([get_result_pickle('flow_me')])
+    _save_best_results('flow_me', checkpoint_names, set_of_mrs, set_of_acps, set_of_aris,
+                       set_of_homogeneity_scores, set_of_completeness_scores, speaker_numbers)
 
 
 if __name__ == '__main__':
-    read_and_safe_best_results()
+    _read_and_safe_best_results()
