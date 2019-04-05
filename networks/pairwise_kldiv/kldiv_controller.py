@@ -46,7 +46,7 @@ class KLDivController(NetworkController):
             logger.info('Run checkpoint: ' + checkpoint)
             network_file = get_experiment_nets(checkpoint)
             X_train, y_train, \
-            X_test, y_test = run_analysis_network(network_file, train_data_file, test_data_file)
+            X_test, y_test = run_analysis_network(network_file, train_data_file, test_data_file, self.dev_mode)
             embeddings, speakers, num_embeddings = generate_embeddings(X_train, X_test, y_train, y_test,
                                                                        X_train.shape[1])
             # Fill return values

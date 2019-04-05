@@ -4,7 +4,7 @@ from networks.pairwise_kldiv.network_training import clustering_network, cluster
     network_factory
 
 
-def run_analysis_network(network_file, train_data_file, test_data_file, conv_network_file=None, save_data_file=None):
+def run_analysis_network(network_file, train_data_file, test_data_file, dev_mode, conv_network_file=None, save_data_file=None):
     # Load eventual CNN output
     if conv_network_file is None:
         get_conv_output = None
@@ -18,7 +18,9 @@ def run_analysis_network(network_file, train_data_file, test_data_file, conv_net
                                                                                output_file_out=None,
                                                                                network_fun=network_factory.create_network_100_speakers,
                                                                                get_conv_output=get_conv_output,
-                                                                               output_layer=7)
+                                                                               output_layer=7,
+                                                                               dev_mode=dev_mode,
+                                                                               sentences=8)
 
     # Generate output test data
     X_test, y_test, speaker_names_test = clustering_network.generate_output(network_params_file_in=network_file,
@@ -26,6 +28,8 @@ def run_analysis_network(network_file, train_data_file, test_data_file, conv_net
                                                                             output_file_out=None,
                                                                             network_fun=network_factory.create_network_100_speakers,
                                                                             get_conv_output=get_conv_output,
-                                                                            output_layer=7)
+                                                                            output_layer=7,
+                                                                            dev_mode=dev_mode,
+                                                                            sentences=2)
 
     return X_train, y_train, X_test, y_test

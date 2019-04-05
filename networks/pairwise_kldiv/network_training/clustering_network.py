@@ -10,6 +10,7 @@
 import pickle
 import sys
 import time
+import random
 
 import lasagne
 import numpy as np
@@ -24,6 +25,7 @@ from . import network_factory as nf
 from .objectives_clustering import create_loss_functions_kl_div
 from ..core import analytics, settings
 from ..core.batch_iterators import SpectTrainBatchIterator, SpectValidBatchIterator
+from common.spectogram.speaker_dev_selector import get_sentences_for_speaker_index
 
 
 def create_and_train(num_epochs=1000, batch_size=100, epoch_batches=10, network_params_file_in=None,
@@ -112,12 +114,25 @@ def train(X, y, num_epochs, train_fn, val_fn=None, train_iterator=None, validati
         sys.stdout.flush()
 
 
-def generate_output(network_params_file_in=None, input_file=None, output_file_out=None, network_fun=None,
-                    get_conv_output=None, output_layer=None, overlapping=False):
+def generate_output(network_params_file_in=None, input_file=None, output_file_out=None, dev_mode=True,network_fun=None,
+                    get_conv_output=None, output_layer=None, overlapping=False, number_speakers=40, sentences=None):
     with open(
             input_file,
             'rb') as f:
         (X, y, speaker_names) = pickle.load(f)
+
+    if dev_mode:
+        x_sampled = np.zeros(X.shape)
+        y_sampled = np.zeros(y.shape)
+        for i in range(number_speakers):
+            index = random.randrange(80-i)
+
+            x_extracted, y_extracted, X, y = get_sentences_for_speaker_index(X, y, index, i, sentences)
+            x_sampled[i * sentences:i * sentences + sentences] = x_extracted
+            y_sampled[i * sentences:i * sentences + sentences] = y_extracted
+
+        X = x_sampled
+        y = y_sampled
 
     X_cluster, y_cluster = generate_cluster_data(X, y, overlapping=overlapping)
 
