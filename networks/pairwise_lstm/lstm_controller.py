@@ -46,8 +46,8 @@ class LSTMController(NetworkController):
 
         # Load and prepare train/test data
         if self.dev_mode:
-            x_train, speakers_train = load_dev_test_data(self.get_validation_train_data(), self.val_data_size, 8)
-            x_test, speakers_test = load_dev_test_data(self.get_validation_test_data(), self.val_data_size, 2)
+            x_train, speakers_train, s_list_train = load_dev_test_data(self.get_validation_train_data(), self.val_data_size, 8)
+            x_test, speakers_test, s_list_test = load_dev_test_data(self.get_validation_test_data(), self.val_data_size, 2)
             x_train, speakers_train, = prepare_data(x_train, speakers_train, seg_size)
             x_test, speakers_test = prepare_data(x_test, speakers_test, seg_size)
         else:
