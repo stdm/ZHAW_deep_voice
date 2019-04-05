@@ -18,7 +18,6 @@ optional arguments:
   -plot       Plots the last results of the specified networks in one file.
 
 """
-import argparse
 import sys
 
 import matplotlib
@@ -37,38 +36,13 @@ from networks.lu_vo.luvo_controller import LuvoController
 from networks.pairwise_kldiv.kldiv_controller import KLDivController
 from networks.pairwise_lstm.lstm_controller import LSTMController
 
-# Constants
-# -------------------
-DEFAULT_SETUP = True
-DEFAULT_NETWORK = 'pairwise_lstm'
-DEFAULT_TRAIN = False
-DEFAULT_TEST = False
-DEFAULT_CLEAR = False
-DEFAULT_DEBUG = False
-DEFAULT_PLOT = False
-DEFAULT_BEST = False
-<<<<<<< HEAD
-DEFAULT_VAL_DATA_SIZE = 40
-DEFAULT_OUT_LAYER = 2
-DEFAULT_SEG_SIZE = 15
-DEFAULT_VEC_SIZE = 512
-DEFAULT_DEV_MODE = True
-DEFAULT_VAL_DATA = 'speakers_80_stratified_dev_train'
-DEFAULT_DEV_VAL_DATA = 'speakers_80_stratified_dev_train'
-=======
-DEFAULT_VAL_NUMBER = 40
->>>>>>> 31e0fdece0e54411d957a8523b0e51485d223e1d
 
 class Controller(NetworkController):
     def __init__(self, 
-                 setup=DEFAULT_SETUP, network=DEFAULT_NETWORK, train=DEFAULT_TRAIN, test=DEFAULT_TEST, 
-                 clear=DEFAULT_CLEAR, debug=DEFAULT_DEBUG, plot=DEFAULT_PLOT, best=DEFAULT_BEST, 
-<<<<<<< HEAD
-                 out_layer=DEFAULT_OUT_LAYER, seg_size=DEFAULT_SEG_SIZE,
-                 vec_size=DEFAULT_VEC_SIZE, val_data=DEFAULT_VAL_DATA, dev_val_data=DEFAULT_DEV_VAL_DATA, val_data_size=DEFAULT_VAL_DATA_SIZE, dev_mode=DEFAULT_DEV_MODE):
-=======
-                 val_number=DEFAULT_VAL_NUMBER):
->>>>>>> 31e0fdece0e54411d957a8523b0e51485d223e1d
+                 setup, network, train, test,
+                 clear, debug, plot, best,
+                 val_data, dev_val_data, val_data_size, dev_mode):
+
         super().__init__("Front")
         self.setup = setup
         self.network = network
@@ -79,16 +53,10 @@ class Controller(NetworkController):
         self.network_controllers = []
         self.plot = plot
         self.best = best
-<<<<<<< HEAD
-        self.out_layer = out_layer
-        self.seg_size = seg_size
-        self.vec_size = vec_size
         self.val_data = val_data
         self.dev_val_data = dev_val_data
         self.val_data_size = val_data_size
         self.dev_mode = dev_mode
-=======
->>>>>>> 31e0fdece0e54411d957a8523b0e51485d223e1d
 
 
     def train_network(self):
@@ -166,7 +134,6 @@ class Controller(NetworkController):
             #regex = self.network + ".pickle"
             regex = self.network + '*best*.pickle'
 
-
         files = list_all_files(get_results(), regex)
 
         for index, file in enumerate(files):
@@ -174,49 +141,12 @@ class Controller(NetworkController):
         return files
 
 if __name__ == '__main__':
-    # Parse console Args
-    parser = argparse.ArgumentParser(description='Controller suite for Speaker clustering')
-    # add all arguments and provide descriptions for them
-    """
-    parser.add_argument('-setup', dest='setup', action='store_true', 
-                        help='Run project setup.')
-    parser.add_argument('-n', dest='network', default=DEFAULT_NETWORK,
-                        help='The network to use for training or analysis.')
-    parser.add_argument('-train', dest='train', action='store_true', 
-                        help='Train the specified network.')
-    parser.add_argument('-test', dest='test', action='store_true', 
-                        help='Test the specified network.')
-    parser.add_argument('-clear', dest='clear', action='store_true', 
-                        help='Clean directories before starting network.')
-    parser.add_argument('-debug', dest='debug', action='store_true',
-                        help='Set loglevel for TensorFlow and Logger to debug')
-    parser.add_argument('-plot', dest='plot', action='store_true',
-                        help='Plots the last results of the specified networks in one file.')
-    parser.add_argument('-best', dest='best', action='store_true',
-                        help='If a single Network is specified and plot was called, just the best curves will be plotted')
-    parser.add_argument('-val#', dest='validation_number', default=DEFAULT_VAL_NUMBER,
-                        help='Specify how many speakers should be used for testing (40, 60, 80).')
-    parser.add_argument('-out_layer#', dest='out_layer', default=DEFAULT_OUT_LAYER,
-                        help='Output layer')
-    parser.add_argument('-seg_size#', dest='seg_size', default=DEFAULT_SEG_SIZE,
-                        help='Segment size')
-    parser.add_argument('-vec_size#', dest='vec_size', default=DEFAULT_VEC_SIZE,
-                        help='Vector size')
-
-    args = parser.parse_args()
-    print(args)
-    """
 
     config = load_config(None, join(get_common(), 'config.cfg'))
 
     controller = Controller(config.getboolean('common', 'setup'), config.get('common', 'network'),
                             config.getboolean('common', 'train'), config.getboolean('common', 'test'), config.getboolean('common', 'clear'),
                             config.getboolean('common', 'debug'), config.getboolean('common', 'plot'), config.getboolean('common', 'best'),
-<<<<<<< HEAD
-                            config.getint('common', 'out_layer'), config.getint('common', 'seg_size'), config.getint('common', 'vec_size'),
                             config.get('validation', 'test_pickle'), config.get('validation', 'dev_pickle'),
                             config.getint('validation', 'dev_total_speakers'), config.getboolean('validation', 'dev_mode'))
-=======
-                            config.getint('common', 'val_number'))
->>>>>>> 31e0fdece0e54411d957a8523b0e51485d223e1d
     controller.run()
