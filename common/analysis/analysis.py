@@ -13,6 +13,13 @@ from common.utils.logger import *
 from common.utils.paths import *
 from common.utils.pickler import load, save
 
+metrics = [
+    ("MR", misclassification_rate, 1),
+    ("ACP", average_cluster_purity, 0),
+    ("ARI", adjusted_rand_index, 0),
+    ("completeness_score", completeness_score, 1),
+    ("homogeneity_score", homogeneity_score, 1)
+]
 
 def plot_files(plot_file_name, files):
     """
@@ -48,7 +55,13 @@ def _read_result_pickle(files):
 
     # Fill result sets
     for file in files:
-        curve_name, mrs, acps, aris, homogeneity_scores, completeness_scores, number_of_embeddings = load(file)
+        curve_name, metric_sets, number_of_embeddings = load(file)
+
+        mrs = metric_sets[0]
+        acps = metric_sets[1]
+        aris = metric_sets[2]
+        homogeneity_scores = metric_sets[3]
+        completeness_scores = metric_sets[4]
 
         for index, curve_name in enumerate(curve_name):
             set_of_mrs.append(mrs[index])
@@ -161,27 +174,18 @@ def analyse_results(network_name, checkpoint_names, set_of_predicted_clusters, s
     """
     logger = get_logger('analysis', logging.INFO)
     logger.info('Run analysis')
-    set_of_mrs = []
-    set_of_acps = []
-    set_of_aris = []
-    set_of_homogeneity_scores = []
-    set_of_completeness_scores = []
+    metric_sets = [[None] * len(set_of_predicted_clusters) for _ in range(len(metrics))]
 
     for index, predicted_clusters in enumerate(set_of_predicted_clusters):
         logger.info('Analysing checkpoint:' + checkpoint_names[index])
 
-        mrs, acps, aris, homogeneity_scores, completeness_scores = _calculate_analysis_values(predicted_clusters,
-                                                                                 set_of_true_clusters[index])
-        set_of_mrs.append(mrs)
-        set_of_acps.append(acps)
-        set_of_aris.append(aris)
-        set_of_homogeneity_scores.append(homogeneity_scores)
-        set_of_completeness_scores.append(completeness_scores)
+        metric_results = _calculate_analysis_values(predicted_clusters, set_of_true_clusters[index])
 
-    _write_result_pickle(network_name, checkpoint_names, set_of_mrs, set_of_acps, set_of_aris,
-                        set_of_homogeneity_scores, set_of_completeness_scores, embedding_numbers)
-    _save_best_results(network_name, checkpoint_names, set_of_mrs, set_of_acps, set_of_aris,
-                      set_of_homogeneity_scores, set_of_completeness_scores, embedding_numbers)
+        for j, _ in enumerate(metrics):
+            metric_sets[j][index] = metric_results[j]
+
+    _write_result_pickle(network_name, checkpoint_names, metric_sets, embedding_numbers)
+    _save_best_results(network_name, checkpoint_names, metric_sets, embedding_numbers)
     logger.info('Analysis done')
 
 
@@ -191,73 +195,63 @@ def _calculate_analysis_values(predicted_clusters, true_cluster):
 
     :param predicted_clusters: The predicted Clusters of the Network.
     :param true_clusters: The validation clusters
-    :return: misclassification rate, average cluster purity, adjusted RAND index,
-        homogeneity Score, completeness score and the thresholds.
+    :return: the results of all metrics as a 2D array where i is the index of the metric and j is the index of a
+        specific result
     """
     logger = get_logger('analysis', logging.INFO)
     logger.info('Calculate scores')
 
     # Initialize output
-    mrs = np.ones(len(true_cluster))
-    acps = np.zeros(len(true_cluster))
-    aris = np.zeros(len(true_cluster))
-    homogeneity_scores = np.ones(len(true_cluster))
-    completeness_scores = np.ones(len(true_cluster))
+    metric_results = [None] * len(metrics)
+    for i, metric in enumerate(metrics):
+        if metric[2] == 1:
+            metric_results[i] = np.ones(len(true_cluster))
+        else:
+            metric_results[i] = np.zeros((len(true_cluster)))
 
     # Loop over all possible clustering
     for i, predicted_cluster in enumerate(predicted_clusters):
         # Calculate different analysis's
-        mrs[i] = misclassification_rate(true_cluster, predicted_cluster)
-        acps[i] = average_cluster_purity(true_cluster, predicted_cluster)
-        aris[i] = adjusted_rand_index(true_cluster, predicted_cluster)
-        homogeneity_scores[i] = homogeneity_score(true_cluster, predicted_cluster)
-        completeness_scores[i] = completeness_score(true_cluster, predicted_cluster)
+        for j, metric in enumerate(metrics):
+            metric_results[j][i] = metric[1](true_cluster, predicted_cluster)
 
-    return mrs, acps, aris, homogeneity_scores, completeness_scores
+    return metric_results
 
 
-def _save_best_results(network_name, checkpoint_names, set_of_mrs, set_of_acps, set_of_aris,
-                      set_of_homogeneity_scores, set_of_completeness_scores, speaker_numbers):
-    if len(set_of_mrs) == 1:
-        _write_result_pickle(network_name + "_best", checkpoint_names, set_of_mrs, set_of_acps, set_of_aris,
-                            set_of_homogeneity_scores, set_of_completeness_scores, speaker_numbers)
+def _save_best_results(network_name, checkpoint_names, metric_sets, speaker_numbers):
+    if len(metric_sets[0]) == 1:
+        _write_result_pickle(network_name + "_best", checkpoint_names, metric_sets, speaker_numbers)
     else:
-
-        # Find best result (min MR)
-        min_mrs = []
-        for mrs in set_of_mrs:
-            min_mrs.append(np.min(mrs))
-
-        min_mr_over_all = min(min_mrs)
+        # Find best result (according to the first metric in metrics)
+        if(metrics[0][1] == 1):
+            best_results = []
+            for results in metric_sets[0]:
+                best_results.append(np.min(results))
+            best_result_over_all = min(best_results)
+        else:
+            best_results = []
+            for results in metric_sets[0]:
+                best_results.append(np.max(results))
+            best_result_over_all = max(best_results)
 
         best_checkpoint_name = []
-        set_of_best_mrs = []
-        set_of_best_acps = []
-        set_of_best_aris = []
-        set_of_best_homogeneity_scores = []
-        set_of_best_completeness_scores = []
+        set_of_best_metrics = [[] for _ in metrics]
         best_speaker_numbers = []
-        for index, min_mr in enumerate(min_mrs):
-            if min_mr == min_mr_over_all:
+
+        for index, best_result in enumerate(best_results):
+            if best_result == best_result_over_all:
                 best_checkpoint_name.append(checkpoint_names[index])
-                set_of_best_mrs.append(set_of_mrs[index])
-                set_of_best_acps.append(set_of_acps[index])
-                set_of_best_aris.append(set_of_aris[index])
-                set_of_best_homogeneity_scores.append(set_of_homogeneity_scores[index])
-                set_of_best_completeness_scores.append(set_of_completeness_scores[index])
+                for j, metric in enumerate(metrics):
+                    set_of_best_metrics[j].append(metric_sets[j][index])
                 best_speaker_numbers.append(speaker_numbers[index])
 
-        _write_result_pickle(network_name + "_best", best_checkpoint_name,
-                            set_of_best_mrs, set_of_best_acps, set_of_best_aris,
-                            set_of_best_homogeneity_scores, set_of_best_completeness_scores, best_speaker_numbers)
+        _write_result_pickle(network_name + "_best", best_checkpoint_name, set_of_best_metrics, best_speaker_numbers)
 
 
-def _write_result_pickle(network_name, checkpoint_names, set_of_mrs, set_of_acps, set_of_aris,
-                        set_of_homogeneity_scores, set_of_completeness_scores, number_of_embeddings):
+def _write_result_pickle(network_name, checkpoint_names, metric_sets, number_of_embeddings):
     logger = get_logger('analysis', logging.INFO)
     logger.info('Write result pickle')
-    save((checkpoint_names, set_of_mrs, set_of_acps, set_of_aris, set_of_homogeneity_scores,
-          set_of_completeness_scores, number_of_embeddings), get_result_pickle(network_name))
+    save((checkpoint_names, metric_sets, number_of_embeddings), get_result_pickle(network_name))
 
 
 def _read_and_safe_best_results():
