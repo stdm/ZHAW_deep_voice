@@ -20,13 +20,8 @@ class LuvoController(NetworkController):
         self.cnn.create_and_train(get_speaker_pickle("speakers_590_clustering_without_raynolds_train"))
 
     def get_embeddings(self):
-
-        if self.dev_mode:
-            X_train, y_train, s_list_train = load_dev_test_data(self.get_validation_train_data(), self.val_data_size, 8)
-            X_test, y_test, s_list_test = load_dev_test_data(self.get_validation_test_data(), self.val_data_size, 2)
-        else:
-            X_train, y_train, s_list_train = load_test_data(self.get_validation_train_data())
-            X_test, y_test, s_list_test = load_test_data(self.get_validation_test_data())
+        X_train, y_train, s_list_train = load_test_data(self.get_validation_train_data())
+        X_test, y_test, s_list_test = load_test_data(self.get_validation_test_data())
 
         embeddings, speakers, num_embeddings = self.cnn.create_embeddings(X_train, y_train, X_test, y_test)
 
