@@ -29,9 +29,11 @@ class ArcFaceController(NetworkController):
     def train_network(self):
         for settings in get_untrained_settings():
             save_settings(settings)
-            extend_most_trained(settings)
-            print(settings['SAVE_PATH'])
             epoch, _ = get_last_epoch(settings)
+            if epoch == -1:
+                extend_most_trained(settings)
+                epoch, _ = get_last_epoch(settings)
+            print(settings['SAVE_PATH'])
             ctx = get_context()
             metric = CompositeEvalMetric([Accuracy(), TopKAccuracy(5), CrossEntropy()])
             save_rules = ['+', 'n', 'n']
