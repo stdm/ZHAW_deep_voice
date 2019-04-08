@@ -28,24 +28,24 @@ class ArcFaceController(NetworkController):
 
     def train_network(self):
         for settings in get_untrained_settings():
+            save_settings(settings)
             epoch, _ = get_last_epoch(settings)
-            print(epoch)
-            print(settings['SAVE_PATH'])
             ctx = get_context()
             metric = CompositeEvalMetric([Accuracy(), TopKAccuracy(5), CrossEntropy()])
             save_rules = ['+', 'n', 'n']
+
+            train_iter, val_iter, num_speakers = load_train_data(settings)
+
             net = ArcFaceBlock(num_speakers, settings)
             net.hybridize()
             if epoch == -1:
                 net.initialize(mx.init.Xavier())
                 net.collect_params().reset_ctx(ctx)
                 epoch = 0
-                save_settings(settings)
             else:
                 reset_progress(settings)
                 net.load_parameters(get_params(settings))
 
-            train_iter, val_iter, num_speakers = load_train_data(settings)
             kv = mx.kv.create('device')
             trainer = mx.gluon.Trainer(net.collect_params(), mx.optimizer.AdaDelta(), kvstore=kv)
 

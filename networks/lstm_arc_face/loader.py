@@ -8,19 +8,15 @@ def get_params(settings):
 
 def get_untrained_settings():
     filename = get_experiment_nets('arc_face/all_settings.json')
-    print(filename)
     settings_tree = {}
     if filename:
         with open(filename, 'r') as f:
             settings_tree = json.load(f)
-    print(settings_tree)
     save_structure = settings_tree['SAVE_STRUCTURE']
     all_settings = _load_children(settings_tree['DEFAULT'], save_structure)
     untrained_settings = []
     for settings in all_settings:
-        print(settings)
         epoch, finished = get_last_epoch(settings)
-        print(epoch)
         if not finished:
             untrained_settings.append(settings)
     return untrained_settings

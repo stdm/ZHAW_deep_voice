@@ -80,10 +80,8 @@ class Controller(NetworkController):
         self.val_data = validation_data[val_number]
 
     def train_network(self):
-        print(3)
         for network_controller in self.network_controllers:
             network_controller.train_network()
-            print(4)
 
     def test_network(self):
         for network_controller in self.network_controllers:
@@ -115,7 +113,6 @@ class Controller(NetworkController):
 
     def generate_controllers(self):
         self.network_controllers = []
-        print(self.network)
         if self.network == 'pairwise_lstm_vox2':
             from networks.pairwise_lstm_vox.lstm_controller import LSTMVOX2Controller
             self.network_controllers.append(LSTMVOX2Controller(self.out_layer, self.seg_size, self.vec_size))
@@ -124,9 +121,7 @@ class Controller(NetworkController):
             self.network_controllers.append(LSTMController(self.out_layer, self.seg_size, self.vec_size))
         if self.network == 'arc_face':
             from networks.lstm_arc_face.arc_face_controller import ArcFaceController
-            print(1)
             self.network_controllers.append(ArcFaceController())
-            print(2)
 
 
     def setup_networks(self):
