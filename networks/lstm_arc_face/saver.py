@@ -58,7 +58,10 @@ def reset_progress(settings):
 
 def save_settings(settings):
     net_dir = get_experiment_nets(settings['SAVE_PATH'])
-    os.makedirs(net_dir)
+    try:
+        os.makedirs(net_dir)
+    except:
+        pass
     with open(net_dir + '/settings.json', 'w') as f:
         json.dump(settings, f)
 
