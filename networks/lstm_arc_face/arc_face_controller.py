@@ -65,8 +65,10 @@ class ArcFaceController(NetworkController):
                 name, indices, mean_loss, time_used = run_epoch(net, ctx, val_iter, metric, trainer, loss, epoch, train=False)
                 best_values = save_epoch(net, settings, epoch, best_values, name, indices, mean_loss, time_used, save_rules, train=False)
                 print('')
-                plot_progress(settings)
+                if epoch%10==0:
+                    plot_progress(settings)
                 epoch = epoch + 1
+
             self.test_settings(settings)
 
     def test_settings(self, settings):
