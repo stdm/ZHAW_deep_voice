@@ -45,7 +45,7 @@ class ArcFaceController(NetworkController):
                 epoch = 0
             else:
                 reset_progress(settings)
-                net.load_parameters(get_params(settings))
+                net.load_parameters(get_params(settings), ctx=ctx)
 
             kv = mx.kv.create('device')
             trainer = mx.gluon.Trainer(net.collect_params(), mx.optimizer.AdaDelta(), kvstore=kv)
