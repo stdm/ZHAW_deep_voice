@@ -122,7 +122,6 @@ def load_train_data(settings):
     x_t, y_t, x_v, y_v, num_speakers = [], [], [], [], 0
     try:
         x_t, y_t, x_v, y_v, num_speakers = load(net_dir+'/dataset.pickle')
-        print('by vlad, it works')
     except:
         x, y, speaker_names = load(get_speaker_pickle(settings['TRAIN_DATA_NAME']))
         x_t, y_t, x_v, y_v = _data_splitter(x, y, settings)
