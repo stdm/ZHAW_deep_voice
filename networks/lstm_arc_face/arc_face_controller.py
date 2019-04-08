@@ -12,8 +12,8 @@ from .data_generator import load_train_data, load_test_data
 from .model import ArcFaceBlock, get_context, SoftmaxLoss
 from .metrics import CrossEntropy
 from .executor import run_epoch
-from .saver import save_epoch, reset_progress, save_final, plot_progress
-from .loader import get_untrained_settings, get_trained_settings, get_params
+from .saver import save_epoch, reset_progress, save_settings, plot_progress
+from .loader import get_untrained_settings, get_trained_settings, get_params, get_last_epoch
 
 from common.utils.paths import *
 from common.network_controller import NetworkController
@@ -28,18 +28,22 @@ class ArcFaceController(NetworkController):
 
     def train_network(self):
         for settings in get_untrained_settings():
+            epoch, _ = get_last_epoch(settings)
             print(settings['SAVE_PATH'])
-            reset_progress(settings)
             ctx = get_context()
             metric = CompositeEvalMetric([Accuracy(), TopKAccuracy(5), CrossEntropy()])
             save_rules = ['+', 'n', 'n']
-
             train_iter, val_iter, num_speakers = load_train_data(settings)
-
             net = ArcFaceBlock(num_speakers, settings)
             net.hybridize()
-            net.initialize(mx.init.Xavier())
-            net.collect_params().reset_ctx(ctx)
+            if epoch == -1:
+                net.initialize(mx.init.Xavier())
+                net.collect_params().reset_ctx(ctx)
+                epoch = 0
+                save_settings(settings)
+            else:
+                reset_progress(settings)
+                net.load_parameters(get_params(settings))
 
             kv = mx.kv.create('device')
             trainer = mx.gluon.Trainer(net.collect_params(), mx.optimizer.AdaDelta(), kvstore=kv)
@@ -48,7 +52,6 @@ class ArcFaceController(NetworkController):
                 loss = mx.gluon.loss.SoftmaxCrossEntropyLoss()
             elif settings['SOFTMAX'] == 'CUSTOM':
                 loss = SoftmaxLoss(num_speakers, settings)
-            epoch = 0
             best_values = {}
             while epoch < settings['MAX_EPOCHS']:
                 name, indices, mean_loss, time_used = run_epoch(net, ctx, train_iter, metric, trainer, loss, epoch, train=True)
@@ -59,7 +62,6 @@ class ArcFaceController(NetworkController):
                 print('')
                 epoch = epoch + 1
             self.test_settings(settings)
-            save_final(net, settings)
 
     def test_settings(self, settings):
         plot_progress(settings)
@@ -90,7 +92,7 @@ class ArcFaceController(NetworkController):
 
         net = ArcFaceBlock(num_speakers, settings)
         net.hybridize()
-        checkpoints = [get_params(settings['SAVE_PATH'])]
+        checkpoints = [get_params(settings)]
         net.load_parameters(checkpoints[0])
 
         ctx = get_context()

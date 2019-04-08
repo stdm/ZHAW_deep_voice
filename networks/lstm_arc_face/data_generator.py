@@ -3,7 +3,7 @@ import mxnet as mx
 import random
 
 from random import randint
-from common.utils.pickler import load
+from common.utils.pickler import load, save
 from common.utils.paths import *
 
 class SimpleIter(mx.io.DataIter):
@@ -118,9 +118,15 @@ def _load_test_data(data_path, settings):
     return x.reshape(x.shape[0], x.shape[3], x.shape[2]), np.asarray(y_test, dtype=np.int32)
 
 def load_train_data(settings):
-    x, y, speaker_names = load(get_speaker_pickle(settings['TRAIN_DATA_NAME']))
-    x_t, y_t, x_v, y_v = _data_splitter(x, y, settings)
-    num_speakers = np.amax(y) + 1
+    net_dir = get_experiment_nets(settings['SAVE_PATH'])
+    x_t, y_t, x_v, y_v, num_speakers = [], [], [], [], 0
+    try:
+        x_t, y_t, x_v, y_v, num_speakers = load(net_dir+'/dataset.pickle')
+    except:
+        x, y, speaker_names = load(get_speaker_pickle(settings['TRAIN_DATA_NAME']))
+        x_t, y_t, x_v, y_v = _data_splitter(x, y, settings)
+        num_speakers = np.amax(y) + 1
+        save((x_t, y_t, x_v, y_v, num_speakers), net_dir+'/dataset.pickle')
 
     bg_t = _batch_generator_lstm(x_t, y_t, settings)
     bg_v = _batch_generator_lstm(x_v, y_v, settings)

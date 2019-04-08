@@ -3,8 +3,8 @@ import os
 
 from common.utils.paths import *
 
-def get_params(network_file):
-    return get_experiment_nets(network_file)+'/val_best_accuracy'
+def get_params(settings):
+    return get_experiment_nets(settings['SAVE_PATH'])+'/final_epoch'
 
 def get_untrained_settings():
     filename = get_experiment_nets('arc_face/all_settings.json')
@@ -14,15 +14,11 @@ def get_untrained_settings():
             settings_tree = json.load(f)
     save_structure = settings_tree['SAVE_STRUCTURE']
     all_settings = _load_children(settings_tree['DEFAULT'], save_structure)
-    trained_settings = get_trained_settings()
     untrained_settings = []
-    for settings1 in all_settings:
-        trained = False
-        for settings2 in trained_settings:
-            if _dict_equals(settings1, settings2):
-                trained = True
-        if not trained:
-            untrained_settings.append(settings1)
+    for settings in all_settings:
+        epoch, finished = get_last_epoch(settings)
+        if not finished:
+            untrained_settings.append(settings)
     return untrained_settings
 
 def _dict_equals(x, y):
@@ -32,16 +28,35 @@ def _dict_equals(x, y):
     return False
 
 def get_trained_settings():
-    return _get_children(get_experiment_nets('arc_face'))
+    return _load_trained_children(get_experiment_nets('arc_face'))
 
-def _get_children(path):
+def get_last_epoch(settings):
+    net_dir = get_experiment_nets(settings['SAVE_PATH'])
+    train_path = net_dir+'/train_progress.csv'
+    t_l = []
+    try:
+        with open(train_path, 'r') as f:
+            t_l = f.readlines()
+        epoch = int(t_l[-1].split(',')[0])
+        finished = False
+        if epoch >= settings['MAX_EPOCHS'] - 1:
+            finished = True
+        return epoch, finished
+    except:
+        return -1, False
+
+def _load_trained_children(path):
     settings = []
     for child in os.listdir(path):
         if child == 'settings.json':
             with open(path+'/'+child, 'r') as f:
-                settings.append(json.load(f))
+                setting = json.load(f)
+                epoch, finished = get_last_epoch(setting)
+                if finished:
+                    settings.append(setting)
+
         elif os.path.isdir(path+'/'+child):
-            settings.extend(_get_children(path+'/'+child))
+            settings.extend(_load_trained_children(path+'/'+child))
     return settings
 
 def _load_children(settings, save_structure):

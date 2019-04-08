@@ -39,16 +39,25 @@ def plot_progress(settings):
 
 def reset_progress(settings):
     net_dir = get_experiment_nets(settings['SAVE_PATH'])
-    if os.path.isfile(net_dir+'/train_progress.csv'):
-        os.remove(net_dir+'/train_progress.csv')
-    if os.path.isfile(net_dir+'/val_progress.csv'):
-        os.remove(net_dir+'/val_progress.csv')
+    train_path, val_path = net_dir+'/train_progress.csv', net_dir+'/val_progress.csv'
+    t_l, v_l = [], []
+    with open(train_path, 'r') as f:
+        t_l = f.readlines()
+    with open(val_path, 'r') as f:
+        v_l = f.readlines()
+    if len(t_l) == len(v_l):
+        t_l, v_l = t_l[:-1], v_l[:-1]
+    else:
+        t_l = t_l[:-1]
+    os.remove(train_path)
+    os.remove(val_path)
+    with open(train_path, 'w+') as f:
+        f.write(''.join(t_l))
+    with open(val_path, 'w+') as f:
+        f.write(''.join(v_l))
 
-def save_final(net, settings):
+def save_settings(settings):
     net_dir = get_experiment_nets(settings['SAVE_PATH'])
-    if not os.path.isdir(net_dir):
-        os.makedirs(net_dir)
-    net.save_parameters(net_dir+'/final_epoch')
     with open(net_dir + '/settings.json', 'w') as f:
         json.dump(settings, f)
 
@@ -93,4 +102,6 @@ def save_epoch(net, settings, epoch, best_values, name, indices, mean_loss, time
                 vals[k] = v
                 net.save_parameters(net_dir+'/'+mode+'_best_'+k)
         best_values[mode] = vals
+    if mode == 'train':
+        net.save_parameters(net_dir+'/final_epoch')
     return best_values
