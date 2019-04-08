@@ -51,10 +51,10 @@ class LSTMController(NetworkController):
             x_train, speakers_train, = prepare_data(x_train, speakers_train, seg_size)
             x_test, speakers_test = prepare_data(x_test, speakers_test, seg_size)
         else:
-            x_test, speakers_test = prepare_data(load_test_data(self.get_validation_test_data()), seg_size)
-            x_train, speakers_train = prepare_data(load_test_data(self.get_validation_train_data()), seg_size)
-            x_test, speakers_test = prepare_data(x_test, speakers_test)
-            x_train, speakers_train=prepare_data(x_train, speakers_train)
+            x_train, speakers_train, s_list_train = load_test_data(self.get_validation_test_data())
+            x_test, speakers_test, s_list_test = load_test_data(self.get_validation_train_data())
+            x_test, speakers_test = prepare_data(x_test, speakers_test, seg_size)
+            x_train, speakers_train=prepare_data(x_train, speakers_train, seg_size)
 
 
         # Prepare return values
