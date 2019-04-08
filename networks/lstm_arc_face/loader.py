@@ -1,6 +1,7 @@
 import json
 import os
 
+from shutil import copyfile
 from common.utils.paths import *
 
 def get_params(settings):
@@ -26,6 +27,30 @@ def _dict_equals(x, y):
     if len(shared_items) == len(x) and len(shared_items) == len(y):
         return True
     return False
+
+def extend_most_trained(settings):
+    trimmed_settings = settings.copy()
+    trimmed_settings.pop('MAX_EPOCHS', None)
+    trimmed_settings.pop('SAVE_PATH', None)
+    trained = get_trained_settings()
+    best_max = 0
+    best_settings = None
+    for train in trained:
+        trimmed_train = train.copy()
+        trimmed_train.pop('MAX_EPOCHS', None)
+        trimmed_train.pop('SAVE_PATH', None)
+        if _dict_equals(trimmed_settings, trimmed_train) and train['MAX_EPOCHS'] < settings['MAX_EPOCHS']:
+            if train['MAX_EPOCHS'] > best_max:
+                best_max = train['MAX_EPOCHS']
+                best_settings = train
+    if best_settings is not None:
+        files = ['/dataset.pickle', '/final_epoch', '/train_progress.csv', '/val_progress.csv']
+        src = get_experiment_nets(best_settings['SAVE_PATH'])
+        dst = get_experiment_nets(settings['SAVE_PATH'])
+        for file in files:
+            copyfile(src+file, dst+file)
+
+
 
 def get_trained_settings():
     return _load_trained_children(get_experiment_nets('arc_face'))
