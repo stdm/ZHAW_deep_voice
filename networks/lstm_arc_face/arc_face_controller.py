@@ -13,7 +13,7 @@ from .model import ArcFaceBlock, get_context, SoftmaxLoss
 from .metrics import CrossEntropy
 from .executor import run_epoch
 from .saver import save_epoch, reset_progress, save_settings, plot_progress
-from .loader import get_untrained_settings, get_trained_settings, get_params, get_last_epoch
+from .loader import get_untrained_settings, get_trained_settings, get_params, get_last_epoch, extend_most_trained
 
 from common.utils.paths import *
 from common.network_controller import NetworkController
