@@ -17,7 +17,7 @@ def load_dev_test_data(data_path, number_speakers, sentences):
 
     if number_speakers < 80:
         X_sampled = np.zeros(X.shape)
-        y_sampled = np.zeros(y.shape)
+        y_sampled = np.zeros(y.shape, dtype=np.int8)
         for i in range(number_speakers):
             index = random.randrange(80-i)
 

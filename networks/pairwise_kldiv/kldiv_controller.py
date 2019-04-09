@@ -36,12 +36,8 @@ class KLDivController(NetworkController):
         logger.info('Run pairwise_kldiv')
         checkpoints = self.checkpoints
 
-        if self.dev_mode:
-            X_train, y_train, s_list_train = load_dev_test_data(self.get_validation_train_data(), self.val_data_size, 8)
-            X_test, y_test, s_list_test = load_dev_test_data(self.get_validation_test_data(), self.val_data_size, 2)
-        else:
-            X_train, y_train, s_list_train = load_test_data(self.get_validation_train_data())
-            X_test, y_test, s_list_test = load_test_data(self.get_validation_test_data())
+        X_train, y_train, s_list_train = load_test_data(self.get_validation_train_data())
+        X_test, y_test, s_list_test = load_test_data(self.get_validation_test_data())
 
         # Prepare return value
         set_of_embeddings = []
