@@ -27,69 +27,56 @@ def plot_files(plot_file_name, files):
     :param plot_file_name: the file name stored in common/data/results
     :param files: a set of full file paths that hold result data
     """
-    curve_names, set_of_mrs, set_of_acps, set_of_aris, set_of_homogeneity_scores, \
-        set_of_completeness_scores, set_of_number_of_embeddings = _read_result_pickle(files)
+    curve_names, metric_sets, set_of_number_of_embeddings = _read_result_pickle(files)
 
-    _plot_curves(plot_file_name, curve_names, set_of_mrs, set_of_acps, set_of_aris,
-                 set_of_homogeneity_scores, set_of_completeness_scores, set_of_number_of_embeddings)
+    _plot_curves(plot_file_name, curve_names, metric_sets, set_of_number_of_embeddings)
 
 
 def _read_result_pickle(files):
     """
     Reads the results of a network from these files.
     :param files: can be 1-n files that contain a result.
-    :return: curve names, thresholds, mrs, acps, aris, homogeneity scores, completeness scores and number of embeddings
+    :return: curve names, thresholds, metric scores as a list and number of embeddings
     """
     logger = get_logger('analysis', logging.INFO)
     logger.info('Read result pickle')
     curve_names = []
 
     # Initialize result sets
-    set_of_thresholds = []
-    set_of_mrs = []
-    set_of_acps = []
-    set_of_aris = []
-    set_of_homogeneity_scores = []
-    set_of_completeness_scores = []
+    metric_sets_all_files = [[] for _ in metrics]
     set_of_number_of_embeddings = []
 
     # Fill result sets
     for file in files:
         curve_name, metric_sets, number_of_embeddings = load(file)
 
-        mrs = metric_sets[0]
-        acps = metric_sets[1]
-        aris = metric_sets[2]
-        homogeneity_scores = metric_sets[3]
-        completeness_scores = metric_sets[4]
-
         for index, curve_name in enumerate(curve_name):
-            set_of_mrs.append(mrs[index])
-            set_of_acps.append(acps[index])
-            set_of_aris.append(aris[index])
-            set_of_homogeneity_scores.append(homogeneity_scores[index])
-            set_of_completeness_scores.append(completeness_scores[index])
+            for m, _ in enumerate(metrics):
+                metric_sets_all_files[m].append(metric_sets[m][index])
+
             set_of_number_of_embeddings.append(number_of_embeddings[index])
             curve_names.append(curve_name)
 
-    return curve_names, set_of_mrs, set_of_acps, set_of_aris, set_of_homogeneity_scores, set_of_completeness_scores, set_of_number_of_embeddings
+    return curve_names, metric_sets_all_files, set_of_number_of_embeddings
 
 
-def _plot_curves(plot_file_name, curve_names, mrs, acps, aris,
-                 homogeneity_scores, completeness_scores, number_of_embeddings):
+def _plot_curves(plot_file_name, curve_names, metric_sets, number_of_embeddings):
     """
     Plots all specified curves and saves the plot into a file.
     :param plot_file_name: String value of save file name
     :param curve_names: Set of names used in legend to describe this curve
-    :param mrs: 2D Matrix, each row describes one dataset of misclassification rates for a curve
-    :param acps: 2D Matrix, each row describes one dataset of average cluster purities for a curve
-    :param aris: 2D Matrix, each row describes one dataset of adjusted RAND indexes for a curve
-    :param homogeneity_scores: 2D Matrix, each row describes one dataset of homogeneity scores for a curve
-    :param completeness_scores: 2D Matrix, each row describes one dataset of completeness scores for a curve
+    :param metric_sets: A list of 2D matrices, each row of a metrics 2D matrix describes one dataset for a curve
     :param number_of_embeddings: set of integers, each integer describes how many embeddings is in this curve
     """
     logger = get_logger('analysis', logging.INFO)
     logger.info('Plot results')
+
+    mrs = metric_sets[0]
+    acps = metric_sets[1]
+    aris = metric_sets[2]
+    homogeneity_scores = metric_sets[3]
+    completeness_scores = metric_sets[4]
+
     min_mrs = []
     for mr in mrs:
         min_mrs.append(np.min(mr))
@@ -181,8 +168,8 @@ def analyse_results(network_name, checkpoint_names, set_of_predicted_clusters, s
 
         metric_results = _calculate_analysis_values(predicted_clusters, set_of_true_clusters[index])
 
-        for j, _ in enumerate(metrics):
-            metric_sets[j][index] = metric_results[j]
+        for m, _ in enumerate(metrics):
+            metric_sets[m][index] = metric_results[m]
 
     _write_result_pickle(network_name, checkpoint_names, metric_sets, embedding_numbers)
     _save_best_results(network_name, checkpoint_names, metric_sets, embedding_numbers)
@@ -203,17 +190,17 @@ def _calculate_analysis_values(predicted_clusters, true_cluster):
 
     # Initialize output
     metric_results = [None] * len(metrics)
-    for i, metric in enumerate(metrics):
+    for m, metric in enumerate(metrics):
         if metric[2] == 1:
-            metric_results[i] = np.ones(len(true_cluster))
+            metric_results[m] = np.ones(len(true_cluster))
         else:
-            metric_results[i] = np.zeros((len(true_cluster)))
+            metric_results[m] = np.zeros((len(true_cluster)))
 
     # Loop over all possible clustering
     for i, predicted_cluster in enumerate(predicted_clusters):
         # Calculate different analysis's
-        for j, metric in enumerate(metrics):
-            metric_results[j][i] = metric[1](true_cluster, predicted_cluster)
+        for m, metric in enumerate(metrics):
+            metric_results[m][i] = metric[1](true_cluster, predicted_cluster)
 
     return metric_results
 
@@ -241,8 +228,8 @@ def _save_best_results(network_name, checkpoint_names, metric_sets, speaker_numb
         for index, best_result in enumerate(best_results):
             if best_result == best_result_over_all:
                 best_checkpoint_name.append(checkpoint_names[index])
-                for j, metric in enumerate(metrics):
-                    set_of_best_metrics[j].append(metric_sets[j][index])
+                for m, metric in enumerate(metrics):
+                    set_of_best_metrics[m].append(metric_sets[m][index])
                 best_speaker_numbers.append(speaker_numbers[index])
 
         _write_result_pickle(network_name + "_best", best_checkpoint_name, set_of_best_metrics, best_speaker_numbers)
@@ -255,11 +242,8 @@ def _write_result_pickle(network_name, checkpoint_names, metric_sets, number_of_
 
 
 def _read_and_safe_best_results():
-    checkpoint_names, set_of_mrs, set_of_acps, set_of_aris,\
-        set_of_homogeneity_scores, set_of_completeness_scores, speaker_numbers =\
-        _read_result_pickle([get_result_pickle('flow_me')])
-    _save_best_results('flow_me', checkpoint_names, set_of_mrs, set_of_acps, set_of_aris,
-                       set_of_homogeneity_scores, set_of_completeness_scores, speaker_numbers)
+    checkpoint_names, metric_sets, speaker_numbers = _read_result_pickle([get_result_pickle('flow_me')])
+    _save_best_results('flow_me', checkpoint_names, metric_sets, speaker_numbers)
 
 
 if __name__ == '__main__':
