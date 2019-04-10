@@ -67,6 +67,8 @@ class ArcFaceController(NetworkController):
                 print('')
                 if epoch%10==0:
                     plot_progress(settings)
+                if epoch%1000==0:
+                    self.test_settings(settings)
                 epoch = epoch + 1
 
             self.test_settings(settings)
