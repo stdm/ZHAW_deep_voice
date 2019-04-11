@@ -7,6 +7,7 @@ from common.utils.logger import *
 from common.utils.paths import *
 from common.spectogram.speaker_dev_selector import load_test_data, load_dev_test_data
 from .network_training.spectrogram_cnn_590 import SpectrogramCnn590
+from common.utils.load_config import *
 
 
 class LuvoController(NetworkController):
@@ -17,7 +18,9 @@ class LuvoController(NetworkController):
         self.cnn = SpectrogramCnn590(get_experiment_nets(self.checkpoint))
 
     def train_network(self):
-        self.cnn.create_and_train(get_speaker_pickle("speakers_590_clustering_without_raynolds_train"))
+        config = load_config(None, join(get_common(), 'config.cfg'))
+        train_file = get_speaker_pickle(config.get('train', 'pickle'))
+        self.cnn.create_and_train(train_file)
 
     def get_embeddings(self):
         X_train, y_train, s_list_train = load_test_data(self.get_validation_train_data())
