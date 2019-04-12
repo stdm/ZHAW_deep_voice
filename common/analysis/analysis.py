@@ -13,12 +13,18 @@ from common.utils.logger import *
 from common.utils.paths import *
 from common.utils.pickler import load, save
 
+
+'''
+This list contains all metrics as tuple, containing the name, the function and the worst expected value (either 0 or 1).
+All functions in this file are influenced by this list and any metric can be added as long as they expect y_true and
+y_pred as their input.
+'''
 metrics = [
     ("MR", misclassification_rate, 1),
     ("ACP", average_cluster_purity, 0),
     ("ARI", adjusted_rand_index, 0),
-    ("completeness_score", completeness_score, 1),
-    ("homogeneity_score", homogeneity_score, 1)
+    ("completeness_score", completeness_score, 0),
+    ("homogeneity_score", homogeneity_score, 0)
 ]
 
 def plot_files(plot_file_name, files):
@@ -71,19 +77,20 @@ def _plot_curves(plot_file_name, curve_names, metric_sets, number_of_embeddings)
     logger = get_logger('analysis', logging.INFO)
     logger.info('Plot results')
 
-    mrs = metric_sets[0]
-    acps = metric_sets[1]
-    aris = metric_sets[2]
-    homogeneity_scores = metric_sets[3]
-    completeness_scores = metric_sets[4]
+    best_results = [[] for _ in metrics]
+    for m, metric in enumerate(metrics):
+        if(metric[2] == 0):
+            best_results[m].append(np.max(metric_sets[m]))
+        else:
+            best_results[m].append(np.min(metric_sets[m]))
 
-    min_mrs = []
-    for mr in mrs:
-        min_mrs.append(np.min(mr))
-
+    '''
+    This code is used to sort the lines by min mr. Because we now use mutliple metrics and dont sort by a single
+    metric, this code is not used anymore, but we keep it for now.
     min_mrs, curve_names, mrs, acps, aris, homogeneity_scores, completeness_scores, number_of_embeddings = \
         (list(t) for t in
          zip(*sorted(zip(min_mrs, curve_names, mrs, acps, aris, homogeneity_scores, completeness_scores, number_of_embeddings))))
+    '''
 
     # How many lines to plot
     number_of_lines = len(curve_names)
@@ -97,27 +104,25 @@ def _plot_curves(plot_file_name, curve_names, metric_sets, number_of_embeddings)
     fig1.set_size_inches(16, 16)
 
     # Define Plots
-    plot_grid = (4,3)
+    plot_grid = (len(metrics),3)
 
-    mr_plot = _add_cluster_subplot(plot_grid, (0, 0), 'MR', 2)
-    plt.ylim([-0.02, 1.02])
+    plots = [None] * 5
 
-    acp_plot = _add_cluster_subplot(plot_grid, (1,0), 'ACP', 2)
-    ari_plot = _add_cluster_subplot(plot_grid, (2,0), 'ARI', 2)
-
-    completeness_scores_plot = _add_cluster_subplot(plot_grid, (3, 0), 'completeness_scores')
-    homogeneity_scores_plot = _add_cluster_subplot(plot_grid, (3, 1), 'homogeneity_scores')
+    for m, metric in enumerate(metrics):
+        plots[m] = _add_cluster_subplot(plot_grid, (m, 0), metric[0], 2)
 
     # Define curves and their values
-    curves = [[mr_plot, mrs],
-              [acp_plot, acps],
-              [ari_plot, aris],
-              [homogeneity_scores_plot, homogeneity_scores],
-              [completeness_scores_plot, completeness_scores]]
+    curves = [[] for _ in metrics]
+
+    for m, metric in enumerate(metrics):
+        curves[m] = [plots[m], metric_sets[m]]
 
     # Plot all curves
     for index in range(number_of_lines):
-        label = curve_names[index] + '\n min MR: ' + str(min_mrs[index])
+        label = curve_names[index]
+        for m, metric in enumerate(metrics):
+            label = label + '\n {} {}: {}'.format('Max' if metric[2]==0 else 'Min', metric[0],
+                                                  str(best_results[m][index]))
         color = colors[index]
         number_of_clusters = np.arange(number_of_embeddings[index], 0, -1)
 
@@ -200,7 +205,8 @@ def _calculate_analysis_values(predicted_clusters, true_cluster):
     for i, predicted_cluster in enumerate(predicted_clusters):
         # Calculate different analysis's
         for m, metric in enumerate(metrics):
-            metric_results[m][i] = metric[1](true_cluster, predicted_cluster)
+            metric_function = metric[1]
+            metric_results[m][i] = metric_function(true_cluster, predicted_cluster)
 
     return metric_results
 
@@ -210,7 +216,7 @@ def _save_best_results(network_name, checkpoint_names, metric_sets, speaker_numb
         _write_result_pickle(network_name + "_best", checkpoint_names, metric_sets, speaker_numbers)
     else:
         # Find best result (according to the first metric in metrics)
-        if(metrics[0][1] == 1):
+        if(metrics[0][2] == 1):
             best_results = []
             for results in metric_sets[0]:
                 best_results.append(np.min(results))
