@@ -88,7 +88,7 @@ class SpectrogramCnn:
         total_time.extend(train_time)
         total_time.extend(test_time)
 
-        return embeddings, speakers, number_embeddings
+        return embeddings, speakers, number_embeddings, total_time
 
 
 def prepare_predict(net):

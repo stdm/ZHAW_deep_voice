@@ -26,6 +26,6 @@ class LuvoController(NetworkController):
         X_train, y_train, s_list_train = load_test_data(self.get_validation_train_data())
         X_test, y_test, s_list_test = load_test_data(self.get_validation_test_data())
 
-        embeddings, speakers, num_embeddings = self.cnn.create_embeddings(X_train, y_train, X_test, y_test)
+        embeddings, speakers, num_embeddings, time = self.cnn.create_embeddings(X_train, y_train, X_test, y_test)
 
         return [self.checkpoint], [embeddings], [speakers], [num_embeddings]
