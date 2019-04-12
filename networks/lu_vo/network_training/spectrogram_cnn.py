@@ -20,10 +20,11 @@ from nolearn.lasagne import NeuralNet, TrainSplit
 from common.clustering.generate_embeddings import generate_embeddings
 from common.utils.logger import *
 from common.utils.pickler import load, save
-from .segment_batchiterator import SegmentBatchIterator
-from .. import settings
+from networks.lu_vo.network_training.segment_batchiterator import SegmentBatchIterator
+from networks.lu_vo import settings
 from common.utils.load_config import *
 from common.utils.paths import *
+from common.utils import TimeCalculator
 
 
 class SpectrogramCnn:
@@ -79,7 +80,15 @@ class SpectrogramCnn:
         output_train = net.predict_proba(x_train_cluster)
         output_test = net.predict_proba(x_test_cluster)
 
-        return generate_embeddings(output_train, output_test, y_train_cluster, y_test_cluster, output_train.shape[1])
+        embeddings, speakers, number_embeddings =\
+            generate_embeddings(output_train, output_test, y_train_cluster, y_test_cluster, output_train.shape[1])
+
+        train_time, test_time = TimeCalculator.calc_time_per_utterance(y_train_cluster, y_test_cluster, settings.ONE_SEC)
+        total_time = []
+        total_time.extend(train_time)
+        total_time.extend(test_time)
+
+        return embeddings, speakers, number_embeddings
 
 
 def prepare_predict(net):
