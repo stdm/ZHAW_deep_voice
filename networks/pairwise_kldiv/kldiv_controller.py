@@ -4,6 +4,7 @@ The controller to train and test the pairwise_kldiv network
 
 from common.clustering.generate_embeddings import generate_embeddings
 from common.network_controller import NetworkController
+from common.utils import TimeCalculator
 from common.utils.logger import *
 from common.utils.paths import *
 from .analysis.run_analysis_network import run_analysis_network
@@ -43,6 +44,7 @@ class KLDivController(NetworkController):
         set_of_embeddings = []
         set_of_speakers = []
         set_of_num_embeddings = []
+        set_of_total_times = []
 
         for checkpoint in checkpoints:
             logger.info('Run checkpoint: ' + checkpoint)
@@ -55,5 +57,12 @@ class KLDivController(NetworkController):
             set_of_embeddings.append(embeddings)
             set_of_speakers.append(speakers)
             set_of_num_embeddings.append(num_embeddings)
+
+            # Calculate the time per utterance
+            train_time, test_time = TimeCalculator.calc_time_per_utterance(y_train, y_test, settings.ONE_SEC)
+            total_time = []
+            total_time.extend(train_time)
+            total_time.extend(test_time)
+            set_of_total_times.append(total_time)
 
         return checkpoints, set_of_embeddings, set_of_speakers, set_of_num_embeddings

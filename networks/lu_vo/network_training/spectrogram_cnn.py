@@ -83,6 +83,7 @@ class SpectrogramCnn:
         embeddings, speakers, number_embeddings =\
             generate_embeddings(output_train, output_test, y_train_cluster, y_test_cluster, output_train.shape[1])
 
+        #Calculate the time per utterance
         train_time, test_time = TimeCalculator.calc_time_per_utterance(y_train_cluster, y_test_cluster, settings.ONE_SEC)
         total_time = []
         total_time.extend(train_time)
