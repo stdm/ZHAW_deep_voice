@@ -79,10 +79,11 @@ def _plot_curves(plot_file_name, curve_names, metric_sets, number_of_embeddings)
 
     best_results = [[] for _ in metrics]
     for m, metric in enumerate(metrics):
-        if(metric[2] == 0):
-            best_results[m].append(np.max(metric_sets[m]))
-        else:
-            best_results[m].append(np.min(metric_sets[m]))
+        for results in metric_sets[m]:
+            if(metric[2] == 0):
+                best_results[m].append(np.max(results))
+            else:
+                best_results[m].append(np.min(results))
 
     '''
     This code is used to sort the lines by min mr. Because we now use mutliple metrics and dont sort by a single
