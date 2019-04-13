@@ -46,6 +46,10 @@ def get_experiment_logs(*args):
     return join(get_experiments('logs'), *args)
 
 
+def get_experiment_tensorboard_logs(*args):
+    return join(get_experiments('tensorboard_logs'), *args)
+
+
 def get_experiment_nets(*args):
     return join(get_experiments('nets'), *args)
 

@@ -25,6 +25,7 @@ TIMIT/TEST/
 TIMIT/TRAIN/
 common/data/training/TIMIT/TEST/
 common/data/training/TIMIT/TRAIN/
+common/data/
 
 #################### VOXCELEB2 ####################
 common/data/training/VOXCELEB2/TEST/
