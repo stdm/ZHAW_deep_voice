@@ -50,20 +50,16 @@ class bilstm_2layer_dropout(object):
         self.run_network()
 
     def create_net(self):
-        tensorflow_gpus_available = len(backend.tensorflow_backend._get_available_gpus()) > 0
+        # tensorflow_gpus_available = len(backend.tensorflow_backend._get_available_gpus()) > 0
         
         model = Sequential()
-        if (tensorflow_gpus_available):
-            model.add(Bidirectional(CuDNNLSTM(self.n_hidden1, return_sequences=True), input_shape=self.input))
-        else:
-            model.add(Bidirectional(LSTM(self.n_hidden1, return_sequences=True), input_shape=self.input))
+        model.add(Bidirectional(CuDNNLSTM(self.n_hidden1, return_sequences=True), input_shape=self.input))
+        # model.add(Bidirectional(LSTM(self.n_hidden1, return_sequences=True), input_shape=self.input))
 
         model.add(Dropout(0.50))
 
-        if (tensorflow_gpus_available):
-            model.add(Bidirectional(CuDNNLSTM(self.n_hidden2)))
-        else:
-            model.add(Bidirectional(LSTM(self.n_hidden2)))
+        model.add(Bidirectional(CuDNNLSTM(self.n_hidden2)))
+        # model.add(Bidirectional(LSTM(self.n_hidden2)))
 
         model.add(Dense(self.n_classes * 10))
         model.add(Dropout(0.25))
