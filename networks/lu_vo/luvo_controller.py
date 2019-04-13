@@ -28,4 +28,4 @@ class LuvoController(NetworkController):
 
         embeddings, speakers, num_embeddings, time = self.cnn.create_embeddings(X_train, y_train, X_test, y_test)
 
-        return [self.checkpoint], [embeddings], [speakers], [num_embeddings]
+        return [self.checkpoint], [embeddings], [speakers], [num_embeddings], [time]

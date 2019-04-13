@@ -46,9 +46,9 @@ class NetworkController:
         """
         Processes the validation list and get's the embeddings as the network output.
         All return values are sets of possible multiples.
-        :return: checkpoints, embeddings, speakers and the speaker numbers
+        :return: checkpoints, embeddings, speakers, speaker numbers and the time per utterance
         """
-        return None, None, None, None
+        return None, None, None, None, None
 
     def get_clusters(self):
         """
@@ -59,18 +59,21 @@ class NetworkController:
         set_of_predicted_clusters: A 2D array of the predicted Clusters from the Network. [checkpoint, clusters]
         set_of_true_clusters: A 2d array of the validation clusters. [checkpoint, validation-clusters]
         embeddings_numbers: A list which represent the number of embeddings in each checkpoint.
+        set_of_times: A 2D array containing the time per utterance
         """
-        checkpoint_names, set_of_embeddings, set_of_true_clusters, embeddings_numbers = self.get_embeddings()
+        checkpoint_names, set_of_embeddings, set_of_true_clusters, embeddings_numbers, set_of_times =\
+            self.get_embeddings()
         set_of_predicted_clusters = cluster_embeddings(set_of_embeddings)
 
-        return checkpoint_names, set_of_predicted_clusters, set_of_true_clusters, embeddings_numbers
+        return checkpoint_names, set_of_predicted_clusters, set_of_true_clusters, embeddings_numbers, set_of_times
 
     def test_network(self):
         """
         Tests the network implementation with the validation data set and saves the result sets
         of the different metrics in analysis.
         """
-        checkpoint_names, set_of_predicted_clusters, set_of_true_clusters, embeddings_numbers = self.get_clusters();
+        checkpoint_names, set_of_predicted_clusters, set_of_true_clusters, embeddings_numbers, set_of_times =\
+            self.get_clusters();
         network_name = self.name + '_' + self.val_data
         analyse_results(network_name, checkpoint_names, set_of_predicted_clusters, set_of_true_clusters,
                         embeddings_numbers)

@@ -93,7 +93,7 @@ class LSTMController(NetworkController):
             set_of_total_times.append(time)
 
         logger.info('Pairwise_lstm test done.')
-        return checkpoints, set_of_embeddings, set_of_speakers, speaker_numbers
+        return checkpoints, set_of_embeddings, set_of_speakers, speaker_numbers, set_of_total_times
 
 
 def prepare_data(X,y, segment_size):
