@@ -84,12 +84,9 @@ class SpectrogramCnn:
             generate_embeddings(output_train, output_test, y_train_cluster, y_test_cluster, output_train.shape[1])
 
         #Calculate the time per utterance
-        train_time, test_time = TimeCalculator.calc_time_per_utterance(y_train_cluster, y_test_cluster, settings.ONE_SEC)
-        total_time = []
-        total_time.extend(train_time)
-        total_time.extend(test_time)
+        time = TimeCalculator.calc_time_long_short_utterances(y_train_cluster, y_test_cluster, settings.ONE_SEC)
 
-        return embeddings, speakers, number_embeddings, total_time
+        return embeddings, speakers, number_embeddings, time
 
 
 def prepare_predict(net):

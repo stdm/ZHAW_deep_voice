@@ -89,12 +89,8 @@ class LSTMController(NetworkController):
             speaker_numbers.append(num_embeddings)
 
             # Calculate the time per utterance
-            train_time, test_time =\
-                TimeCalculator.calc_time_per_utterance(speakers_train, speakers_test, seg_size)
-            total_time = []
-            total_time.extend(train_time)
-            total_time.extend(test_time)
-            set_of_total_times.append(total_time)
+            time = TimeCalculator.calc_time_long_short_utterances(speakers_train, speakers_test, seg_size)
+            set_of_total_times.append(time)
 
         logger.info('Pairwise_lstm test done.')
         return checkpoints, set_of_embeddings, set_of_speakers, speaker_numbers

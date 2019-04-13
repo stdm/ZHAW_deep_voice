@@ -59,10 +59,7 @@ class KLDivController(NetworkController):
             set_of_num_embeddings.append(num_embeddings)
 
             # Calculate the time per utterance
-            train_time, test_time = TimeCalculator.calc_time_per_utterance(y_train, y_test, settings.ONE_SEC)
-            total_time = []
-            total_time.extend(train_time)
-            total_time.extend(test_time)
-            set_of_total_times.append(total_time)
+            time = TimeCalculator.calc_time_long_short_utterances(y_train, y_test, settings.ONE_SEC)
+            set_of_total_times.append(time)
 
         return checkpoints, set_of_embeddings, set_of_speakers, set_of_num_embeddings
