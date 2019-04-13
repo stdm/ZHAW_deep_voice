@@ -78,6 +78,9 @@ class bilstm_2layer_dropout(object):
         print(model)
         return model
 
+    # This method splits the given training data into training and validation
+    # sets for the training step
+    #
     def create_train_data(self):
         print('create_train_data', self.training_data)
         print('create_train_data', get_speaker_pickle(self.training_data))
@@ -85,7 +88,7 @@ class bilstm_2layer_dropout(object):
             (X, y, speaker_names) = pickle.load(f)
 
         splitter = sts.SpeakerTrainSplit(0.2)
-        X_t, X_v, y_t, y_v = splitter(X, y, speaker_names)
+        X_t, X_v, y_t, y_v, _speaker_t, _speaker_v = splitter(X, y, speaker_names)
         return X_t, y_t, X_v, y_v
 
     def create_callbacks(self):

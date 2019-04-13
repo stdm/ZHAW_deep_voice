@@ -138,7 +138,7 @@ def batch_generator_lstm_v2(X, y, batch_size=100, segment_size=15):
 
 
 def transformy(y, batch_size, nb_classes):
-    yn = np.zeros((batch_size, nb_classes))
+    yn = np.zeros((batch_size, int(nb_classes)))
     k = 0
     for v in y:
         # print v
