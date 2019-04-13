@@ -8,6 +8,7 @@ from keras.models import load_model
 
 from common.clustering.generate_embeddings import generate_embeddings
 from common.network_controller import NetworkController
+from common.utils import TimeCalculator
 from common.utils.logger import *
 from common.utils.paths import *
 from .bilstm_2layer_dropout_plus_2dense import bilstm_2layer_dropout
@@ -54,6 +55,7 @@ class LSTMController(NetworkController):
         set_of_embeddings = []
         set_of_speakers = []
         speaker_numbers = []
+        set_of_total_times = []
         checkpoints = list_all_files(get_experiment_nets(), "*pairwise_lstm*.h5")
 
         # Values out of the loop
@@ -85,6 +87,14 @@ class LSTMController(NetworkController):
             set_of_embeddings.append(embeddings)
             set_of_speakers.append(speakers)
             speaker_numbers.append(num_embeddings)
+
+            # Calculate the time per utterance
+            train_time, test_time =\
+                TimeCalculator.calc_time_per_utterance(speakers_train, speakers_test, seg_size)
+            total_time = []
+            total_time.extend(train_time)
+            total_time.extend(test_time)
+            set_of_total_times.append(total_time)
 
         logger.info('Pairwise_lstm test done.')
         return checkpoints, set_of_embeddings, set_of_speakers, speaker_numbers
