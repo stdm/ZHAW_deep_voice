@@ -76,4 +76,4 @@ class NetworkController:
             self.get_clusters();
         network_name = self.name + '_' + self.val_data
         analyse_results(network_name, checkpoint_names, set_of_predicted_clusters, set_of_true_clusters,
-                        embeddings_numbers)
+                        embeddings_numbers, set_of_times)

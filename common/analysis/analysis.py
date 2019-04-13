@@ -153,7 +153,8 @@ def _add_cluster_subplot(grid, position, y_label, colspan=1):
     return subplot
 
 
-def analyse_results(network_name, checkpoint_names, set_of_predicted_clusters, set_of_true_clusters, embedding_numbers):
+def analyse_results(network_name, checkpoint_names, set_of_predicted_clusters,
+                    set_of_true_clusters, embedding_numbers, set_of_times):
     """
     Analyses each checkpoint with the values of set_of_predicted_clusters and set_of_true_clusters.
     After the analysis the result are stored in the Pickle network_name.pickle and the best Result
@@ -164,6 +165,7 @@ def analyse_results(network_name, checkpoint_names, set_of_predicted_clusters, s
     :param set_of_predicted_clusters: A 2D array of the predicted Clusters from the Network. [checkpoint, clusters]
     :param set_of_true_clusters: A 2d array of the validation clusters. [checkpoint, validation-clusters]
     :param embeddings_numbers: A list which represent the number of embeddings in each checkpoint.
+    :param set_of_true_clusters: A 2d array of the time per utterance [checkpoint, times]
     """
     logger = get_logger('analysis', logging.INFO)
     logger.info('Run analysis')
