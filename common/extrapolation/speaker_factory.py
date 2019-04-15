@@ -13,13 +13,13 @@ def create_all_speakers():
     :return: yields Speakers
     """
 
-    yield Speaker(False, 40, 'timit_speakers_40', dataset="timit")
-    yield Speaker(False, 60, 'timit_speakers_60', dataset="timit")
-    yield Speaker(False, 80, 'timit_speakers_80', dataset="timit")
-    yield Speaker(False, 100, 'timit_speakers_100', dataset="timit")
-    yield Speaker(False, 590, 'timit_speakers_590', dataset="timit")
+    yield Speaker(True, 40, 'timit_speakers_40', dataset="timit")
+    yield Speaker(True, 60, 'timit_speakers_60', dataset="timit")
+    yield Speaker(True, 80, 'timit_speakers_80', dataset="timit")
+    yield Speaker(True, 100, 'timit_speakers_100', dataset="timit")
+    yield Speaker(True, 590, 'timit_speakers_590', dataset="timit")
 
-    yield Speaker(False, 10, "vox2_speakers_10", dataset="voxceleb2", max_audio_length=6600)
-    yield Speaker(False, 40, "vox2_speakers_40", dataset="voxceleb2", max_audio_length=6600)
-    yield Speaker(False, 100, "vox2_speakers_100", dataset="voxceleb2", max_audio_length=6600)
-    yield Speaker(False, 150, "vox2_speakers_150", dataset="voxceleb2", max_audio_length=6600)
+    yield Speaker(True, 10, "vox2_speakers_10", dataset="voxceleb2", max_audio_length=6600)
+    yield Speaker(True, 40, "vox2_speakers_40", dataset="voxceleb2", max_audio_length=6600)
+    yield Speaker(True, 100, "vox2_speakers_100", dataset="voxceleb2", max_audio_length=6600)
+    yield Speaker(True, 150, "vox2_speakers_150", dataset="voxceleb2", max_audio_length=6600)

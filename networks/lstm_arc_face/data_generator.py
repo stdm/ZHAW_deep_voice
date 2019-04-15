@@ -94,8 +94,8 @@ def _batch_generator_lstm(X, y, settings):
             yield Xb, yb
 
 def load_test_data(settings):
-    x_train, speakers_train = _load_test_data(get_speaker_pickle(settings['VAL_DATA_NAME'] + "_train"), settings)
-    x_test, speakers_test = _load_test_data(get_speaker_pickle(settings['VAL_DATA_NAME'] + "_test"), settings)
+    x_train, speakers_train = _load_test_data(get_speaker_pickle(settings['TEST_DATA_NAME'] + "_train"), settings)
+    x_test, speakers_test = _load_test_data(get_speaker_pickle(settings['TEST_DATA_NAME'] + "_test"), settings)
     return x_train, speakers_train, x_test, speakers_test
 
 def _load_test_data(data_path, settings):
@@ -118,6 +118,20 @@ def _load_test_data(data_path, settings):
     return x.reshape(x.shape[0], x.shape[3], x.shape[2]), np.asarray(y_test, dtype=np.int32)
 
 def load_train_data(settings):
+    x_t, y_t, speaker_names = load(get_speaker_pickle(settings['TRAIN_DATA_NAME']))
+    x_v, y_v, speaker_names = load(get_speaker_pickle(settings['VAL_DATA_NAME']))
+
+    bg_t = _batch_generator_lstm(x_t, y_t, settings)
+    bg_v = _batch_generator_lstm(x_v, y_v, settings)
+
+    iter_t = SimpleIter(bg_t, settings)
+    iter_v = SimpleIter(bg_v, settings)
+
+    return iter_t, iter_v, num_speakers
+
+
+"""
+def load_train_data(settings):
     net_dir = get_experiment_nets(settings['SAVE_PATH'])
     x_t, y_t, x_v, y_v, num_speakers = [], [], [], [], 0
     try:
@@ -135,3 +149,4 @@ def load_train_data(settings):
     iter_v = SimpleIter(bg_v, settings)
 
     return iter_t, iter_v, num_speakers
+"""
