@@ -13,19 +13,8 @@ from common.utils.logger import *
 from common.utils.paths import *
 from common.utils.pickler import load, save
 
-
-'''
-This list contains all metrics as tuple, containing the name, the function and the worst expected value (either 0 or 1).
-All functions in this file are influenced by this list and any metric can be added as long as they expect y_true and
-y_pred as their input.
-'''
-metrics = [
-    ("MR", misclassification_rate, 1),
-    ("ACP", average_cluster_purity, 0),
-    ("ARI", adjusted_rand_index, 0),
-    ("completeness_score", completeness_score, 0),
-    ("homogeneity_score", homogeneity_score, 0)
-]
+metric_names = ["MR", "ACP", "ARI", "completeness_score", "homogeneity_score"]
+metric_min_values = [1,0,0,0,0]
 
 def plot_files(plot_file_name, files):
     """
@@ -49,7 +38,7 @@ def _read_result_pickle(files):
     curve_names = []
 
     # Initialize result sets
-    metric_sets_all_files = [[] for _ in metrics]
+    metric_sets_all_files = [[] for _ in metric_names]
     set_of_number_of_embeddings = []
 
     # Fill result sets
@@ -57,8 +46,8 @@ def _read_result_pickle(files):
         curve_name, metric_sets, number_of_embeddings = load(file)
 
         for index, curve_name in enumerate(curve_name):
-            for m, _ in enumerate(metrics):
-                metric_sets_all_files[m].append(metric_sets[m][index])
+            for m, metric_set in enumerate(metric_sets):
+                metric_sets_all_files[m].append(metric_set[index])
 
             set_of_number_of_embeddings.append(number_of_embeddings[index])
             curve_names.append(curve_name)
@@ -77,10 +66,10 @@ def _plot_curves(plot_file_name, curve_names, metric_sets, number_of_embeddings)
     logger = get_logger('analysis', logging.INFO)
     logger.info('Plot results')
 
-    best_results = [[] for _ in metrics]
-    for m, metric in enumerate(metrics):
+    best_results = [[] for _ in metric_names]
+    for m, min_value in enumerate(metric_min_values):
         for results in metric_sets[m]:
-            if(metric[2] == 0):
+            if(metric_min_values[m] == 0):
                 best_results[m].append(np.max(results))
             else:
                 best_results[m].append(np.min(results))
@@ -105,24 +94,24 @@ def _plot_curves(plot_file_name, curve_names, metric_sets, number_of_embeddings)
     fig1.set_size_inches(16, 16)
 
     # Define Plots
-    plot_grid = (len(metrics),3)
+    plot_grid = (len(metric_names),3)
 
-    plots = [None] * 5
+    plots = [None] * len(metric_names)
 
-    for m, metric in enumerate(metrics):
-        plots[m] = _add_cluster_subplot(plot_grid, (m, 0), metric[0], 2)
+    for m, metric_name in enumerate(metric_names):
+        plots[m] = _add_cluster_subplot(plot_grid, (m, 0), metric_name, 2)
 
     # Define curves and their values
-    curves = [[] for _ in metrics]
+    curves = [[] for _ in metric_names]
 
-    for m, metric in enumerate(metrics):
-        curves[m] = [plots[m], metric_sets[m]]
+    for m, metric_set in enumerate(metric_sets):
+        curves[m] = [plots[m], metric_set]
 
     # Plot all curves
     for index in range(number_of_lines):
         label = curve_names[index]
-        for m, metric in enumerate(metrics):
-            label = label + '\n {} {}: {}'.format('Max' if metric[2]==0 else 'Min', metric[0],
+        for m, metric_name in enumerate(metric_names):
+            label = label + '\n {} {}: {}'.format('Max' if metric_min_values[m]==0 else 'Min', metric_name,
                                                   str(best_results[m][index]))
         color = colors[index]
         number_of_clusters = np.arange(number_of_embeddings[index], 0, -1)
@@ -169,22 +158,22 @@ def analyse_results(network_name, checkpoint_names, set_of_predicted_clusters,
     """
     logger = get_logger('analysis', logging.INFO)
     logger.info('Run analysis')
-    metric_sets = [[None] * len(set_of_predicted_clusters) for _ in range(len(metrics))]
+    metric_sets = [[None] * len(set_of_predicted_clusters) for _ in range(len(metric_names))]
 
     for index, predicted_clusters in enumerate(set_of_predicted_clusters):
         logger.info('Analysing checkpoint:' + checkpoint_names[index])
 
-        metric_results = _calculate_analysis_values(predicted_clusters, set_of_true_clusters[index])
+        metric_results = _calculate_analysis_values(predicted_clusters, set_of_true_clusters[index], set_of_times)
 
-        for m, _ in enumerate(metrics):
-            metric_sets[m][index] = metric_results[m]
+        for m, metric_result in enumerate(metric_results):
+            metric_sets[m][index] = metric_result
 
     _write_result_pickle(network_name, checkpoint_names, metric_sets, embedding_numbers)
     _save_best_results(network_name, checkpoint_names, metric_sets, embedding_numbers)
     logger.info('Analysis done')
 
 
-def _calculate_analysis_values(predicted_clusters, true_cluster):
+def _calculate_analysis_values(predicted_clusters, true_cluster, set_of_times):
     """
     Calculates the analysis values out of the predicted_clusters.
 
@@ -197,9 +186,9 @@ def _calculate_analysis_values(predicted_clusters, true_cluster):
     logger.info('Calculate scores')
 
     # Initialize output
-    metric_results = [None] * len(metrics)
-    for m, metric in enumerate(metrics):
-        if metric[2] == 1:
+    metric_results = [None] * len(metric_names)
+    for m, min_value in enumerate(metric_min_values):
+        if min_value == 1:
             metric_results[m] = np.ones(len(true_cluster))
         else:
             metric_results[m] = np.zeros((len(true_cluster)))
@@ -207,9 +196,11 @@ def _calculate_analysis_values(predicted_clusters, true_cluster):
     # Loop over all possible clustering
     for i, predicted_cluster in enumerate(predicted_clusters):
         # Calculate different analysis's
-        for m, metric in enumerate(metrics):
-            metric_function = metric[1]
-            metric_results[m][i] = metric_function(true_cluster, predicted_cluster)
+        metric_results[0][i] = misclassification_rate(true_cluster, predicted_cluster)
+        metric_results[1][i] = average_cluster_purity(true_cluster, predicted_cluster)
+        metric_results[2][i] = adjusted_rand_index(true_cluster, predicted_cluster)
+        metric_results[3][i] = completeness_score(true_cluster, predicted_cluster)
+        metric_results[4][i] = homogeneity_score(true_cluster, predicted_cluster)
 
     return metric_results
 
@@ -219,7 +210,7 @@ def _save_best_results(network_name, checkpoint_names, metric_sets, speaker_numb
         _write_result_pickle(network_name + "_best", checkpoint_names, metric_sets, speaker_numbers)
     else:
         # Find best result (according to the first metric in metrics)
-        if(metrics[0][2] == 1):
+        if(metric_min_values[0] == 1):
             best_results = []
             for results in metric_sets[0]:
                 best_results.append(np.min(results))
@@ -231,14 +222,14 @@ def _save_best_results(network_name, checkpoint_names, metric_sets, speaker_numb
             best_result_over_all = max(best_results)
 
         best_checkpoint_name = []
-        set_of_best_metrics = [[] for _ in metrics]
+        set_of_best_metrics = [[] for _ in metric_sets]
         best_speaker_numbers = []
 
         for index, best_result in enumerate(best_results):
             if best_result == best_result_over_all:
                 best_checkpoint_name.append(checkpoint_names[index])
-                for m, metric in enumerate(metrics):
-                    set_of_best_metrics[m].append(metric_sets[m][index])
+                for m, metric_set in enumerate(metric_sets):
+                    set_of_best_metrics[m].append(metric_set[index])
                 best_speaker_numbers.append(speaker_numbers[index])
 
         _write_result_pickle(network_name + "_best", best_checkpoint_name, set_of_best_metrics, best_speaker_numbers)
@@ -250,10 +241,10 @@ def _write_result_pickle(network_name, checkpoint_names, metric_sets, number_of_
     save((checkpoint_names, metric_sets, number_of_embeddings), get_result_pickle(network_name))
 
 
-def _read_and_safe_best_results():
+def read_and_safe_best_results():
     checkpoint_names, metric_sets, speaker_numbers = _read_result_pickle([get_result_pickle('flow_me')])
     _save_best_results('flow_me', checkpoint_names, metric_sets, speaker_numbers)
 
 
 if __name__ == '__main__':
-    _read_and_safe_best_results()
+    read_and_safe_best_results()
