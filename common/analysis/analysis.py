@@ -14,7 +14,7 @@ from common.utils.paths import *
 from common.utils.pickler import load, save
 
 metric_names = ["MR", "ACP", "ARI", "completeness_score", "homogeneity_score"]
-metric_min_values = [1,0,0,1,0]
+metric_min_values = [1,0,0,0,0]
 
 def plot_files(plot_file_name, files):
     """
