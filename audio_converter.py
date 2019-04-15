@@ -1,5 +1,5 @@
 import os
-import pydub
+from pydub import AudioSegment
 
 source = input('enter the source, please:     ')
 destination = input('enter the destination please: ')
