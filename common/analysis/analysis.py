@@ -14,7 +14,7 @@ from common.utils.paths import *
 from common.utils.pickler import load, save
 
 metric_names = ["MR", "ACP", "ARI", "completeness_score", "homogeneity_score"]
-metric_min_values = [1,0,0,0,0]
+metric_min_values = [1,0,0,1,0]
 
 def plot_files(plot_file_name, files):
     """
@@ -98,8 +98,12 @@ def _plot_curves(plot_file_name, curve_names, metric_sets, number_of_embeddings)
 
     plots = [None] * len(metric_names)
 
-    for m, metric_name in enumerate(metric_names):
-        plots[m] = _add_cluster_subplot(plot_grid, (m, 0), metric_name, 2)
+    plots[0] = _add_cluster_subplot(plot_grid, (0, 0), metric_names[0], 2)
+    plots[1] = _add_cluster_subplot(plot_grid, (1, 0), metric_names[1], 2)
+    plots[2] = _add_cluster_subplot(plot_grid, (2, 0), metric_names[2], 2)
+    plots[3] = _add_cluster_subplot(plot_grid, (3, 0), metric_names[3])
+    plots[3].set_ylim([0.8, 1.02])
+    plots[4] = _add_cluster_subplot(plot_grid, (3, 1), metric_names[4])
 
     # Define curves and their values
     curves = [[] for _ in metric_names]
