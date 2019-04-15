@@ -24,7 +24,6 @@ import matplotlib
 matplotlib.use('Agg')
 
 from common.analysis.analysis import *
-from common.extrapolation.setup import setup_suite, is_suite_setup
 from common.network_controller import NetworkController
 from common.utils.paths import *
 from common.utils.load_config import *
@@ -35,6 +34,8 @@ from networks.flow_me.me_controller import MEController
 from networks.lu_vo.luvo_controller import LuvoController
 from networks.pairwise_kldiv.kldiv_controller import KLDivController
 from networks.pairwise_lstm.lstm_controller import LSTMController
+from networks.i_vector.ivec_controller import IVECController
+from common.extrapolation.setup import setup_suite, is_suite_setup
 
 
 class Controller(NetworkController):
@@ -98,6 +99,7 @@ class Controller(NetworkController):
             'pairwise_kldiv': [KLDivController()],
             'flow_me': [MEController(self.clear, self.debug, False)],
             'luvo': [LuvoController()],
+            'ivector': [IVECController],
             'all': [LSTMController(), KLDivController(), MEController(self.clear, self.debug, False), LuvoController()]
         }
 
