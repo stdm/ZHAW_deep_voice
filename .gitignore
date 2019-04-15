@@ -5,6 +5,7 @@
 # manually build them when you need them
 common/data/training/speaker_pickles/*.pickle
 common/data/training/i_vector/*/*/3.h5
+common/data/training/i_vector/
 
 # do not save experiment results in git
 common/data/experiments/plots/*.png
