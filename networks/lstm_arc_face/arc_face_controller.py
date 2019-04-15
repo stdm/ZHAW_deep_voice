@@ -13,7 +13,7 @@ from .model import ArcFaceBlock, get_context, SoftmaxLoss
 from .metrics import CrossEntropy
 from .executor import run_epoch
 from .saver import save_epoch, reset_progress, save_settings, plot_progress
-from .loader import get_untrained_settings, get_trained_settings, get_params, get_last_epoch, extend_most_trained
+from .loader import get_untrained_settings, get_trained_settings, get_params, get_trainer_params, get_last_epoch, extend_most_trained
 
 from common.utils.paths import *
 from common.network_controller import NetworkController
@@ -42,16 +42,20 @@ class ArcFaceController(NetworkController):
 
             net = ArcFaceBlock(num_speakers, settings)
             net.hybridize()
+            trainer = None
+
+            kv = mx.kv.create('device')
+
             if epoch == -1:
                 net.initialize(mx.init.Xavier())
                 net.collect_params().reset_ctx(ctx)
+                trainer = mx.gluon.Trainer(net.collect_params(), mx.optimizer.AdaDelta(), kvstore=kv)
                 epoch = 0
             else:
                 reset_progress(settings)
                 net.load_parameters(get_params(settings), ctx=ctx)
-
-            kv = mx.kv.create('device')
-            trainer = mx.gluon.Trainer(net.collect_params(), mx.optimizer.AdaDelta(), kvstore=kv)
+                trainer = mx.gluon.Trainer(net.collect_params(), mx.optimizer.AdaDelta(), kvstore=kv)
+                trainer.load_states(get_trainer_params(settings))
 
             if settings['SOFTMAX'] == 'GLUON':
                 loss = mx.gluon.loss.SoftmaxCrossEntropyLoss()
@@ -60,10 +64,10 @@ class ArcFaceController(NetworkController):
             best_values = {}
             while epoch < settings['MAX_EPOCHS']:
                 name, indices, mean_loss, time_used = run_epoch(net, ctx, train_iter, metric, trainer, loss, epoch, train=True)
-                best_values = save_epoch(net, settings, epoch, best_values, name, indices, mean_loss, time_used, save_rules, train=True)
+                best_values = save_epoch(net, trainer, settings, epoch, best_values, name, indices, mean_loss, time_used, save_rules, train=True)
 
                 name, indices, mean_loss, time_used = run_epoch(net, ctx, val_iter, metric, trainer, loss, epoch, train=False)
-                best_values = save_epoch(net, settings, epoch, best_values, name, indices, mean_loss, time_used, save_rules, train=False)
+                best_values = save_epoch(net, trainer, settings, epoch, best_values, name, indices, mean_loss, time_used, save_rules, train=False)
                 print('')
                 if epoch%10==0:
                     plot_progress(settings)

@@ -65,7 +65,7 @@ def save_settings(settings):
     with open(net_dir + '/settings.json', 'w') as f:
         json.dump(settings, f)
 
-def save_epoch(net, settings, epoch, best_values, name, indices, mean_loss, time_used, save_rules, train=True):
+def save_epoch(net, trainer, settings, epoch, best_values, name, indices, mean_loss, time_used, save_rules, train=True):
     while len(save_rules) < len(name):
         save_rules.append('n')
     mode = 'train' if train else 'val'
@@ -107,5 +107,8 @@ def save_epoch(net, settings, epoch, best_values, name, indices, mean_loss, time
                 net.save_parameters(net_dir+'/'+mode+'_best_'+k)
         best_values[mode] = vals
     if mode == 'train':
+        print('saving states...')
+        trainer.save_states(net_dir+'/trainer_params')
         net.save_parameters(net_dir+'/final_epoch')
+        print('states saved')
     return best_values

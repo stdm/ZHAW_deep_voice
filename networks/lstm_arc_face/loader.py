@@ -7,6 +7,9 @@ from common.utils.paths import *
 def get_params(settings):
     return get_experiment_nets(settings['SAVE_PATH'])+'/final_epoch'
 
+def get_trainer_params(settings):
+    return get_experiment_nets(settings['SAVE_PATH'])+'/trainer_params'
+
 def get_untrained_settings():
     filename = get_experiment_nets('arc_face/all_settings.json')
     settings_tree = {}
