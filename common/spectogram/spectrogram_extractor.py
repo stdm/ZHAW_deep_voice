@@ -53,6 +53,8 @@ def extract_mel_spectrogram(wav_path, X, y, index, curr_speaker_num):
     Sxx = spectrogram_converter.mel_spectrogram(wav_path)
     for i in range(Sxx.shape[0]):
         for j in range(Sxx.shape[1]):
+            if j >= X.shape[3]:
+                continue
             X[index, 0, i, j] = Sxx[i, j]
     y[index] = curr_speaker_num
 

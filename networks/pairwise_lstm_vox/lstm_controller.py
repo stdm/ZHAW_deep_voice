@@ -31,7 +31,7 @@ class LSTMVOX2Controller(NetworkController):
 
         bilstm_2layer_dropout(
             self.name + "_" + str(nr_classes), 
-            'vox2_speakers_10_train', # _train suffix for train/test split, _cluster otherwise
+            'vox2_speakers_' + str(nr_classes) + '_train', # _train suffix for train/test split, _cluster otherwise
             n_hidden1=256, 
             n_hidden2=256, 
             n_classes=nr_classes, 

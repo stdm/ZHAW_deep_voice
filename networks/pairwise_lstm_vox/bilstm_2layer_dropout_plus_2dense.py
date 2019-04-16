@@ -53,13 +53,13 @@ class bilstm_2layer_dropout(object):
         # tensorflow_gpus_available = len(backend.tensorflow_backend._get_available_gpus()) > 0
         
         model = Sequential()
-        model.add(Bidirectional(CuDNNLSTM(self.n_hidden1, return_sequences=True), input_shape=self.input))
-        # model.add(Bidirectional(LSTM(self.n_hidden1, return_sequences=True), input_shape=self.input))
+        #model.add(Bidirectional(CuDNNLSTM(self.n_hidden1, return_sequences=True), input_shape=self.input))
+        model.add(Bidirectional(LSTM(self.n_hidden1, return_sequences=True), input_shape=self.input))
 
         model.add(Dropout(0.50))
 
-        model.add(Bidirectional(CuDNNLSTM(self.n_hidden2)))
-        # model.add(Bidirectional(LSTM(self.n_hidden2)))
+        #model.add(Bidirectional(CuDNNLSTM(self.n_hidden2)))
+        model.add(Bidirectional(LSTM(self.n_hidden2)))
 
         model.add(Dense(self.n_classes * 10))
         model.add(Dropout(0.25))
@@ -120,7 +120,6 @@ class bilstm_2layer_dropout(object):
         # `fit_generator(<generator..., callbacks=[<keras.ca..., use_multiprocessing=False,
         # class_weight=None, epochs=1000, workers=1, steps_per_epoch=10, validation_steps=2,
         # verbose=2, validation_data=<generator..., max_queue_size=10)`
-
 
         history = model.fit_generator(train_gen, steps_per_epoch=10, epochs=self.n_10_batches,
                                       verbose=2, callbacks=calls, validation_data=val_gen,
