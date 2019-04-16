@@ -107,6 +107,21 @@ class bilstm_2layer_dropout(object):
         # batches_t = ((X_t.shape[0] + 128 - 1) // 128)
         # batches_v = ((X_v.shape[0] + 128 - 1) // 128)
 
+        # lehmacl1@2019-04-14: bilstm_2layer_dropout_plus_2dense.py:113: UserWarning:
+        # The semantics of the Keras 2 argument `steps_per_epoch` is not the same as the Keras 1
+        # argument `samples_per_epoch`. `steps_per_epoch` is the number of batches to draw from the
+        # generator at each epoch. Basically steps_per_epoch = samples_per_epoch/batch_size.
+        #
+        # Similarly `nb_val_samples`->`validation_steps` and `val_samples`->`steps`
+        # arguments have changed. Update your method calls accordingly.
+
+        # bilstm_2layer_dropout_plus_2dense.py:113: UserWarning:
+        # Update your `fit_generator` call to the Keras 2 API:
+        # `fit_generator(<generator..., callbacks=[<keras.ca..., use_multiprocessing=False,
+        # class_weight=None, epochs=1000, workers=1, steps_per_epoch=10, validation_steps=2,
+        # verbose=2, validation_data=<generator..., max_queue_size=10)`
+
+
         history = model.fit_generator(train_gen, steps_per_epoch=10, epochs=self.n_10_batches,
                                       verbose=2, callbacks=calls, validation_data=val_gen,
                                       validation_steps=2, class_weight=None, max_q_size=10,
