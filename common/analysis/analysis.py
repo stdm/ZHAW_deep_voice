@@ -160,7 +160,7 @@ def analyse_results(network_name, checkpoint_names, set_of_predicted_clusters,
     :param set_of_predicted_clusters: A 2D array of the predicted Clusters from the Network. [checkpoint, clusters]
     :param set_of_true_clusters: A 2d array of the validation clusters. [checkpoint, validation-clusters]
     :param embeddings_numbers: A list which represent the number of embeddings in each checkpoint.
-    :param set_of_true_clusters: A 2d array of the time per utterance [checkpoint, times]
+    :param set_of_times: A 2d array of the time per utterance [checkpoint, times]
     """
     logger = get_logger('analysis', logging.INFO)
     logger.info('Run analysis')
