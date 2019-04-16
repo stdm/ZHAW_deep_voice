@@ -12,7 +12,7 @@ def _generate_annotations(utterances, times):
     annotation = Annotation()
     start = 0
     for u, utterance in enumerate(utterances):
-        end = start + times[u]
+        end = start + round(times[u] * 1000)
         annotation[Segment(start, end)] = utterance
         start = end
     return annotation
@@ -26,3 +26,8 @@ if __name__ == '__main__':
     y_pred = [1, 2, 2, 2]
     times = [8, 2, 8, 2]
     assert flt_eq(diarization_error_rate(y_true, y_pred, times), 0.1)
+
+    y_true = [1, 1, 2, 2]
+    y_pred = [1, 2, 3, 4]
+    times = [8, 2, 8, 2]
+    assert flt_eq(diarization_error_rate(y_true, y_pred, times), 0.2)

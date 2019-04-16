@@ -2,6 +2,7 @@ import matplotlib
 
 from common.analysis.acp import average_cluster_purity
 from common.analysis.ari import adjusted_rand_index
+from common.analysis.der import diarization_error_rate
 
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -13,8 +14,8 @@ from common.utils.logger import *
 from common.utils.paths import *
 from common.utils.pickler import load, save
 
-metric_names = ["MR", "ACP", "ARI", "completeness_score", "homogeneity_score"]
-metric_min_values = [1,0,0,0,0]
+metric_names = ["MR", "ACP", "ARI", "DER", "completeness_score", "homogeneity_score"]
+metric_min_values = [1,0,0,1,0,0]
 
 def plot_files(plot_file_name, files):
     """
@@ -101,9 +102,10 @@ def _plot_curves(plot_file_name, curve_names, metric_sets, number_of_embeddings)
     plots[0] = _add_cluster_subplot(plot_grid, (0, 0), metric_names[0], 2)
     plots[1] = _add_cluster_subplot(plot_grid, (1, 0), metric_names[1], 2)
     plots[2] = _add_cluster_subplot(plot_grid, (2, 0), metric_names[2], 2)
-    plots[3] = _add_cluster_subplot(plot_grid, (3, 0), metric_names[3])
-    plots[3].set_ylim([0.8, 1.02])
-    plots[4] = _add_cluster_subplot(plot_grid, (3, 1), metric_names[4])
+    plots[3] = _add_cluster_subplot(plot_grid, (3, 0), metric_names[3], 2)
+    plots[4] = _add_cluster_subplot(plot_grid, (4, 0), metric_names[4])
+    plots[4].set_ylim([0.8, 1.02])
+    plots[5] = _add_cluster_subplot(plot_grid, (4, 1), metric_names[5])
 
     # Define curves and their values
     curves = [[] for _ in metric_names]
@@ -167,7 +169,7 @@ def analyse_results(network_name, checkpoint_names, set_of_predicted_clusters,
     for index, predicted_clusters in enumerate(set_of_predicted_clusters):
         logger.info('Analysing checkpoint:' + checkpoint_names[index])
 
-        metric_results = _calculate_analysis_values(predicted_clusters, set_of_true_clusters[index], set_of_times)
+        metric_results = _calculate_analysis_values(predicted_clusters, set_of_true_clusters[index], set_of_times[index])
 
         for m, metric_result in enumerate(metric_results):
             metric_sets[m][index] = metric_result
@@ -177,7 +179,7 @@ def analyse_results(network_name, checkpoint_names, set_of_predicted_clusters,
     logger.info('Analysis done')
 
 
-def _calculate_analysis_values(predicted_clusters, true_cluster, set_of_times):
+def _calculate_analysis_values(predicted_clusters, true_cluster, times):
     """
     Calculates the analysis values out of the predicted_clusters.
 
@@ -203,8 +205,9 @@ def _calculate_analysis_values(predicted_clusters, true_cluster, set_of_times):
         metric_results[0][i] = misclassification_rate(true_cluster, predicted_cluster)
         metric_results[1][i] = average_cluster_purity(true_cluster, predicted_cluster)
         metric_results[2][i] = adjusted_rand_index(true_cluster, predicted_cluster)
-        metric_results[3][i] = completeness_score(true_cluster, predicted_cluster)
-        metric_results[4][i] = homogeneity_score(true_cluster, predicted_cluster)
+        metric_results[3][i] = diarization_error_rate(true_cluster, predicted_cluster, times)
+        metric_results[4][i] = completeness_score(true_cluster, predicted_cluster)
+        metric_results[5][i] = homogeneity_score(true_cluster, predicted_cluster)
 
     return metric_results
 
