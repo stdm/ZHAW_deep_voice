@@ -53,6 +53,8 @@ def extract_mel_spectrogram(wav_path, X, y, index, curr_speaker_num):
     Sxx = spectrogram_converter.mel_spectrogram(wav_path)
     for i in range(Sxx.shape[0]):
         for j in range(Sxx.shape[1]):
+            # In case the file is longer than the :max_audio_length defined in the speaker_factory.py,
+            # we only use the spectrogram up to that cut off point at :max_audio_length
             if j >= X.shape[3]:
                 continue
             X[index, 0, i, j] = Sxx[i, j]
