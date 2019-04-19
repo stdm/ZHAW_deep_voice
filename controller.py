@@ -126,13 +126,11 @@ class Controller(NetworkController):
 
     def get_result_files(self):
         if self.network == "all":
-            regex = '*best*.pickle'
+            regex = '^.*best\.pickle'
         elif self.best:
-            regex = self.network + '*best*.pickle'
+            regex = '^{}.*best.pickle'.format(self.network)
         else:
-            # TODO: Funktioniert aktuell nicht ohne "-best" Flag
-            #regex = self.network + ".pickle"
-            regex = self.network + '*best*.pickle'
+            regex = '^{}.*(?<!best)\.pickle'.format(self.network)
 
         files = list_all_files(get_results(), regex)
 

@@ -2,7 +2,7 @@
 A bunch of path related convenience methods that avoid usage of relative paths for the application.
 Uses the os.path library to use the correct path separators ( \\ or / ) automatically.
 """
-import fnmatch
+import re
 import os
 import os.path as path
 
@@ -109,6 +109,6 @@ def list_all_files(directory, file_regex):
     """
     files = []
     for file in os.listdir(directory):
-        if fnmatch.fnmatch(file, file_regex):
+        if re.match(file_regex, file):
             files.append(file)
     return files
