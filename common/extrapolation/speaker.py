@@ -46,25 +46,23 @@ class Speaker:
 
         # Extract the spectrogram's, speaker numbers and speaker names
         X, y, speaker_files = self.extract_data_from_speaker()
-        #speaker_names = list(speaker_files.keys()) # can't pickle dict.keys() directly
-        speaker_names = speaker_files
 
         # Safe Test-Data to disk
         if self.split_train_test:
             speaker_train_split = SpeakerTrainSplit(0.2)
-            X_train_valid, X_test, y_train_valid, y_test = speaker_train_split(X, y, speaker_files)
+            X_train_valid, X_test, y_train_valid, y_test, speaker_train, speaker_test = speaker_train_split(X, y, speaker_files)
 
             with open(get_speaker_pickle(self.output_name + '_train'), 'wb') as f:
-                pickle.dump((X_train_valid, y_train_valid, speaker_names), f, -1)
+                pickle.dump((X_train_valid, y_train_valid, speaker_train), f, -1)
 
             with open(get_speaker_pickle(self.output_name + '_test'), 'wb') as f:
-                pickle.dump((X_test, y_test, speaker_names), f, -1)
+                pickle.dump((X_test, y_test, speaker_test), f, -1)
         else:
             with open(get_speaker_pickle(self.output_name + '_cluster'), 'wb') as f:
-                pickle.dump((X, y, speaker_names), f, -1)
+                pickle.dump((X, y, speaker_files), f, -1)
 
         print("Done Extracting {}".format(self.speaker_list))
-        print("Safed to pickle.\n")
+        print("Saved to pickle.\n")
 
     def extract_data_from_speaker(self):
         """

@@ -50,20 +50,16 @@ class bilstm_2layer_dropout(object):
         self.run_network()
 
     def create_net(self):
-        tensorflow_gpus_available = len(backend.tensorflow_backend._get_available_gpus()) > 0
+        # tensorflow_gpus_available = len(backend.tensorflow_backend._get_available_gpus()) > 0
         
         model = Sequential()
-        if (tensorflow_gpus_available):
-            model.add(Bidirectional(CuDNNLSTM(self.n_hidden1, return_sequences=True), input_shape=self.input))
-        else:
-            model.add(Bidirectional(LSTM(self.n_hidden1, return_sequences=True), input_shape=self.input))
+        #model.add(Bidirectional(CuDNNLSTM(self.n_hidden1, return_sequences=True), input_shape=self.input))
+        model.add(Bidirectional(LSTM(self.n_hidden1, return_sequences=True), input_shape=self.input))
 
         model.add(Dropout(0.50))
 
-        if (tensorflow_gpus_available):
-            model.add(Bidirectional(CuDNNLSTM(self.n_hidden2)))
-        else:
-            model.add(Bidirectional(LSTM(self.n_hidden2)))
+        #model.add(Bidirectional(CuDNNLSTM(self.n_hidden2)))
+        model.add(Bidirectional(LSTM(self.n_hidden2)))
 
         model.add(Dense(self.n_classes * 10))
         model.add(Dropout(0.25))
@@ -78,6 +74,9 @@ class bilstm_2layer_dropout(object):
         print(model)
         return model
 
+    # This method splits the given training data into training and validation
+    # sets for the training step
+    #
     def create_train_data(self):
         print('create_train_data', self.training_data)
         print('create_train_data', get_speaker_pickle(self.training_data))
@@ -85,7 +84,7 @@ class bilstm_2layer_dropout(object):
             (X, y, speaker_names) = pickle.load(f)
 
         splitter = sts.SpeakerTrainSplit(0.2)
-        X_t, X_v, y_t, y_v = splitter(X, y, speaker_names)
+        X_t, X_v, y_t, y_v, _speaker_t, _speaker_v = splitter(X, y, speaker_names)
         return X_t, y_t, X_v, y_v
 
     def create_callbacks(self):
@@ -107,6 +106,20 @@ class bilstm_2layer_dropout(object):
         val_gen = dg.batch_generator_lstm(X_v, y_v, 100, segment_size=self.segment_size)
         # batches_t = ((X_t.shape[0] + 128 - 1) // 128)
         # batches_v = ((X_v.shape[0] + 128 - 1) // 128)
+
+        # lehmacl1@2019-04-14: bilstm_2layer_dropout_plus_2dense.py:113: UserWarning:
+        # The semantics of the Keras 2 argument `steps_per_epoch` is not the same as the Keras 1
+        # argument `samples_per_epoch`. `steps_per_epoch` is the number of batches to draw from the
+        # generator at each epoch. Basically steps_per_epoch = samples_per_epoch/batch_size.
+        #
+        # Similarly `nb_val_samples`->`validation_steps` and `val_samples`->`steps`
+        # arguments have changed. Update your method calls accordingly.
+
+        # bilstm_2layer_dropout_plus_2dense.py:113: UserWarning:
+        # Update your `fit_generator` call to the Keras 2 API:
+        # `fit_generator(<generator..., callbacks=[<keras.ca..., use_multiprocessing=False,
+        # class_weight=None, epochs=1000, workers=1, steps_per_epoch=10, validation_steps=2,
+        # verbose=2, validation_data=<generator..., max_queue_size=10)`
 
         history = model.fit_generator(train_gen, steps_per_epoch=10, epochs=self.n_10_batches,
                                       verbose=2, callbacks=calls, validation_data=val_gen,
