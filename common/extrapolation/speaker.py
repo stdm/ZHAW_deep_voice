@@ -46,7 +46,6 @@ class Speaker:
 
         # Extract the spectrogram's, speaker numbers and speaker names
         X, y, speaker_files = self.extract_data_from_speaker()
-        speaker_names = speaker_files
 
         # Safe Test-Data to disk
         if self.split_train_test:
@@ -60,7 +59,7 @@ class Speaker:
                 pickle.dump((X_test, y_test, speaker_test), f, -1)
         else:
             with open(get_speaker_pickle(self.output_name + '_cluster'), 'wb') as f:
-                pickle.dump((X, y, speaker_names), f, -1)
+                pickle.dump((X, y, speaker_files), f, -1)
 
         print("Done Extracting {}".format(self.speaker_list))
         print("Saved to pickle.\n")
