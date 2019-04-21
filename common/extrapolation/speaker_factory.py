@@ -37,3 +37,4 @@ def create_all_speakers():
     # yield Speaker(True, 40, "vox2_speakers_40", dataset="voxceleb2", max_audio_length=800)
     # yield Speaker(True, 100, "vox2_speakers_100", dataset="voxceleb2", max_audio_length=800)
     # yield Speaker(True, 150, "vox2_speakers_150", dataset="voxceleb2", max_audio_length=800)
+
