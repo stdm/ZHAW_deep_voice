@@ -4,6 +4,7 @@ import time
 import math
 import os
 
+from tqdm import tqdm
 from mxnet.gluon import nn
 from mxnet.gluon import rnn
 from mxnet.metric import Accuracy, TopKAccuracy, CompositeEvalMetric, check_label_shapes
@@ -115,20 +116,18 @@ class ArcFaceController(NetworkController):
         x_train, speakers_train, x_test, speakers_test = load_test_data(settings)
 
         test_output, train_output = [], []
-        i = 0
-        for sample in x_test:
-            sample = np.array([sample])
-            sample = mx.nd.array(sample)
-            test_output.append(net.feature(sample).asnumpy())
-            print('%d/%d'%(i, x_test.shape[0]))
-            i += 1
-        i = 0
-        for sample in x_train:
-            sample = np.array([sample])
-            sample = mx.nd.array(sample)
-            train_output.append(net.feature(sample).asnumpy())
-            print('%d/%d'%(i, x_train.shape[0]))
-            i += 1
+        with tqdm(total=len(x_test), desc='getting test features') as pbar:
+            for sample in x_test:
+                sample = np.array([sample])
+                sample = mx.nd.array(sample)
+                test_output.append(net.feature(sample).asnumpy())
+                pbar.update()
+        with tqdm(total=len(x_train), desc='getting train features') as pbar:
+            for sample in x_train:
+                sample = np.array([sample])
+                sample = mx.nd.array(sample)
+                train_output.append(net.feature(sample).asnumpy())
+                pbar.update()
 
 
         test_output = np.squeeze(np.array(test_output))
