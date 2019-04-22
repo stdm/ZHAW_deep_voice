@@ -132,12 +132,15 @@ class ArcFaceController(NetworkController):
         check = True
         with tqdm(total=self.get_num_batches(x_test, settings), desc='getting test features') as pbar:
             while check:
-                samples = mx.nd.array(x_train[start:settings['BATCH_SIZE']])
+                samples = mx.nd.array(x_train[start:start+settings['BATCH_SIZE']])
                 if start == 0:
                     test_output = net.feature(samples).asnumpy()
-                    print(test_output.shape)
                 else:
-                    test_output = np.concatenate((test_output, net.feature(samples).asnumpy()))
+                    print(test_output.shape)
+                    print(samples.shape)
+                    output = net.feature(samples).asnumpy())
+                    print(output.shape)
+                    test_output = np.concatenate((test_output, output))
                 start += settings['BATCH_SIZE']
                 pbar.update()
         with tqdm(total=self.get_num_batches(x_train, settings), desc='getting train features') as pbar:
