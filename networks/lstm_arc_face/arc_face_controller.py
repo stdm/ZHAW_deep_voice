@@ -127,7 +127,7 @@ class ArcFaceController(NetworkController):
             sample = np.array([sample])
             sample = mx.nd.array(sample)
             train_output.append(net.feature(sample).asnumpy())
-            print('%d/%d'%(i, x_test.shape[0]))
+            print('%d/%d'%(i, x_train.shape[0]))
             i += 1
 
 
