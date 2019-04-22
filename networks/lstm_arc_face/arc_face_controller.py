@@ -125,10 +125,6 @@ class ArcFaceController(NetworkController):
 
         # Load and prepare train/test data
         x_train, speakers_train, x_test, speakers_test = load_test_data(settings)
-        print(speakers_test)
-        input('next')
-        print(speakers_train)
-        input('next')
 
         test_output, train_output = None, None
 
@@ -137,7 +133,7 @@ class ArcFaceController(NetworkController):
         with tqdm(total=self.get_num_batches(x_test, settings), desc='getting test features') as pbar:
             while check:
                 if start+settings['BATCH_SIZE'] >= len(x_test) - 1:
-                    samples = mx.nd.array(x_test[start:-1])
+                    samples = mx.nd.array(x_test[start:])
                     check = False
                 else:
                     samples = mx.nd.array(x_test[start:start+settings['BATCH_SIZE']])
@@ -153,7 +149,7 @@ class ArcFaceController(NetworkController):
         with tqdm(total=self.get_num_batches(x_train, settings), desc='getting train features') as pbar:
             while check:
                 if start+settings['BATCH_SIZE'] >= len(x_train) - 1:
-                    samples = mx.nd.array(x_train[start:-1])
+                    samples = mx.nd.array(x_train[start:])
                     check = False
                 else:
                     samples = mx.nd.array(x_train[start:start+settings['BATCH_SIZE']])
