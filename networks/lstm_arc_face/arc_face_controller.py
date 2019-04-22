@@ -34,7 +34,13 @@ class ArcFaceController(NetworkController):
             if epoch == -1:
                 extend_most_trained(settings)
                 epoch, _ = get_last_epoch(settings)
-            print(settings['SAVE_PATH'])
+
+            path = settings['SAVE_PATH']
+            for d in path.split('/'):
+                for p in d.split(';'):
+                    print(p)
+                print('')
+
             ctx = get_context()
             metric = CompositeEvalMetric([Accuracy(), TopKAccuracy(5), CrossEntropy()])
             save_rules = ['+', 'n', 'n']
@@ -128,12 +134,11 @@ class ArcFaceController(NetworkController):
             while check:
                 samples = mx.nd.array(x_train[start:settings['BATCH_SIZE']])
                 if start == 0:
-                    print(samples.shape)
-                    samples = mx.nd.array(x_train[:settings['BATCH_SIZE']])
-                    print(samples.shape)
-                    test_output = net.feature(sample).asnumpy()
+                    test_output = net.feature(samples).asnumpy()
+                    print(test_output.shape)
                 else:
-                    test_output = np.concatenate((test_output, net.feature(sample).asnumpy()))
+                    test_output = np.concatenate((test_output, net.feature(samples).asnumpy()))
+                start += settings['BATCH_SIZE']
                 pbar.update()
         with tqdm(total=self.get_num_batches(x_train, settings), desc='getting train features') as pbar:
             for sample in x_train:
