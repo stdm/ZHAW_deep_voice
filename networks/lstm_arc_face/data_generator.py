@@ -118,8 +118,10 @@ def _load_test_data(data_path, settings):
     return x.reshape(x.shape[0], x.shape[3], x.shape[2]), np.asarray(y_test, dtype=np.int32)
 
 def load_train_data(settings):
-    x_t, y_t, speaker_names = load(get_speaker_pickle(settings['TRAIN_DATA_NAME']))
-    x_v, y_v, speaker_names = load(get_speaker_pickle(settings['VAL_DATA_NAME']))
+    train = load(get_speaker_pickle(settings['TRAIN_DATA_NAME']))
+    val = load(get_speaker_pickle(settings['VAL_DATA_NAME']))
+
+    x_t, y_t, x_v, y_v = train[0], train[1], val[0], val[1]
 
     bg_t = _batch_generator_lstm(x_t, y_t, settings)
     bg_v = _batch_generator_lstm(x_v, y_v, settings)
