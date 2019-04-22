@@ -113,7 +113,7 @@ def batch_generator_lstm(X, y, batch_size=100, segment_size=15):
             yield Xb.reshape(bs, segment_size, settings.FREQ_ELEMENTS), transformy(yb, bs, speakers)
 
 
-'''creates the a batch for LSTM networks, with Pairwise Laabels, 
+'''creates the a batch for LSTM networks, with Pairwise Labels, 
 for use with core.pairwise_kl_divergence_full_labels'''
 
 
