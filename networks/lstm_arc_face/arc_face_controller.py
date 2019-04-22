@@ -135,7 +135,7 @@ class ArcFaceController(NetworkController):
                 if start+settings['BATCH_SIZE'] >= len(x_test) - 1:
                     samples = mx.nd.array(x_test[start:-1])
                     check = False
-                else
+                else:
                     samples = mx.nd.array(x_test[start:start+settings['BATCH_SIZE']])
                 if start == 0:
                     test_output = net.feature(samples).asnumpy()
@@ -151,7 +151,7 @@ class ArcFaceController(NetworkController):
                 if start+settings['BATCH_SIZE'] >= len(x_train) - 1:
                     samples = mx.nd.array(x_train[start:-1])
                     check = False
-                else
+                else:
                     samples = mx.nd.array(x_train[start:start+settings['BATCH_SIZE']])
                 if start == 0:
                     train_output = net.feature(samples).asnumpy()
