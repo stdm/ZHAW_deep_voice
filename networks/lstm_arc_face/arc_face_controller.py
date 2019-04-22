@@ -42,7 +42,7 @@ class ArcFaceController(NetworkController):
 
             net = ArcFaceBlock(num_speakers, settings)
             net.hybridize()
-            mx.visualization.print_summary(net)
+            mx.viz.print_summary(net(mx.sym.var('data')))
             trainer = None
 
             kv = mx.kv.create('device')
