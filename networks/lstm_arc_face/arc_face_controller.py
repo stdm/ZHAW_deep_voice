@@ -114,11 +114,25 @@ class ArcFaceController(NetworkController):
         # Load and prepare train/test data
         x_train, speakers_train, x_test, speakers_test = load_test_data(settings)
 
-        x_test = mx.nd.array(x_test)
-        x_train = mx.nd.array(x_train)
+        test_output, train_output = [], []
+        i = 0
+        for sample in x_test:
+            sample = np.array([sample])
+            sample = mx.nd.array(sample)
+            test_output.append(net.feature(sample).asnumpy())
+            print('%d/%d'%(i, x_test.shape[0]))
+            i += 1
+        i = 0
+        for sample in x_train:
+            sample = np.array([sample])
+            sample = mx.nd.array(sample)
+            train_output.append(net.feature(sample).asnumpy())
+            print('%d/%d'%(i, x_test.shape[0]))
+            i += 1
 
-        test_output = np.squeeze(net.feature(x_test).asnumpy())
-        train_output = np.squeeze(net.feature(x_train).asnumpy())
+
+        test_output = np.squeeze(np.array(test_output))
+        train_output = np.squeeze(np.array(train_output))
 
         vector_size = list(train_output.shape[1:])
 
