@@ -138,7 +138,7 @@ class ArcFaceController(NetworkController):
                 else:
                     print(test_output.shape)
                     print(samples.shape)
-                    output = net.feature(samples).asnumpy())
+                    output = net.feature(samples).asnumpy()
                     print(output.shape)
                     test_output = np.concatenate((test_output, output))
                 start += settings['BATCH_SIZE']
