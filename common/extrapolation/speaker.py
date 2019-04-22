@@ -107,6 +107,7 @@ class Speaker:
         
         # list the speaker files
         valid_speakers = self.get_valid_speakers()
+
         speaker_files = self.get_speaker_list_of_files(get_training("VOXCELEB2"), '.wav', valid_speakers)
         
         # Extract the spectrogram's, speaker numbers and speaker names
