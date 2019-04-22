@@ -165,7 +165,7 @@ class ArcFaceController(NetworkController):
         test_output = np.squeeze(np.array(test_output))
         train_output = np.squeeze(np.array(train_output))
 
-        vector_size = list(train_output.shape[1:])
+        vector_size = train_output.shape[1:]
 
         print('test_output len -> ' + str(test_output.shape))
         print('train_output len -> ' + str(train_output.shape))
