@@ -102,6 +102,11 @@ class ArcFaceController(NetworkController):
         for settings in get_trained_settings():
             self.test_settings(settings)
 
+    def get_num_batches(data, settings):
+        r = (len(data) - len(data)%settings['BATCH_SIZE'])/settings['BATCH_SIZE']
+        r += 1 if len(data)%settings['BATCH_SIZE'] > 0 else 0
+        return r
+
     def get_embeddings(self, settings):
         _, _, num_speakers = load_train_data(settings)
 
@@ -115,14 +120,22 @@ class ArcFaceController(NetworkController):
         # Load and prepare train/test data
         x_train, speakers_train, x_test, speakers_test = load_test_data(settings)
 
-        test_output, train_output = [], []
-        with tqdm(total=len(x_test), desc='getting test features') as pbar:
-            for sample in x_test:
-                sample = np.array([sample])
-                sample = mx.nd.array(sample)
-                test_output.append(net.feature(sample).asnumpy())
+        test_output, train_output = None, None
+
+        start = 0
+        check = True
+        with tqdm(total=get_num_batches(x_test, settings), desc='getting test features') as pbar:
+            while check:
+                samples = mx.nd.array(x_train[start:settings['BATCH_SIZE']])
+                if start == 0:
+                    print(samples.shape)
+                    samples = mx.nd.array(x_train[:settings['BATCH_SIZE']])
+                    print(samples.shape)
+                    test_output = net.feature(sample).asnumpy()
+                else:
+                    test_output = np.concatenate((test_output, net.feature(sample).asnumpy()))
                 pbar.update()
-        with tqdm(total=len(x_train), desc='getting train features') as pbar:
+        with tqdm(total=get_num_batches(x_train, settings), desc='getting train features') as pbar:
             for sample in x_train:
                 sample = np.array([sample])
                 sample = mx.nd.array(sample)
