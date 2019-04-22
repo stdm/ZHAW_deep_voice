@@ -132,22 +132,33 @@ class ArcFaceController(NetworkController):
         check = True
         with tqdm(total=self.get_num_batches(x_test, settings), desc='getting test features') as pbar:
             while check:
-                samples = mx.nd.array(x_train[start:start+settings['BATCH_SIZE']])
+                if start+settings['BATCH_SIZE'] >= len(x_test) - 1:
+                    samples = mx.nd.array(x_test[start:-1])
+                    check = False
+                else
+                    samples = mx.nd.array(x_test[start:start+settings['BATCH_SIZE']])
                 if start == 0:
                     test_output = net.feature(samples).asnumpy()
                 else:
-                    print(test_output.shape)
-                    print(samples.shape)
                     output = net.feature(samples).asnumpy()
-                    print(output.shape)
                     test_output = np.concatenate((test_output, output))
                 start += settings['BATCH_SIZE']
                 pbar.update()
+        start = 0
+        check = True
         with tqdm(total=self.get_num_batches(x_train, settings), desc='getting train features') as pbar:
-            for sample in x_train:
-                sample = np.array([sample])
-                sample = mx.nd.array(sample)
-                train_output.append(net.feature(sample).asnumpy())
+            while check:
+                if start+settings['BATCH_SIZE'] >= len(x_train) - 1:
+                    samples = mx.nd.array(x_train[start:-1])
+                    check = False
+                else
+                    samples = mx.nd.array(x_train[start:start+settings['BATCH_SIZE']])
+                if start == 0:
+                    train_output = net.feature(samples).asnumpy()
+                else:
+                    output = net.feature(samples).asnumpy()
+                    train_output = np.concatenate((train_output, output))
+                start += settings['BATCH_SIZE']
                 pbar.update()
 
 
