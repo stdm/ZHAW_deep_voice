@@ -119,9 +119,9 @@ def _load_test_data(data_path, settings):
 
 def load_train_data(settings):
     x_t, y_t, _ = load(get_speaker_pickle(settings['TRAIN_DATA_NAME']))
-    print(np.amax(y_t))
-    num_speakers = np.amax(y_t) + 1
     x_v, y_v, _ = load(get_speaker_pickle(settings['VAL_DATA_NAME']))
+
+    num_speakers = np.amax(y_t) + 1
 
     bg_t = _batch_generator_lstm(x_t, y_t, settings)
     bg_v = _batch_generator_lstm(x_v, y_v, settings)
