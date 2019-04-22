@@ -125,6 +125,10 @@ class ArcFaceController(NetworkController):
 
         # Load and prepare train/test data
         x_train, speakers_train, x_test, speakers_test = load_test_data(settings)
+        print(speakers_test)
+        input('next')
+        print(speakers_train)
+        input('next')
 
         test_output, train_output = None, None
 
