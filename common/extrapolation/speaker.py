@@ -4,13 +4,16 @@ A Speaker contains all needed information and methods to create the pickle file 
 Based on previous work of Gerber, Lukic and Vogt, adapted by Heusser
 """
 import pickle
+import random
 
+from math import ceil
 import numpy as np
 
 from common.spectogram.speaker_train_splitter import SpeakerTrainSplit
 from common.spectogram.spectrogram_extractor import SpectrogramExtractor
 from common.utils.paths import *
 
+random.seed(1234)
 
 class Speaker:
     def __init__(self, split_train_test, max_speakers, speaker_list, dataset, output_name=None,
@@ -44,41 +47,79 @@ class Speaker:
         """
         print("Extracting {}".format(self.speaker_list))
 
-        # Extract the spectrogram's, speaker numbers and speaker names
-        X, y, speaker_names = self.extract_data_from_speaker()
+        if self.dataset == "timit":
+            # Extract the spectrogram's, speaker numbers and speaker names
+            X, y, speaker_names = self.extract_timit()
 
-        # Safe Test-Data to disk
-        if self.split_train_test:
-            speaker_train_split = SpeakerTrainSplit(0.2)
-            X_train, X_test, y_train, y_test = speaker_train_split(X, y)
+            # Safe Test-Data to disk
+            if self.split_train_test:
+                speaker_train_split = SpeakerTrainSplit(0.2)
+                X_train, X_test, y_train, y_test = speaker_train_split(X, y)
 
-            with open(get_speaker_pickle(self.output_name + '_train'), 'wb') as f:
-                pickle.dump((X_train, y_train, speaker_names), f, -1)
+                with open(get_speaker_pickle(self.output_name + '_train'), 'wb') as f:
+                    pickle.dump((X_train, y_train, speaker_names), f, -1)
 
-            with open(get_speaker_pickle(self.output_name + '_test'), 'wb') as f:
-                pickle.dump((X_test, y_test, speaker_names), f, -1)
-        else:
+                with open(get_speaker_pickle(self.output_name + '_test'), 'wb') as f:
+                    pickle.dump((X_test, y_test, speaker_names), f, -1)
+            else:
+                with open(get_speaker_pickle(self.output_name + '_cluster'), 'wb') as f:
+                    pickle.dump((X, y, speaker_names), f, -1)
+
+        elif self.dataset == "voxceleb2":
+            speakers_per_partition = 3 # TODO: increase
+
+            # take list of all speakers and shuffle them
+            #
+            list_of_speakers = self.get_valid_speakers()
+            
+            # Extract initial dataset
+            #
+            initial_dataset_speakers = list_of_speakers[0:speakers_per_partition]
+            print("Extracting Voxceleb2 Initial Dataset")
+
+            # extract slice into pickle (w/ or w/o train_test split)
+            #
+            X, y, speaker_names = self.extract_voxceleb2(valid_speakers=initial_dataset_speakers)
+
+            # Split Train and Test Sets not available for VoxCeleb2, as the initial
+            # training set is given seperate and these partitions are used to dynamically
+            # generate/add new samples
+            #
             with open(get_speaker_pickle(self.output_name + '_cluster'), 'wb') as f:
                 pickle.dump((X, y, speaker_names), f, -1)
+            print("Done Extracting Voxceleb2 Initial Dataset")
+
+            list_of_speakers = list_of_speakers[speakers_per_partition:]
+            random.shuffle(list_of_speakers)
+
+            # slice the speaker list into partitions N partitions, this is calculataed by the total number of 
+            # speakers and divided by the expected elements per partition, rounded up
+            #
+            # TODO: lehmacl1, add parameter for partition size
+            speaker_count = len(list_of_speakers)
+            speaker_splits = np.array_split(list_of_speakers, ceil(speaker_count / speakers_per_partition))
+            
+            for i in range(len(speaker_splits)):
+                print("Extracting Voxceleb2 SpeakerSplit {}".format(i))
+
+                # extract slice into pickle (w/ or w/o train_test split)
+                #
+                X, y, speaker_names = self.extract_voxceleb2(valid_speakers=speaker_splits[i])
+
+                # Split Train and Test Sets not available for VoxCeleb2, as the initial
+                # training set is given seperate and these partitions are used to dynamically
+                # generate/add new samples
+                #
+                with open(get_speaker_pickle(self.output_name + '_cluster_' + str(i)), 'wb') as f:
+                    pickle.dump((X, y, speaker_names), f, -1)
+                
+                print("Done Extracting Voxceleb2 SpeakerSplit {}".format(i))
+
+        else:
+            raise ValueError("self.dataset can only be one of ('timit', 'voxceleb2'), was " + self.dataset + ".")
 
         print("Done Extracting {}".format(self.speaker_list))
         print("Saved to pickle.\n")
-
-    def extract_data_from_speaker(self):
-        """
-        Extracts the training and testing data from the speaker list
-        :return:
-        x: the filled training data in the 4D array [Speaker, Channel, Frequency, Time]
-        y: the filled testing data in a list of speaker_numbers
-        valid_speakers: list of all speakers in this dataset
-        """
-
-        if self.dataset == "timit":
-            return self.extract_timit()
-        elif self.dataset == "voxceleb2":
-            return self.extract_voxceleb2()
-        else:
-            raise ValueError("self.dataset can only be one of ('timit', 'voxceleb2'), was " + self.dataset + ".")
 
     def extract_timit(self):
         """
@@ -96,7 +137,7 @@ class Speaker:
         x, y = self.build_array_and_extract_speaker_data(speaker_files)
         return x, y, valid_speakers
 
-    def extract_voxceleb2(self):
+    def extract_voxceleb2(self, valid_speakers):
         """
         Extracts the training and testing data from the speaker list of the VoxCeleb2 Dataset
         :return:
@@ -104,9 +145,7 @@ class Speaker:
         y: the filled testing data in a list of speaker_numbers
         valid_speakers: list of all speakers in this dataset
         """
-        
-        # list the speaker files
-        valid_speakers = self.get_valid_speakers()
+
         speaker_files = self.get_speaker_list_of_files(get_training("VOXCELEB2"), '.wav', valid_speakers)
         
         # Extract the spectrogram's, speaker numbers and speaker names

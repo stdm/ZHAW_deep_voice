@@ -47,7 +47,7 @@ def extend_most_trained(settings):
                 best_max = train['MAX_EPOCHS']
                 best_settings = train
     if best_settings is not None:
-        files = ['/dataset.pickle', '/final_epoch', '/train_progress.csv', '/val_progress.csv']
+        files = ['/final_epoch', '/train_progress.csv', '/val_progress.csv', '/trainer_params']
         src = get_experiment_nets(best_settings['SAVE_PATH'])
         dst = get_experiment_nets(settings['SAVE_PATH'])
         for file in files:

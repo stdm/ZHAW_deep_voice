@@ -34,7 +34,13 @@ class ArcFaceController(NetworkController):
             if epoch == -1:
                 extend_most_trained(settings)
                 epoch, _ = get_last_epoch(settings)
-            print(settings['SAVE_PATH'])
+
+            path = settings['SAVE_PATH']
+            for d in path.split('/'):
+                for p in d.split(';'):
+                    print(p)
+                print('')
+
             ctx = get_context()
             metric = CompositeEvalMetric([Accuracy(), TopKAccuracy(5), CrossEntropy()])
             save_rules = ['+', 'n', 'n']
@@ -102,6 +108,11 @@ class ArcFaceController(NetworkController):
         for settings in get_trained_settings():
             self.test_settings(settings)
 
+    def get_num_batches(self, data, settings):
+        r = (len(data) - len(data)%settings['BATCH_SIZE'])/settings['BATCH_SIZE']
+        r += 1 if len(data)%settings['BATCH_SIZE'] > 0 else 0
+        return r
+
     def get_embeddings(self, settings):
         _, _, num_speakers = load_train_data(settings)
 
@@ -115,25 +126,48 @@ class ArcFaceController(NetworkController):
         # Load and prepare train/test data
         x_train, speakers_train, x_test, speakers_test = load_test_data(settings)
 
-        test_output, train_output = [], []
-        with tqdm(total=len(x_test), desc='getting test features') as pbar:
-            for sample in x_test:
-                sample = np.array([sample])
-                sample = mx.nd.array(sample)
-                test_output.append(net.feature(sample).asnumpy())
+        test_output, train_output = None, None
+
+        start = 0
+        check = True
+        with tqdm(total=self.get_num_batches(x_test, settings), desc='getting test features') as pbar:
+            while check:
+                if start+settings['BATCH_SIZE'] >= len(x_test) - 1:
+                    samples = mx.nd.array(x_test[start:])
+                    check = False
+                else:
+                    samples = mx.nd.array(x_test[start:start+settings['BATCH_SIZE']])
+                if start == 0:
+                    test_output = net.feature(samples).asnumpy()
+                else:
+                    output = net.feature(samples).asnumpy()
+                    test_output = np.concatenate((test_output, output))
+                start += settings['BATCH_SIZE']
                 pbar.update()
-        with tqdm(total=len(x_train), desc='getting train features') as pbar:
-            for sample in x_train:
-                sample = np.array([sample])
-                sample = mx.nd.array(sample)
-                train_output.append(net.feature(sample).asnumpy())
+        start = 0
+        check = True
+        with tqdm(total=self.get_num_batches(x_train, settings), desc='getting train features') as pbar:
+            while check:
+                if start+settings['BATCH_SIZE'] >= len(x_train) - 1:
+                    samples = mx.nd.array(x_train[start:])
+                    check = False
+                else:
+                    samples = mx.nd.array(x_train[start:start+settings['BATCH_SIZE']])
+                if start == 0:
+                    train_output = net.feature(samples).asnumpy()
+                else:
+                    output = net.feature(samples).asnumpy()
+                    train_output = np.concatenate((train_output, output))
+                start += settings['BATCH_SIZE']
                 pbar.update()
 
 
         test_output = np.squeeze(np.array(test_output))
         train_output = np.squeeze(np.array(train_output))
 
-        vector_size = list(train_output.shape[1:])
+        vector_size = train_output.shape[1]
+        print(vector_size)
+        print(type(vector_size))
 
         print('test_output len -> ' + str(test_output.shape))
         print('train_output len -> ' + str(train_output.shape))
