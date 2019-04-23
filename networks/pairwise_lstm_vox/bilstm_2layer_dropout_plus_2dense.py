@@ -201,14 +201,11 @@ class bilstm_2layer_dropout(object):
         """
         Uncertainty sampling query strategy. Selects the least sure instances for labelling.
         Args:
-            classifier: The classifier for which the labels are to be queried.
+            model: The model for which the labels are to be queried.
             X: The pool of samples to query from.
             n_instances: Number of samples to be queried.
-            **uncertainty_measure_kwargs: Keyword arguments to be passed for the uncertainty
-                measure function.
         Returns:
             The indices of the instances from X chosen to be labelled;
-            the instances from X chosen to be labelled.
         """
         try:
             classwise_uncertainty = model.predict(X)
