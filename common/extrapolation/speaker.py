@@ -45,7 +45,7 @@ class Speaker:
         print("Extracting {}".format(self.speaker_list))
 
         # Extract the spectrogram's, speaker numbers and speaker names
-        X, y = self.extract_data_from_speaker()
+        X, y, speaker_names = self.extract_data_from_speaker()
 
         # Safe Test-Data to disk
         if self.split_train_test:
@@ -53,13 +53,13 @@ class Speaker:
             X_train, X_test, y_train, y_test = speaker_train_split(X, y)
 
             with open(get_speaker_pickle(self.output_name + '_train'), 'wb') as f:
-                pickle.dump((X_train, y_train), f, -1)
+                pickle.dump((X_train, y_train, speaker_names), f, -1)
 
             with open(get_speaker_pickle(self.output_name + '_test'), 'wb') as f:
-                pickle.dump((X_test, y_test), f, -1)
+                pickle.dump((X_test, y_test, speaker_names), f, -1)
         else:
             with open(get_speaker_pickle(self.output_name + '_cluster'), 'wb') as f:
-                pickle.dump((X, y), f, -1)
+                pickle.dump((X, y, speaker_names), f, -1)
 
         print("Done Extracting {}".format(self.speaker_list))
         print("Saved to pickle.\n")
@@ -70,7 +70,7 @@ class Speaker:
         :return:
         x: the filled training data in the 4D array [Speaker, Channel, Frequency, Time]
         y: the filled testing data in a list of speaker_numbers
-        speaker_files: the names associated with the numbers and each of their audio files
+        valid_speakers: list of all speakers in this dataset
         """
 
         if self.dataset == "timit":
@@ -86,7 +86,7 @@ class Speaker:
         :return:
         x: the filled training data in the 4D array [Speaker, Channel, Frequency, Time]
         y: the filled testing data in a list of speaker_numbers
-        speaker_files: the names associated with the numbers and each of their audio files
+        valid_speakers: list of all speakers in this dataset
         """
         # Add all valid speakers
         valid_speakers = self.get_valid_speakers()
@@ -94,7 +94,7 @@ class Speaker:
 
         # Extract the spectrogram's, speaker numbers and speaker names
         x, y = self.build_array_and_extract_speaker_data(speaker_files)
-        return x, y
+        return x, y, valid_speakers
 
     def extract_voxceleb2(self):
         """
@@ -102,7 +102,7 @@ class Speaker:
         :return:
         x: the filled training data in the 4D array [Speaker, Channel, Frequency, Time]
         y: the filled testing data in a list of speaker_numbers
-        speaker_files: the names associated with the numbers and each of their audio files
+        valid_speakers: list of all speakers in this dataset
         """
         
         # list the speaker files
@@ -111,7 +111,7 @@ class Speaker:
         
         # Extract the spectrogram's, speaker numbers and speaker names
         x, y = self.build_array_and_extract_speaker_data(speaker_files)
-        return x, y
+        return x, y, valid_speakers
 
     def get_valid_speakers(self):
         """

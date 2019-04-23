@@ -37,17 +37,16 @@ class SpeakerTrainSplit(object):
     # for each speaker. E.g. for a :eval_size of 0.2, at least 5 files per speaker are encouraged.
     #
     def __call__(self, X, y):
-        # build speaker file count dict
+        # Build speaker file count dict: Iterate over all entries in y (labels) and
+        # sum up the amount of examples for each unique speaker_id (content of y)
         #
         speaker_file_count = dict()
 
         for i in range(len(y)):
             try:
-                speaker_file_count[y[i]]
+                speaker_file_count[y[i]] += 1
             except KeyError:
-                speaker_file_count[y[i]] = 0
-
-            speaker_file_count[y[i]] += 1
+                speaker_file_count[y[i]] = 1
 
         valid_size = int(len(y) * self.eval_size) # 0.2y - len(y) is amount of total audio files
         train_size = int(len(y) - valid_size)     # 0.8y - len(y) is amount of total audio files
