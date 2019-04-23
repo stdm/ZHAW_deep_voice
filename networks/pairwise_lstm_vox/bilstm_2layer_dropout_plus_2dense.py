@@ -28,6 +28,7 @@ from common.utils.paths import *
     n_hidden2: Units of the second LSTM Layer
     n_classes: Amount of output classes (Speakers in Trainingset)
     epochs: Number of Epochs to train the Network per ActiveLearningRound
+    activeLearnerRounds: Number of learning rounds to requery the pool for new data
     segment_size: Segment size that is used as input 100 equals 1 second with current Spectrogram extraction
     frequency: size of the frequency Dimension of the Input Spectrogram
 
@@ -82,13 +83,16 @@ class bilstm_2layer_dropout(object):
     #
     def create_train_data(self, activeLearningRound):
         training_data_round = self.training_data + '_al_' + str(activeLearningRound)
-
         print('create_train_data', self.training_data, 'AL round', activeLearningRound)
-        print('create_train_data', get_speaker_pickle(training_data_round))
+        speaker_pickle = get_speaker_pickle(training_data_round)
+        print('create_train_data', speaker_pickle)
 
-        with open(get_speaker_pickle(training_data_round), 'rb') as f:
+        with open(speaker_pickle, 'rb') as f:
             (X, y, speaker_names) = pickle.load(f)
 
+        return (X, y, speaker_names, speaker_pickle)
+
+    def split_train_val_data(self, X, y, speaker_names):
         splitter = sts.SpeakerTrainSplit(0.2)
         X_t, X_v, y_t, y_v, _speaker_t, _speaker_v = splitter(X, y, speaker_names)
         return X_t, y_t, X_v, y_v
@@ -108,24 +112,42 @@ class bilstm_2layer_dropout(object):
         # base keras network
         model = self.create_net()
         calls = self.create_callbacks()
-
-        # wrappers for AL
-        classifier = KerasClassifier(model)
-        learner = ActiveLearner(estimator=classifier, verbose=1)
+        known = dict()
 
         # initial train set
-        X_t, y_t, X_v, y_v = self.create_train_data(0)
+        X_pool, y_pool, speaker_names, pool_ident = self.create_train_data(0)
+        known[pool_ident] = np.array(range(len(X_pool))
+        # split
+        X_t, y_t, X_v, y_v = split_train_val_data(X_pool, y_pool, speaker_names)
 
         for i in range(self.activeLearnerRounds): # ActiveLearning Rounds
             if i != 0:
-                # query active learner for uncertainty based on pool and append to numpy
-                X_t_pool, y_t_pool, X_v_pool, y_v_pool = self.create_train_data(i)
-                query_idx, _ = learner.query(X_t_pool, n_instances=100, verbose=0)
+                # query for uncertainty based on pool and append to numpy
+                X_pool, y_pool, speaker_names, pool_ident = self.create_train_data(i)
+                query_idx = uncertainty_sampling(model, X_pool, n_instances=10)
+
+                x_us = X_pool[query_idx]
+                y_us = y_pool[query_idx]
+                speaker_names_us = speaker_names[query_idx]
+
+                if not pool_ident in known.keys():
+                    known[pool_ident] = np.array()
+
+                for qidx in query_idx:
+                    if not qidx in known[pool_ident]:
+                        np.append(known[pool_ident], qidx)
+
+
+                x_us = np.delete(x_us, known[pool_ident], axis=0)
+                y_us = np.delete(y_us, known[pool_ident], axis=0)
+                speaker_names_us = speaker_names_us.delete(qidx)
                 
-                np.append(X_t, X_t_pool[query_idx])
-                np.append(y_t, y_t_pool[query_idx])
-                np.append(X_v, X_v_pool[query_idx])
-                np.append(y_v, y_v_pool[query_idx])
+                r_x_t, r_y_t, r_x_v, r_y_v = split_train_val_data(x_us, y_us, speaker_names_us)
+
+                np.append(X_t, r_x_t)
+                np.append(y_t, r_y_t)
+                np.append(X_v, r_x_v)
+                np.append(y_v, r_y_v)
 
             # TODO lehmacl1@2019-03-05: Müssen hier nicht 2er Potenzen als Batchsize (100) mitgegeben werden?
             train_gen = dg.batch_generator_lstm(X_t, y_t, 100, segment_size=self.segment_size)
@@ -151,14 +173,14 @@ class bilstm_2layer_dropout(object):
                 train_gen, 
                 steps_per_epoch=10, 
                 epochs=self.epochs,
-                verbose=2, 
                 callbacks=calls, 
                 validation_data=val_gen,
                 validation_steps=2, 
                 class_weight=None, 
                 max_q_size=10,
                 nb_worker=1, 
-                pickle_safe=False
+                pickle_safe=False,
+                verbose=2
             )
 
             ps.save_accuracy_plot(history, self.network_name)
@@ -167,3 +189,43 @@ class bilstm_2layer_dropout(object):
             model.save(get_experiment_nets(self.network_name + ".h5"))
             # print "evaluating model"
             # da.calculate_test_acccuracies(self.network_name, self.test_data, True, True, True, segment_size=self.segment_size)
+
+    def active_learning_round(self, model, known, round: int):
+
+
+    def uncertainty_sampling(self, model, X, n_instances: int = 1):
+        """
+        Uncertainty sampling query strategy. Selects the least sure instances for labelling.
+        Args:
+            classifier: The classifier for which the labels are to be queried.
+            X: The pool of samples to query from.
+            n_instances: Number of samples to be queried.
+            **uncertainty_measure_kwargs: Keyword arguments to be passed for the uncertainty
+                measure function.
+        Returns:
+            The indices of the instances from X chosen to be labelled;
+            the instances from X chosen to be labelled.
+        """
+        try:
+            classwise_uncertainty = model.predict(X)
+        except ValueError:
+            return np.ones(shape=(X.shape[0], ))
+
+        # for each point, select the maximum uncertainty
+        uncertainty = 1 - np.max(classwise_uncertainty, axis=1)
+        query_idx = self.multi_argmax(uncertainty, n_instances=n_instances)
+        return query_idx
+
+    def multi_argmax(self, values: np.ndarray, n_instances: int = 1):
+        """
+        Selects the indices of the n_instances highest values.
+        Args:
+            values: Contains the values to be selected from.
+            n_instances: Specifies how many indices to return.
+        Returns:
+            The indices of the n_instances largest values.
+        """
+        assert n_instances <= values.shape[0], 'n_instances must be less or equal than the size of utility'
+
+        max_idx = np.argpartition(-values, n_instances-1, axis=0)[:n_instances]
+        return max_idx

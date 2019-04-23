@@ -50,10 +50,10 @@ class Speaker:
         # Safe Test-Data to disk
         if self.split_train_test:
             speaker_train_split = SpeakerTrainSplit(0.2)
-            X_train_valid, X_test, y_train_valid, y_test, speaker_train, speaker_test = speaker_train_split(X, y, speaker_files)
+            X_train, X_test, y_train, y_test, speaker_train, speaker_test = speaker_train_split(X, y, speaker_files)
 
             with open(get_speaker_pickle(self.output_name + '_train'), 'wb') as f:
-                pickle.dump((X_train_valid, y_train_valid, speaker_train), f, -1)
+                pickle.dump((X_train, y_train, speaker_train), f, -1)
 
             with open(get_speaker_pickle(self.output_name + '_test'), 'wb') as f:
                 pickle.dump((X_test, y_test, speaker_test), f, -1)

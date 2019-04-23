@@ -35,8 +35,8 @@ class LSTMVOX2Controller(NetworkController):
             n_hidden1=256, 
             n_hidden2=256, 
             n_classes=nr_classes, 
-            epochs=50,
-            activeLearnerRounds=50,
+            epochs=2, # TODO: increase
+            activeLearnerRounds=2, # TODO: increase
             segment_size=self.seg_size
         )
 
