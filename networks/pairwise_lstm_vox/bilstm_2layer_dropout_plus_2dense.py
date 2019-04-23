@@ -37,7 +37,8 @@ from common.utils.paths import *
 
 
 class bilstm_2layer_dropout(object):
-    def __init__(self, name, training_data, n_hidden1, n_hidden2, n_classes, epochs, activeLearnerRounds,
+    def __init__(self, name, training_data, n_hidden1, n_hidden2, n_classes, 
+                 epochs, activeLearnerRounds, activeLearnerPools,
                  segment_size, frequency=128):
         self.network_name = name
         self.training_data = training_data
@@ -47,6 +48,7 @@ class bilstm_2layer_dropout(object):
         self.n_classes = n_classes
         self.epochs = epochs
         self.activeLearnerRounds = activeLearnerRounds
+        self.activeLearnerPools = activeLearnerPools
         self.segment_size = segment_size
         self.input = (segment_size, frequency)
         print(self.network_name)
@@ -82,17 +84,18 @@ class bilstm_2layer_dropout(object):
     # sets for the training step
     #
     def create_train_data(self, activeLearningRound):
-        training_data_round = self.training_data + '_al_' + str(activeLearningRound)
-        print('create_train_data', self.training_data, 'AL round', activeLearningRound)
+        al_pool = activeLearningRound % self.activeLearnerPools
+        training_data_round = self.training_data + '_al_' + str(al_pool)
+        print('create_train_data', self.training_data, 'pool', al_pool)
         speaker_pickle = get_speaker_pickle(training_data_round)
         print('create_train_data', speaker_pickle)
 
         with open(speaker_pickle, 'rb') as f:
             (X, y, speaker_names) = pickle.load(f)
 
-        return (X, y, speaker_names, speaker_pickle)
+        return (X, y, speaker_pickle)
 
-    def split_train_val_data(self, X, y, speaker_names):
+    def split_train_val_data(self, X, y):
         splitter = sts.SpeakerTrainSplit(0.2)
         X_t, X_v, y_t, y_v = splitter(X, y)
         return X_t, y_t, X_v, y_v
@@ -115,39 +118,15 @@ class bilstm_2layer_dropout(object):
         known = dict()
 
         # initial train set
-        X_pool, y_pool, speaker_names, pool_ident = self.create_train_data(0)
+        X_pool, y_pool, pool_ident = self.create_train_data(0)
         known[pool_ident] = np.array(range(len(X_pool))
         # split
-        X_t, y_t, X_v, y_v = self.split_train_val_data(X_pool, y_pool, speaker_names)
+        X_t, y_t, X_v, y_v = self.split_train_val_data(X_pool, y_pool)
 
         for i in range(self.activeLearnerRounds): # ActiveLearning Rounds
             if i != 0:
                 # query for uncertainty based on pool and append to numpy
-                X_pool, y_pool, speaker_names, pool_ident = self.create_train_data(i)
-                query_idx = uncertainty_sampling(model, X_pool, n_instances=10)
-
-                x_us = X_pool[query_idx]
-                y_us = y_pool[query_idx]
-                speaker_names_us = speaker_names[query_idx]
-
-                if not pool_ident in known.keys():
-                    known[pool_ident] = np.array()
-
-                for qidx in query_idx:
-                    if not qidx in known[pool_ident]:
-                        np.append(known[pool_ident], qidx)
-
-
-                x_us = np.delete(x_us, known[pool_ident], axis=0)
-                y_us = np.delete(y_us, known[pool_ident], axis=0)
-                speaker_names_us = speaker_names_us.delete(qidx)
-                
-                r_x_t, r_y_t, r_x_v, r_y_v = self.split_train_val_data(x_us, y_us, speaker_names_us)
-
-                np.append(X_t, r_x_t)
-                np.append(y_t, r_y_t)
-                np.append(X_v, r_x_v)
-                np.append(y_v, r_y_v)
+                self.active_learning_round(model, known, i, X_t, X_v, y_t, y_v)
 
             # TODO lehmacl1@2019-03-05: Müssen hier nicht 2er Potenzen als Batchsize (100) mitgegeben werden?
             train_gen = dg.batch_generator_lstm(X_t, y_t, 100, segment_size=self.segment_size)
@@ -190,8 +169,33 @@ class bilstm_2layer_dropout(object):
             # print "evaluating model"
             # da.calculate_test_acccuracies(self.network_name, self.test_data, True, True, True, segment_size=self.segment_size)
 
-    def active_learning_round(self, model, known, round: int):
-        pass
+    def active_learning_round(self, model, known: dict, round: int, X_t, X_v, y_t, y_v):
+        X_pool, y_pool, pool_ident = self.create_train_data(round)
+        # query for uncertainty
+        query_idx = self.uncertainty_sampling(model, X_pool, n_instances=10)
+
+        x_us = X_pool[query_idx]
+        y_us = y_pool[query_idx]
+
+        if not pool_ident in known.keys():
+            known[pool_ident] = np.array()
+
+        # ignore already added entries
+        for qidx in query_idx:
+            if not qidx in known[pool_ident]:
+                np.append(known[pool_ident], qidx)
+
+        x_us = np.delete(x_us, known[pool_ident], axis=0)
+        y_us = np.delete(y_us, known[pool_ident], axis=0)
+        
+        # split the new records into test and val
+        r_x_t, r_y_t, r_x_v, r_y_v = self.split_train_val_data(x_us, y_us)
+
+        # append to used / passed sets
+        np.append(X_t, r_x_t)
+        np.append(y_t, r_y_t)
+        np.append(X_v, r_x_v)
+        np.append(y_v, r_y_v)
 
     def uncertainty_sampling(self, model, X, n_instances: int = 1):
         """
