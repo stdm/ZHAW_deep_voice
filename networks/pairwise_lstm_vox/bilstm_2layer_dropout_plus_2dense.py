@@ -94,7 +94,7 @@ class bilstm_2layer_dropout(object):
 
     def split_train_val_data(self, X, y, speaker_names):
         splitter = sts.SpeakerTrainSplit(0.2)
-        X_t, X_v, y_t, y_v, _speaker_t, _speaker_v = splitter(X, y, speaker_names)
+        X_t, X_v, y_t, y_v = splitter(X, y)
         return X_t, y_t, X_v, y_v
 
     def create_callbacks(self):
@@ -118,7 +118,7 @@ class bilstm_2layer_dropout(object):
         X_pool, y_pool, speaker_names, pool_ident = self.create_train_data(0)
         known[pool_ident] = np.array(range(len(X_pool))
         # split
-        X_t, y_t, X_v, y_v = split_train_val_data(X_pool, y_pool, speaker_names)
+        X_t, y_t, X_v, y_v = self.split_train_val_data(X_pool, y_pool, speaker_names)
 
         for i in range(self.activeLearnerRounds): # ActiveLearning Rounds
             if i != 0:
@@ -142,7 +142,7 @@ class bilstm_2layer_dropout(object):
                 y_us = np.delete(y_us, known[pool_ident], axis=0)
                 speaker_names_us = speaker_names_us.delete(qidx)
                 
-                r_x_t, r_y_t, r_x_v, r_y_v = split_train_val_data(x_us, y_us, speaker_names_us)
+                r_x_t, r_y_t, r_x_v, r_y_v = self.split_train_val_data(x_us, y_us, speaker_names_us)
 
                 np.append(X_t, r_x_t)
                 np.append(y_t, r_y_t)
@@ -191,7 +191,7 @@ class bilstm_2layer_dropout(object):
             # da.calculate_test_acccuracies(self.network_name, self.test_data, True, True, True, segment_size=self.segment_size)
 
     def active_learning_round(self, model, known, round: int):
-
+        pass
 
     def uncertainty_sampling(self, model, X, n_instances: int = 1):
         """

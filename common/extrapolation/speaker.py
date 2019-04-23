@@ -45,21 +45,21 @@ class Speaker:
         print("Extracting {}".format(self.speaker_list))
 
         # Extract the spectrogram's, speaker numbers and speaker names
-        X, y, speaker_files = self.extract_data_from_speaker()
+        X, y = self.extract_data_from_speaker()
 
         # Safe Test-Data to disk
         if self.split_train_test:
             speaker_train_split = SpeakerTrainSplit(0.2)
-            X_train, X_test, y_train, y_test, speaker_train, speaker_test = speaker_train_split(X, y, speaker_files)
+            X_train, X_test, y_train, y_test = speaker_train_split(X, y)
 
             with open(get_speaker_pickle(self.output_name + '_train'), 'wb') as f:
-                pickle.dump((X_train, y_train, speaker_train), f, -1)
+                pickle.dump((X_train, y_train), f, -1)
 
             with open(get_speaker_pickle(self.output_name + '_test'), 'wb') as f:
-                pickle.dump((X_test, y_test, speaker_test), f, -1)
+                pickle.dump((X_test, y_test), f, -1)
         else:
             with open(get_speaker_pickle(self.output_name + '_cluster'), 'wb') as f:
-                pickle.dump((X, y, speaker_files), f, -1)
+                pickle.dump((X, y), f, -1)
 
         print("Done Extracting {}".format(self.speaker_list))
         print("Saved to pickle.\n")
@@ -94,7 +94,7 @@ class Speaker:
 
         # Extract the spectrogram's, speaker numbers and speaker names
         x, y = self.build_array_and_extract_speaker_data(speaker_files)
-        return x, y, speaker_files
+        return x, y
 
     def extract_voxceleb2(self):
         """
@@ -111,7 +111,7 @@ class Speaker:
         
         # Extract the spectrogram's, speaker numbers and speaker names
         x, y = self.build_array_and_extract_speaker_data(speaker_files)
-        return x, y, speaker_files
+        return x, y
 
     def get_valid_speakers(self):
         """
