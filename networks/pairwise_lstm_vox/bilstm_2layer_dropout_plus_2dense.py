@@ -119,7 +119,7 @@ class bilstm_2layer_dropout(object):
 
         # initial train set
         X_pool, y_pool, pool_ident = self.create_train_data(0)
-        known[pool_ident] = np.array(range(len(X_pool))
+        known[pool_ident] = np.array(range(len(X_pool)))
         # split
         X_t, y_t, X_v, y_v = self.split_train_val_data(X_pool, y_pool)
 
@@ -174,19 +174,23 @@ class bilstm_2layer_dropout(object):
         # query for uncertainty
         query_idx = self.uncertainty_sampling(model, X_pool, n_instances=10)
 
+        # Converts np.ndarray to dytpe int, default is float
+        query_idx = query_idx.astype('int')
+
         x_us = X_pool[query_idx]
         y_us = y_pool[query_idx]
 
         if not pool_ident in known.keys():
-            known[pool_ident] = np.array()
+            known[pool_ident] = []
 
         # ignore already added entries
         for qidx in query_idx:
             if not qidx in known[pool_ident]:
-                np.append(known[pool_ident], qidx)
+                known[pool_ident].append(qidx)
 
-        x_us = np.delete(x_us, known[pool_ident], axis=0)
-        y_us = np.delete(y_us, known[pool_ident], axis=0)
+        numpArray = np.array(known[pool_ident])
+        x_us = np.delete(x_us, numpArray, axis=0)
+        y_us = np.delete(y_us, numpArray, axis=0)
         
         # split the new records into test and val
         r_x_t, r_y_t, r_x_v, r_y_v = self.split_train_val_data(x_us, y_us)
@@ -229,4 +233,5 @@ class bilstm_2layer_dropout(object):
         assert n_instances <= values.shape[0], 'n_instances must be less or equal than the size of utility'
 
         max_idx = np.argpartition(-values, n_instances-1, axis=0)[:n_instances]
+        
         return max_idx
