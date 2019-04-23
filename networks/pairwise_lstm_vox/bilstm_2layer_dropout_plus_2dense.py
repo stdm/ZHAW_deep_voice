@@ -38,7 +38,7 @@ from common.utils.paths import *
 
 class bilstm_2layer_dropout(object):
     def __init__(self, name, training_data, n_hidden1, n_hidden2, n_classes, 
-                 epochs, activeLearnerRounds, activeLearnerPools,
+                 epochs, activeLearnerRounds,
                  segment_size, frequency=128):
         self.network_name = name
         self.training_data = training_data
@@ -48,7 +48,7 @@ class bilstm_2layer_dropout(object):
         self.n_classes = n_classes
         self.epochs = epochs
         self.activeLearnerRounds = activeLearnerRounds
-        self.activeLearnerPools = activeLearnerPools
+        self.activeLearnerPools = 0
         self.segment_size = segment_size
         self.input = (segment_size, frequency)
         print(self.network_name)
@@ -80,20 +80,24 @@ class bilstm_2layer_dropout(object):
         print(model)
         return model
 
-    # This method splits the given training data into training and validation
-    # sets for the training step
-    #
-    def create_train_data(self, activeLearningRound):
-        al_pool = activeLearningRound % self.activeLearnerPools
-        training_data_round = self.training_data + '_al_' + str(al_pool)
-        print('create_train_data', self.training_data, 'pool', al_pool)
-        speaker_pickle = get_speaker_pickle(training_data_round)
+    def read_speaker_data(self, speaker_pickle):
         print('create_train_data', speaker_pickle)
 
         with open(speaker_pickle, 'rb') as f:
-            (X, y, speaker_names) = pickle.load(f)
+            (X, y, _) = pickle.load(f)
 
         return (X, y, speaker_pickle)
+
+    def reader_speaker_data_round(self, activeLearningRound):
+        training_data_round = self.training_data + '.part' + str(activeLearningRound)        
+        speaker_pickle = get_speaker_pickle(training_data_round)
+
+        if not path.exists(speaker_pickle):
+            return self.reader_speaker_data_round(activeLearningRound % self.activeLearnerPools)
+        else:
+            print('create_train_data', self.training_data, 'pool', training_data_round)
+            self.activeLearnerPools += 1
+            return self.read_speaker_data(speaker_pickle)
 
     def split_train_val_data(self, X, y):
         splitter = sts.SpeakerTrainSplit(0.2)
@@ -115,18 +119,17 @@ class bilstm_2layer_dropout(object):
         # base keras network
         model = self.create_net()
         calls = self.create_callbacks()
-        known = dict()
+        known_pool_data = dict()
 
         # initial train set
-        X_pool, y_pool, pool_ident = self.create_train_data(0)
-        known[pool_ident] = np.array(range(len(X_pool)))
-        # split
+        speaker_pickle = get_speaker_pickle(self.training_data)
+        X_pool, y_pool, _ = self.read_speaker_data(speaker_pickle)
         X_t, y_t, X_v, y_v = self.split_train_val_data(X_pool, y_pool)
 
         for i in range(self.activeLearnerRounds): # ActiveLearning Rounds
             if i != 0:
                 # query for uncertainty based on pool and append to numpy
-                self.active_learning_round(model, known, i, X_t, X_v, y_t, y_v)
+                self.active_learning_round(model, known_pool_data, i, X_t, X_v, y_t, y_v)
 
             # TODO lehmacl1@2019-03-05: Müssen hier nicht 2er Potenzen als Batchsize (100) mitgegeben werden?
             train_gen = dg.batch_generator_lstm(X_t, y_t, 100, segment_size=self.segment_size)
@@ -169,8 +172,8 @@ class bilstm_2layer_dropout(object):
             # print "evaluating model"
             # da.calculate_test_acccuracies(self.network_name, self.test_data, True, True, True, segment_size=self.segment_size)
 
-    def active_learning_round(self, model, known: dict, round: int, X_t, X_v, y_t, y_v):
-        X_pool, y_pool, pool_ident = self.create_train_data(round)
+    def active_learning_round(self, model, known_pool_data: dict, round: int, X_t, X_v, y_t, y_v):
+        X_pool, y_pool, pool_ident = self.reader_speaker_data_round(round)
         # query for uncertainty
         query_idx = self.uncertainty_sampling(model, X_pool, n_instances=10)
 
@@ -180,15 +183,15 @@ class bilstm_2layer_dropout(object):
         x_us = X_pool[query_idx]
         y_us = y_pool[query_idx]
 
-        if not pool_ident in known.keys():
-            known[pool_ident] = []
+        if not pool_ident in known_pool_data.keys():
+            known_pool_data[pool_ident] = []
 
         # ignore already added entries
         for qidx in query_idx:
-            if not qidx in known[pool_ident]:
-                known[pool_ident].append(qidx)
+            if not qidx in known_pool_data[pool_ident]:
+                known_pool_data[pool_ident].append(qidx)
 
-        numpArray = np.array(known[pool_ident])
+        numpArray = np.array(known_pool_data[pool_ident])
         x_us = np.delete(x_us, numpArray, axis=0)
         y_us = np.delete(y_us, numpArray, axis=0)
         
