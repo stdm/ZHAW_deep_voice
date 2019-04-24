@@ -11,7 +11,6 @@ from keras.layers import LSTM
 from keras.layers import CuDNNLSTM
 from keras.layers.wrappers import Bidirectional
 from keras.wrappers.scikit_learn import KerasClassifier
-from modAL.models import ActiveLearner
 
 from .core import data_gen as dg
 from .core import pairwise_kl_divergence as kld

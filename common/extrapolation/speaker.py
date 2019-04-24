@@ -17,7 +17,7 @@ random.seed(1234)
 
 class Speaker:
     def __init__(self, split_train_test, max_speakers, speaker_list, dataset, output_name=None,
-                 frequency_elements=128, max_audio_length=800):
+                 frequency_elements=128, max_audio_length=800, speakers_per_partition=40):
         """
         Represents a fully defined speaker in the Speaker clustering suite.
 
@@ -34,6 +34,7 @@ class Speaker:
         self.max_speakers = max_speakers
         self.speaker_list = speaker_list
         self.max_audio_length = max_audio_length
+        self.speakers_per_partition = speakers_per_partition
         self.dataset = dataset
 
         if output_name is None:
@@ -66,15 +67,13 @@ class Speaker:
                     pickle.dump((X, y, speaker_names), f, -1)
 
         elif self.dataset == "voxceleb2":
-            speakers_per_partition = 3 # TODO: increase
-
             # take list of all speakers and shuffle them
             #
             list_of_speakers = self.get_valid_speakers()
             
             # Extract initial dataset
             #
-            initial_dataset_speakers = list_of_speakers[0:speakers_per_partition]
+            initial_dataset_speakers = list_of_speakers[0:self.speakers_per_partition]
             print("Extracting Voxceleb2 Initial Dataset")
 
             # extract slice into pickle (w/ or w/o train_test split)
@@ -85,19 +84,19 @@ class Speaker:
             # training set is given seperate and these partitions are used to dynamically
             # generate/add new samples
             #
+            # with open(get_speaker_pickle('/mnt/all1/voxceleb2/speaker_pickles/' + self.output_name + '_cluster'), 'wb') as f:
             with open(get_speaker_pickle(self.output_name + '_cluster'), 'wb') as f:
                 pickle.dump((X, y, speaker_names), f, -1)
             print("Done Extracting Voxceleb2 Initial Dataset")
 
-            list_of_speakers = list_of_speakers[speakers_per_partition:]
+            list_of_speakers = list_of_speakers[self.speakers_per_partition:]
             random.shuffle(list_of_speakers)
 
             # slice the speaker list into partitions N partitions, this is calculataed by the total number of 
             # speakers and divided by the expected elements per partition, rounded up
             #
-            # TODO: lehmacl1, add parameter for partition size
             speaker_count = len(list_of_speakers)
-            speaker_splits = np.array_split(list_of_speakers, ceil(speaker_count / speakers_per_partition))
+            speaker_splits = np.array_split(list_of_speakers, ceil(speaker_count / self.speakers_per_partition))
             
             for i in range(len(speaker_splits)):
                 print("Extracting Voxceleb2 SpeakerSplit {}".format(i))
@@ -110,6 +109,7 @@ class Speaker:
                 # training set is given seperate and these partitions are used to dynamically
                 # generate/add new samples
                 #
+                # with open(get_speaker_pickle('/mnt/all1/voxceleb2/speaker_pickles/' + self.output_name + '_cluster_' + str(i)), 'wb') as f:
                 with open(get_speaker_pickle(self.output_name + '_cluster_' + str(i)), 'wb') as f:
                     pickle.dump((X, y, speaker_names), f, -1)
                 
@@ -146,6 +146,7 @@ class Speaker:
         valid_speakers: list of all speakers in this dataset
         """
 
+        # speaker_files = self.get_speaker_list_of_files('/mnt/all1/voxceleb2/test/aac', '.wav', valid_speakers)
         speaker_files = self.get_speaker_list_of_files(get_training("VOXCELEB2"), '.wav', valid_speakers)
         
         # Extract the spectrogram's, speaker numbers and speaker names
