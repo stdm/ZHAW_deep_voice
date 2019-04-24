@@ -21,12 +21,14 @@ import common.spectogram.speaker_train_splitter as sts
 from common.spectogram.spectrogram_extractor import extract_spectrogram
 from common.utils import pickler
 from common.utils.paths import *
+from common.utils.load_config import *
 from . import network_factory as nf
 from .objectives_clustering import create_loss_functions_kl_div
-from ..core import analytics, settings
+from ..core import analytics
 from ..core.batch_iterators import SpectTrainBatchIterator, SpectValidBatchIterator
 from common.spectogram.speaker_dev_selector import get_sentences_for_speaker_index
 
+config = load_config(None, join(get_common(), 'config.cfg'))
 
 def create_and_train(num_epochs=1000, batch_size=100, epoch_batches=10, network_params_file_in=None,
                      network_params_file_out=None,
@@ -54,8 +56,8 @@ def create_and_train(num_epochs=1000, batch_size=100, epoch_batches=10, network_
         val_fn = None
 
     # Train network
-    train(X, y, num_epochs, train_fn, val_fn, SpectTrainBatchIterator(batch_size, epoch_batches, 1, 1),
-          SpectValidBatchIterator(batch_size, epoch_batches))
+    train(X, y, num_epochs, train_fn, val_fn, SpectTrainBatchIterator(batch_size, epoch_batches, config),
+          SpectValidBatchIterator(batch_size, epoch_batches, config))
 
     # Save if
     if network_params_file_out is not None:
@@ -64,9 +66,9 @@ def create_and_train(num_epochs=1000, batch_size=100, epoch_batches=10, network_
 
 def train(X, y, num_epochs, train_fn, val_fn=None, train_iterator=None, validation_iterator=None):
     if train_iterator is None:
-        train_iterator = SpectTrainBatchIterator(100, 10)
+        train_iterator = SpectTrainBatchIterator(100, 10, config)
     if validation_iterator is None:
-        validation_iterator = SpectValidBatchIterator(100, 10)
+        validation_iterator = SpectValidBatchIterator(100, 10, config)
     if val_fn is not None:
         train_splitter = sts.SpeakerTrainSplit(eval_size=0.25, sentences=8)
         X_train, X_valid, y_train, y_valid = train_splitter(X, y)
@@ -153,21 +155,23 @@ def generate_output(X, y, speaker_names, network_params_file_in=None, output_fil
 
 
 def generate_cluster_data(X, y, overlapping=False):
-    X_cluster = np.zeros((10000, 1, settings.FREQ_ELEMENTS, settings.ONE_SEC), dtype=np.float32)
+    seg_size = config.getint('pairwise_kldiv', 'seg_size')
+    spectogram_height = config.getint('pairwise_kldiv', 'spectogram_height')
+    X_cluster = np.zeros((10000, 1, spectogram_height, seg_size), dtype=np.float32)
     y_cluster = []
 
-    step = settings.ONE_SEC
+    step = seg_size
     if overlapping:
-        step = settings.ONE_SEC / 2
+        step = seg_size / 2
     pos = 0
     for i in range(len(X)):
-        spect = extract_spectrogram(X[i, 0], settings.ONE_SEC, settings.FREQ_ELEMENTS)
+        spect = extract_spectrogram(X[i, 0], seg_size, spectogram_height)
 
         for j in range(int(spect.shape[1] / step)):
             y_cluster.append(y[i])
             seg_idx = j * step
             try:
-                X_cluster[pos, 0] = spect[:, seg_idx:seg_idx + settings.ONE_SEC]
+                X_cluster[pos, 0] = spect[:, seg_idx:seg_idx + seg_size]
             except ValueError:
                 # if the last segment doesn't match ignore it
                 pass

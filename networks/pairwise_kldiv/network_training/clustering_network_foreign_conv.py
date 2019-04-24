@@ -14,11 +14,13 @@ from lasagne import layers
 
 from common.utils import pickler
 from common.utils.paths import *
+from common.utils.load_config import *
 from . import clustering_network, network_factory
 from .objectives_clustering import create_loss_functions_kl_div
 from ..core.batch_iterators import SpectWithSeparateConvTrainBatchIterator, \
     SpectWithSeparateConvValidBatchIterator
 
+config = load_config(None, join(get_common(), 'config.cfg'))
 
 def create_and_train(network_file, train_file, out_file):
     print("Loading static convolution...")
@@ -32,10 +34,10 @@ def create_and_train(network_file, train_file, out_file):
     margin = T.scalar('margin')
     network = network_factory.create_network_KL_clustering_no_convolution(input_var, input_size=1000, output_size=100)
     train_fn, val_fn = create_loss_functions_kl_div(input_var, network, target_var, margin)
-    train_batch_iterator = SpectWithSeparateConvTrainBatchIterator(batchsize=100, batches_per_epoch=10, input_dim=1000,
-                                                                   get_conv_output=get_conv_output)
-    valid_batch_iterator = SpectWithSeparateConvValidBatchIterator(batchsize=100, batches_per_epoch=10, input_dim=1000,
-                                                                   get_conv_output=get_conv_output)
+    train_batch_iterator = SpectWithSeparateConvTrainBatchIterator(batchsize=100, batches_per_epoch=10, config=config,
+                                                                   input_dim=1000, get_conv_output=get_conv_output)
+    valid_batch_iterator = SpectWithSeparateConvValidBatchIterator(batchsize=100, batches_per_epoch=10, config=config,
+                                                                   input_dim=1000, get_conv_output=get_conv_output)
     print("Vanilla network created!")
 
     with open(train_file, 'rb') as f:

@@ -9,18 +9,19 @@ from random import randint
 import numpy as np
 from nolearn.lasagne import BatchIterator
 
-from networks.pairwise_kldiv.core import settings
-
 
 class SegmentBatchIterator(BatchIterator):
-    def __init__(self, batch_size):
-        super(SegmentBatchIterator, self).__init__(batch_size)
+    def __init__(self, batch_size, config):
+        super().__init__(batch_size)
+        self.config = config
 
     def __iter__(self):
         bs = self.batch_size
+        seg_size = self.config.getint('pairwise_kldiv', 'seg_size')
+        spectogram_height = self.config.getint('pairwise_kldiv', 'spectogram_height')
         # build as much batches as fit into the training set
         for i in range((self.n_samples + bs - 1) // bs):
-            Xb = np.zeros((bs, 1, settings.FREQ_ELEMENTS, settings.ONE_SEC), dtype=np.float32)
+            Xb = np.zeros((bs, 1, spectogram_height, seg_size), dtype=np.float32)
             yb = np.zeros(bs, dtype=np.int32)
             # here one batch is generated
             for j in range(0, bs):
@@ -28,36 +29,41 @@ class SegmentBatchIterator(BatchIterator):
                 if self.y is not None:
                     yb[j] = self.y[speaker_idx]
                 spect = self.extract_spectrogram(self.X[speaker_idx, 0])
-                seg_idx = randint(0, spect.shape[1] - settings.ONE_SEC)
-                Xb[j, 0] = spect[:, seg_idx:seg_idx + settings.ONE_SEC]
+                seg_idx = randint(0, spect.shape[1] - seg_size)
+                Xb[j, 0] = spect[:, seg_idx:seg_idx + seg_size]
             yield self.transform(Xb, yb)
 
     def transform(self, Xb, yb):
         return Xb, yb
 
-    @staticmethod
-    def extract_spectrogram(spectrogram):
+    def _extract_spectrogram(self, spectrogram):
         zeros = 0
+        seg_size = self.config.getint('pairwise_kldiv', 'seg_size')
+        spectogram_height = self.config.getint('pairwise_kldiv', 'spectogram_height')
         for x in spectrogram[0]:
             if x == 0.0:
                 zeros += 1
             else:
                 zeros = 0
-        while spectrogram.shape[1] - zeros < settings.ONE_SEC:
+        while spectrogram.shape[1] - zeros < seg_size:
             zeros -= 1
-        spect = spectrogram[0:settings.FREQ_ELEMENTS, 0:spectrogram.shape[1] - zeros]
+        spect = spectrogram[0:spectogram_height, 0:spectrogram.shape[1] - zeros]
         return spect
 
 
 class DoubleSegmentBatchIterator(BatchIterator):
-    def __init__(self, batch_size, minibatches_per_epoch):
-        super(DoubleSegmentBatchIterator, self).__init__(batch_size)
+    def __init__(self, batch_size, minibatches_per_epoch, config):
+        super().__init__(batch_size)
         self.minibatches_per_epoch = minibatches_per_epoch
+        self.config = config
 
     def __iter__(self):
         bs = self.batch_size
+        seg_size = self.config.getint('pairwise_kldiv', 'seg_size')
+        spectogram_height = self.config.getint('pairwise_kldiv', 'spectogram_height')
+
         for i in range(self.minibatches_per_epoch):
-            Xb = np.zeros((bs, 1, settings.FREQ_ELEMENTS * 2, settings.ONE_SEC), dtype=np.float32)
+            Xb = np.zeros((bs, 1, spectogram_height * 2, seg_size), dtype=np.float32)
             yb = np.zeros(bs, dtype=np.int32)
             # here one batch is generated
             for j in range(0, bs):
@@ -70,29 +76,31 @@ class DoubleSegmentBatchIterator(BatchIterator):
                 if self.y is not None:
                     yb[j] = 1 if self.y[sentence1_idx] == self.y[sentence2_idx] else 0
                 spect1 = self.extract_spectrogram(self.X[sentence1_idx, 0])
-                seg_idx1 = randint(0, spect1.shape[1] - settings.ONE_SEC)
+                seg_idx1 = randint(0, spect1.shape[1] - seg_size)
                 if j % 2 == 0:
                     spect2 = spect1
                 else:
                     spect2 = self.extract_spectrogram(self.X[sentence2_idx, 0])
-                seg_idx2 = randint(0, spect2.shape[1] - settings.ONE_SEC)
+                seg_idx2 = randint(0, spect2.shape[1] - seg_size)
                 Xb[j, 0] = np.concatenate(
-                    (spect1[:, seg_idx1:seg_idx1 + settings.ONE_SEC], spect2[:, seg_idx2:seg_idx2 + settings.ONE_SEC]),
+                    (spect1[:, seg_idx1:seg_idx1 + seg_size], spect2[:, seg_idx2:seg_idx2 + seg_size]),
                     axis=0)
             yield self.transform(Xb, yb)
 
     def transform(self, Xb, yb):
         return Xb, yb
 
-    @staticmethod
-    def extract_spectrogram(spectrogram):
+    def _extract_spectrogram(self, spectrogram):
         zeros = 0
+        seg_size = self.config.getint('pairwise_kldiv', 'seg_size')
+        spectogram_height = self.config.getint('pairwise_kldiv', 'spectogram_height')
+
         for x in spectrogram[0]:
             if x == 0.0:
                 zeros += 1
             else:
                 zeros = 0
-        while spectrogram.shape[1] - zeros < settings.ONE_SEC:
+        while spectrogram.shape[1] - zeros < seg_size:
             zeros -= 1
-        spect = spectrogram[0:settings.FREQ_ELEMENTS, 0:spectrogram.shape[1] - zeros]
+        spect = spectrogram[0:spectogram_height, 0:spectrogram.shape[1] - zeros]
         return spect
