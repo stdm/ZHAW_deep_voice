@@ -3,10 +3,11 @@ A Speaker contains all needed information and methods to create the pickle file 
 
 Based on previous work of Gerber, Lukic and Vogt, adapted by Heusser
 """
-import pickle
 import random
-
 from math import ceil
+
+import pickle
+import h5py
 import numpy as np
 
 from common.spectogram.speaker_train_splitter import SpeakerTrainSplit
@@ -83,10 +84,17 @@ class Speaker:
             # Split Train and Test Sets not available for VoxCeleb2, as the initial
             # training set is given seperate and these partitions are used to dynamically
             # generate/add new samples
-            #
+            
             # with open(get_speaker_pickle('/mnt/all1/voxceleb2/speaker_pickles/' + self.output_name + '_cluster'), 'wb') as f:
-            with open(get_speaker_pickle(self.output_name + '_cluster'), 'wb') as f:
-                pickle.dump((X, y, speaker_names), f, -1)
+            # with open(get_speaker_pickle(self.output_name + '_cluster'), 'wb') as f:
+            #     pickle.dump((X, y, speaker_names), f, -1)
+            with h5py.File(get_speaker_pickle('/mnt/all1/voxceleb2/speaker_pickles/' + self.output_name + '_cluster', format='.h5'), 'w') as f:
+                f.create_dataset('X', data=X)
+                f.create_dataset('y', data=y)
+                ds = f.create_dataset('speaker_names', (len(speaker_names),), dtype=h5py.special_dtype(vlen=str))
+                ds[:] = speaker_names
+                f.close()
+
             print("Done Extracting Voxceleb2 Initial Dataset")
 
             list_of_speakers = list_of_speakers[self.speakers_per_partition:]
@@ -110,9 +118,15 @@ class Speaker:
                 # generate/add new samples
                 #
                 # with open(get_speaker_pickle('/mnt/all1/voxceleb2/speaker_pickles/' + self.output_name + '_cluster_' + str(i)), 'wb') as f:
-                with open(get_speaker_pickle(self.output_name + '_cluster_' + str(i)), 'wb') as f:
-                    pickle.dump((X, y, speaker_names), f, -1)
-                
+                # with open(get_speaker_pickle(self.output_name + '_cluster_' + str(i)), 'wb') as f:
+                #     pickle.dump((X, y, speaker_names), f, -1)
+                with h5py.File(get_speaker_pickle('/mnt/all1/voxceleb2/speaker_pickles/' + self.output_name + '_cluster_' + str(i), format='.h5'), 'w') as f:
+                    f.create_dataset('X', data=X)
+                    f.create_dataset('y', data=y)
+                    ds = f.create_dataset('speaker_names', (len(speaker_names),), dtype=h5py.special_dtype(vlen=str))
+                    ds[:] = speaker_names
+                    f.close()
+
                 print("Done Extracting Voxceleb2 SpeakerSplit {}".format(i))
 
         else:
@@ -146,8 +160,8 @@ class Speaker:
         valid_speakers: list of all speakers in this dataset
         """
 
-        # speaker_files = self.get_speaker_list_of_files('/mnt/all1/voxceleb2/test/aac', '.wav', valid_speakers)
-        speaker_files = self.get_speaker_list_of_files(get_training("VOXCELEB2"), '.wav', valid_speakers)
+        speaker_files = self.get_speaker_list_of_files('/mnt/all1/voxceleb2/test/aac', '.wav', valid_speakers)
+        # speaker_files = self.get_speaker_list_of_files(get_training("VOXCELEB2"), '.wav', valid_speakers)
         
         # Extract the spectrogram's, speaker numbers and speaker names
         x, y = self.build_array_and_extract_speaker_data(speaker_files)
@@ -224,6 +238,6 @@ class Speaker:
         :return: true if it exists, false otherwise
         """
         if self.split_train_test:
-            return path.exists(get_speaker_pickle(self.output_name + '_train'))
+            return path.exists(get_speaker_pickle('/mnt/all1/voxceleb2/speaker_pickles/' + self.output_name + '_train', format='.h5'))
         else:
-            path.exists(get_speaker_pickle(self.output_name + '_cluster'))
+            path.exists(get_speaker_pickle('/mnt/all1/voxceleb2/speaker_pickles/' + self.output_name + '_cluster', format='.h5'))

@@ -35,4 +35,4 @@ def create_all_speakers():
     #
     yield Speaker(False, 10, "vox2_speakers_10_test", dataset="voxceleb2", max_audio_length=800, speakers_per_partition=3)
     # yield Speaker(False, 5994, "vox2_speakers_5994_dev", dataset="voxceleb2", max_audio_length=800, speakers_per_partition=100)
-    # yield Speaker(False, 120, "vox2_speakers_120_test", dataset="voxceleb2", max_audio_length=800, speakers_per_partition=15)
+    yield Speaker(False, 120, "vox2_speakers_120_test", dataset="voxceleb2", max_audio_length=800, speakers_per_partition=30)
