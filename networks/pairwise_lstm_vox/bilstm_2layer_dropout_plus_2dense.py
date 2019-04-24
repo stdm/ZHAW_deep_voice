@@ -89,7 +89,7 @@ class bilstm_2layer_dropout(object):
         return (X, y, speaker_pickle)
 
     def reader_speaker_data_round(self, activeLearningRound):
-        training_data_round = self.training_data + '.part' + str(activeLearningRound)        
+        training_data_round = self.training_data + '_' + str(activeLearningRound)
         speaker_pickle = get_speaker_pickle(training_data_round)
 
         if not path.exists(speaker_pickle):
