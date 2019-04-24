@@ -9,14 +9,18 @@ from lasagne import layers
 from lasagne import nonlinearities
 
 from .spectrogram_cnn import SpectrogramCnn
-from .. import settings
 
 
 class SpectrogramCnn590(SpectrogramCnn):
+    def __init__(self, net_path, config):
+        super().__init__(net_path)
+        self.config = config
+
     def create_paper(self, shape):
         paper = [
             # input layer
-            (layers.InputLayer, {'shape': (None, shape, settings.FREQ_ELEMENTS, settings.ONE_SEC)}),
+            (layers.InputLayer, {'shape': (None, shape, self.config.getint('luvo', 'spectogram_height'),
+                                           self.config.getint('luvo', 'seg_size'))}),
 
             # convolution layers 1
             (layers.Conv2DLayer, {'num_filters': 32, 'filter_size': (4, 4)}),

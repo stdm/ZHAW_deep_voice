@@ -15,11 +15,11 @@ class LuvoController(NetworkController):
         super().__init__("luvo")
         self.checkpoint = self.name + ".pickle"
         self.logger = get_logger(self.name, logging.INFO)
-        self.cnn = SpectrogramCnn590(get_experiment_nets(self.checkpoint))
+        self.config = load_config(None, join(get_common(), 'config.cfg'))
+        self.cnn = SpectrogramCnn590(get_experiment_nets(self.checkpoint), self.config)
 
     def train_network(self):
-        config = load_config(None, join(get_common(), 'config.cfg'))
-        train_file = get_speaker_pickle(config.get('train', 'pickle'))
+        train_file = get_speaker_pickle(self.config.get('train', 'pickle'))
         self.cnn.create_and_train(train_file)
 
     def get_embeddings(self):
