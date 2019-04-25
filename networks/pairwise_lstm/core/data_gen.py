@@ -8,7 +8,12 @@ from random import randint
 import numpy as np
 
 from common.spectogram.spectrogram_extractor import extract_spectrogram
-from . import settings
+from common.utils.load_config import *
+from common.utils.paths import *
+
+
+config = load_config(None, join(get_common(), 'config.cfg'))
+spectrogram_height = config.getint('pairwise_lstm', 'spectrogram_height')
 
 
 def transform(Xb, yb):
@@ -25,13 +30,13 @@ def shuffle_data(Xb, yb):
 
 # Extracts the Spectorgram and discards all padded Data
 def extract(spectrogram, segment_size):
-    return extract_spectrogram(spectrogram, segment_size, settings.FREQ_ELEMENTS)
+    return extract_spectrogram(spectrogram, segment_size, spectrogram_height)
 
 
 # generates the data for testing the network, with the specified segment_size (timewindow)
 def generate_test_data(X, y, segment_size):
     segments = X.shape[0] * 3 * (800 // segment_size)
-    X_test = np.zeros((segments, 1, settings.FREQ_ELEMENTS, segment_size), dtype=np.float32)
+    X_test = np.zeros((segments, 1, spectrogram_height, segment_size), dtype=np.float32)
     y_test = []
 
     pos = 0
@@ -55,7 +60,7 @@ def batch_generator(X, y, batch_size=100, segment_size=100):
     # build as much batches as fit into the training set
     while 1:
         for i in range((segments + bs - 1) // bs):
-            Xb = np.zeros((bs, 1, settings.FREQ_ELEMENTS, segment_size), dtype=np.float32)
+            Xb = np.zeros((bs, 1, spectrogram_height, segment_size), dtype=np.float32)
             yb = np.zeros(bs, dtype=np.int32)
             # here one batch is generated
             for j in range(0, bs):
@@ -79,7 +84,7 @@ def batch_generator_v2(X, y, batch_size=100, segment_size=100):
     # build as much batches as fit into the training set
     while 1:
         for i in range((segments + bs - 1) // bs):
-            Xb = np.zeros((bs, 1, settings.FREQ_ELEMENTS, segment_size), dtype=np.float32)
+            Xb = np.zeros((bs, 1, spectrogram_height, segment_size), dtype=np.float32)
             yb = np.zeros(bs, dtype=np.int32)
             # here one batch is generated
             for j in range(0, bs):
@@ -100,7 +105,7 @@ def batch_generator_lstm(X, y, batch_size=100, segment_size=15):
     # build as much batches as fit into the training set
     while 1:
         for i in range((segments + bs - 1) // bs):
-            Xb = np.zeros((bs, 1, settings.FREQ_ELEMENTS, segment_size), dtype=np.float32)
+            Xb = np.zeros((bs, 1, spectrogram_height, segment_size), dtype=np.float32)
             yb = np.zeros(bs, dtype=np.int32)
             # here one batch is generated
             for j in range(0, bs):
@@ -110,7 +115,7 @@ def batch_generator_lstm(X, y, batch_size=100, segment_size=15):
                 spect = extract(X[speaker_idx, 0], segment_size)
                 seg_idx = randint(0, spect.shape[1] - segment_size)
                 Xb[j, 0] = spect[:, seg_idx:seg_idx + segment_size]
-            yield Xb.reshape(bs, segment_size, settings.FREQ_ELEMENTS), transformy(yb, bs, speakers)
+            yield Xb.reshape(bs, segment_size, spectrogram_height), transformy(yb, bs, speakers)
 
 
 '''creates the a batch for LSTM networks, with Pairwise Laabels, 
@@ -124,7 +129,7 @@ def batch_generator_lstm_v2(X, y, batch_size=100, segment_size=15):
     # build as much batches as fit into the training set
     while 1:
         for i in range((segments + bs - 1) // bs):
-            Xb = np.zeros((bs, 1, settings.FREQ_ELEMENTS, segment_size), dtype=np.float32)
+            Xb = np.zeros((bs, 1, spectrogram_height, segment_size), dtype=np.float32)
             yb = np.zeros(bs, dtype=np.int32)
             # here one batch is generated
             for j in range(0, bs):
@@ -134,7 +139,7 @@ def batch_generator_lstm_v2(X, y, batch_size=100, segment_size=15):
                 spect = extract(X[speaker_idx, 0], segment_size)
                 seg_idx = randint(0, spect.shape[1] - segment_size)
                 Xb[j, 0] = spect[:, seg_idx:seg_idx + segment_size]
-            yield Xb.reshape(bs, segment_size, settings.FREQ_ELEMENTS), create_pairs(yb)
+            yield Xb.reshape(bs, segment_size, spectrogram_height), create_pairs(yb)
 
 
 def transformy(y, batch_size, nb_classes):
@@ -168,7 +173,7 @@ def create_pairs(l):
 def createData(X, y, samples, segment_size=15):
     segments = X.shape[0]
     idx = 0
-    Xb = np.zeros((segments * samples, 1, settings.FREQ_ELEMENTS, segment_size), dtype=np.float32)
+    Xb = np.zeros((segments * samples, 1, spectrogram_height, segment_size), dtype=np.float32)
     yb = np.zeros(segments * samples, dtype=np.int32)
     for i in range(segments):
         # here one batch is generated
