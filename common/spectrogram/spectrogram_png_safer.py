@@ -1,7 +1,7 @@
 import numpy as np
 from matplotlib import pyplot as plot
 
-from common.spectogram.spectrogram_converter import mel_spectrogram
+from common.spectrogram.spectrogram_converter import mel_spectrogram
 from common.utils.paths import *
 
 

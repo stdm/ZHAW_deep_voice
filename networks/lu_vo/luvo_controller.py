@@ -5,7 +5,7 @@ The controller to train and test the luvo network
 from common.network_controller import NetworkController
 from common.utils.logger import *
 from common.utils.paths import *
-from common.spectogram.speaker_dev_selector import load_test_data, load_dev_test_data
+from common.spectrogram.speaker_dev_selector import load_test_data, load_dev_test_data
 from .network_training.spectrogram_cnn_590 import SpectrogramCnn590
 from common.utils.load_config import *
 

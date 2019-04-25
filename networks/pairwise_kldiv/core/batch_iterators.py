@@ -11,7 +11,7 @@ from random import randint
 
 import numpy as np
 
-from common.spectogram.spectrogram_extractor import extract_spectrogram
+from common.spectrogram.spectrogram_extractor import extract_spectrogram
 
 
 class BatchIterator(object):
@@ -33,9 +33,9 @@ class SpectTrainBatchIterator(BatchIterator):
     def iterate(self, inputs, targets):
         assert len(inputs) == len(targets)
         seg_size = self.config.getint('pairwise_kldiv', 'seg_size')
-        spectogram_height = self.config.getint('pairwise_kldiv', 'spectogram_height')
+        spectrogram_height = self.config.getint('pairwise_kldiv', 'spectrogram_height')
         for i in range(0, self.batches_per_epoch):
-            Xb = np.zeros((self.batchsize, 1, spectogram_height, seg_size), dtype=np.float32)
+            Xb = np.zeros((self.batchsize, 1, spectrogram_height, seg_size), dtype=np.float32)
             yb = np.zeros(self.batchsize, dtype=np.int32)
 
             # here one batch is generated
@@ -45,7 +45,7 @@ class SpectTrainBatchIterator(BatchIterator):
                     speaker_idx_offset = speaker_idx + speaker_offset
                     if speaker_idx_offset >= len(inputs):
                         speaker_idx_offset = speaker_idx - speaker_offset
-                    spect = extract_spectrogram(inputs[speaker_idx, 0], seg_size, spectogram_height)
+                    spect = extract_spectrogram(inputs[speaker_idx, 0], seg_size, spectrogram_height)
                     self.extract_segments(Xb, yb, targets, j + speaker_offset * 2, speaker_idx_offset, spect,
                                           self.segments_per_sentence)
             yield Xb, yb
@@ -67,11 +67,11 @@ class SpectValidBatchIterator(BatchIterator):
     def iterate(self, inputs, targets):
         assert len(inputs) == len(targets)
         seg_size = self.config.getint('pairwise_kldiv', 'seg_size')
-        spectogram_height = self.config.getint('pairwise_kldiv', 'spectogram_height')
+        spectrogram_height = self.config.getint('pairwise_kldiv', 'spectrogram_height')
 
         seg_count = 0
         for input in inputs:
-            seg_count += extract_spectrogram(input[0], seg_size, spectogram_height).shape[
+            seg_count += extract_spectrogram(input[0], seg_size, spectrogram_height).shape[
                              1] / seg_size + 1  # todo: make the segments overlapping by half a second
 
         speaker_idx = 0
@@ -80,10 +80,10 @@ class SpectValidBatchIterator(BatchIterator):
         if seg_count < self.batchsize:
             iterations = seg_count
         for start_idx in range(0, iterations, self.batchsize):
-            Xb = np.zeros((self.batchsize, 1, spectogram_height, seg_size), dtype=np.float32)
+            Xb = np.zeros((self.batchsize, 1, spectrogram_height, seg_size), dtype=np.float32)
             yb = []
 
-            spect = extract_spectrogram(inputs[speaker_idx, 0], seg_size, spectogram_height)
+            spect = extract_spectrogram(inputs[speaker_idx, 0], seg_size, spectrogram_height)
             for batch_pos in range(0, self.batchsize):
                 if targets is not None:
                     yb.append(targets[speaker_idx])
@@ -96,7 +96,7 @@ class SpectValidBatchIterator(BatchIterator):
                 segment_pos += 1
                 if segment_pos == spect.shape[1] / seg_size + 1 and speaker_idx + 1 < len(inputs):
                     speaker_idx += 1
-                    spect = extract_spectrogram(inputs[speaker_idx, 0], seg_size, spectogram_height)
+                    spect = extract_spectrogram(inputs[speaker_idx, 0], seg_size, spectrogram_height)
                     segment_pos = 0
                 elif segment_pos == spect.shape[1] / seg_size + 1 and speaker_idx + 1 == len(inputs):
                     break

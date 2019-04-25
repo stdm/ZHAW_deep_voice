@@ -7,8 +7,8 @@ import pickle
 
 import numpy as np
 
-from common.spectogram.speaker_train_splitter import SpeakerTrainSplit
-from common.spectogram.spectrogram_extractor import SpectrogramExtractor
+from common.spectrogram.speaker_train_splitter import SpeakerTrainSplit
+from common.spectrogram.spectrogram_extractor import SpectrogramExtractor
 from common.utils.paths import *
 
 

@@ -104,7 +104,7 @@ class SpectrogramCnn:
 
     def _generate_cluster_data(self, X, y):
         seg_size = self.config.getint('luvo', 'seg_size')
-        spectrogram_height = self.config.getint('luvo', 'spectogram_height')
+        spectrogram_height = self.config.getint('luvo', 'spectrogram_height')
         X_cluster = np.zeros((10000, 1, spectrogram_height, seg_size), dtype=np.float32)
         y_cluster = []
 
@@ -127,7 +127,7 @@ class SpectrogramCnn:
                 zeros += 1
             else:
                 zeros = 0
-        return spectrogram[0:self.config.getint('luvo', 'spectogram_height'), 0:spectrogram.shape[1] - zeros]
+        return spectrogram[0:self.config.getint('luvo', 'spectrogram_height'), 0:spectrogram.shape[1] - zeros]
 
 '''
 def prepare_predict(net):

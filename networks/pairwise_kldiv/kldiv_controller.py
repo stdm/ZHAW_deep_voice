@@ -11,16 +11,16 @@ from .analysis.run_analysis_network import run_analysis_network
 from .network_training.clustering_network import create_and_train
 from .network_training.network_factory import *
 from common.utils.load_config import *
-from common.spectogram.speaker_dev_selector import load_test_data, load_dev_test_data
+from common.spectrogram.speaker_dev_selector import load_test_data, load_dev_test_data
 
 
 class KLDivController(NetworkController):
     def __init__(self):
         super().__init__("pairwise_kldiv")
         self.checkpoints = ["pairwise_kldiv_100.pickle"]
+        self.config = load_config(None, join(get_common(), 'config.cfg'))
 
     def train_network(self):
-        config = load_config(None, join(get_common(), 'config.cfg'))
         net_file = get_experiment_nets(self.checkpoints[0])
         train_file = get_speaker_pickle(config.get('train', 'pickle'),)
 
@@ -59,7 +59,8 @@ class KLDivController(NetworkController):
             set_of_num_embeddings.append(num_embeddings)
 
             # Calculate the time per utterance
-            time = TimeCalculator.calc_time_long_short_utterances(y_train, y_test, settings.ONE_SEC)
+            time = TimeCalculator.calc_time_long_short_utterances(y_train, y_test,
+                                                                  config.getint('pairwise_kldiv', 'seg_size'))
             set_of_total_times.append(time)
 
         return checkpoints, set_of_embeddings, set_of_speakers, set_of_num_embeddings, set_of_total_times

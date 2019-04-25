@@ -19,7 +19,7 @@ class SpectrogramCnn590(SpectrogramCnn):
     def create_paper(self, shape):
         paper = [
             # input layer
-            (layers.InputLayer, {'shape': (None, shape, self.config.getint('luvo', 'spectogram_height'),
+            (layers.InputLayer, {'shape': (None, shape, self.config.getint('luvo', 'spectrogram_height'),
                                            self.config.getint('luvo', 'seg_size'))}),
 
             # convolution layers 1

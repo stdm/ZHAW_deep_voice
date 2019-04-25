@@ -15,7 +15,7 @@ from .bilstm_2layer_dropout_plus_2dense import bilstm_2layer_dropout
 from .core.data_gen import generate_test_data
 from .core.pairwise_kl_divergence import pairwise_kl_divergence
 from common.utils.load_config import *
-from common.spectogram.speaker_dev_selector import load_test_data, load_dev_test_data
+from common.spectrogram.speaker_dev_selector import load_test_data, load_dev_test_data
 
 class LSTMController(NetworkController):
     def __init__(self):

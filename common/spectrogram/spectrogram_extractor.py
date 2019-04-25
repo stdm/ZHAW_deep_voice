@@ -6,7 +6,7 @@ Based on previous work of Gerber, Lukic and Vogt.
 """
 import os
 
-import common.spectogram.spectrogram_converter as spectrogram_converter
+import common.spectrogram.spectrogram_converter as spectrogram_converter
 
 
 class SpectrogramExtractor:

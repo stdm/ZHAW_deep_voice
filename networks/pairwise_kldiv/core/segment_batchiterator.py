@@ -18,10 +18,10 @@ class SegmentBatchIterator(BatchIterator):
     def __iter__(self):
         bs = self.batch_size
         seg_size = self.config.getint('pairwise_kldiv', 'seg_size')
-        spectogram_height = self.config.getint('pairwise_kldiv', 'spectogram_height')
+        spectrogram_height = self.config.getint('pairwise_kldiv', 'spectrogram_height')
         # build as much batches as fit into the training set
         for i in range((self.n_samples + bs - 1) // bs):
-            Xb = np.zeros((bs, 1, spectogram_height, seg_size), dtype=np.float32)
+            Xb = np.zeros((bs, 1, spectrogram_height, seg_size), dtype=np.float32)
             yb = np.zeros(bs, dtype=np.int32)
             # here one batch is generated
             for j in range(0, bs):
@@ -39,7 +39,7 @@ class SegmentBatchIterator(BatchIterator):
     def _extract_spectrogram(self, spectrogram):
         zeros = 0
         seg_size = self.config.getint('pairwise_kldiv', 'seg_size')
-        spectogram_height = self.config.getint('pairwise_kldiv', 'spectogram_height')
+        spectrogram_height = self.config.getint('pairwise_kldiv', 'spectrogram_height')
         for x in spectrogram[0]:
             if x == 0.0:
                 zeros += 1
@@ -47,7 +47,7 @@ class SegmentBatchIterator(BatchIterator):
                 zeros = 0
         while spectrogram.shape[1] - zeros < seg_size:
             zeros -= 1
-        spect = spectrogram[0:spectogram_height, 0:spectrogram.shape[1] - zeros]
+        spect = spectrogram[0:spectrogram_height, 0:spectrogram.shape[1] - zeros]
         return spect
 
 
@@ -60,10 +60,10 @@ class DoubleSegmentBatchIterator(BatchIterator):
     def __iter__(self):
         bs = self.batch_size
         seg_size = self.config.getint('pairwise_kldiv', 'seg_size')
-        spectogram_height = self.config.getint('pairwise_kldiv', 'spectogram_height')
+        spectrogram_height = self.config.getint('pairwise_kldiv', 'spectrogram_height')
 
         for i in range(self.minibatches_per_epoch):
-            Xb = np.zeros((bs, 1, spectogram_height * 2, seg_size), dtype=np.float32)
+            Xb = np.zeros((bs, 1, spectrogram_height * 2, seg_size), dtype=np.float32)
             yb = np.zeros(bs, dtype=np.int32)
             # here one batch is generated
             for j in range(0, bs):
@@ -93,7 +93,7 @@ class DoubleSegmentBatchIterator(BatchIterator):
     def _extract_spectrogram(self, spectrogram):
         zeros = 0
         seg_size = self.config.getint('pairwise_kldiv', 'seg_size')
-        spectogram_height = self.config.getint('pairwise_kldiv', 'spectogram_height')
+        spectrogram_height = self.config.getint('pairwise_kldiv', 'spectrogram_height')
 
         for x in spectrogram[0]:
             if x == 0.0:
@@ -102,5 +102,5 @@ class DoubleSegmentBatchIterator(BatchIterator):
                 zeros = 0
         while spectrogram.shape[1] - zeros < seg_size:
             zeros -= 1
-        spect = spectrogram[0:spectogram_height, 0:spectrogram.shape[1] - zeros]
+        spect = spectrogram[0:spectrogram_height, 0:spectrogram.shape[1] - zeros]
         return spect

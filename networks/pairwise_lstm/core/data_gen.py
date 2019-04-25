@@ -7,7 +7,7 @@ from random import randint
 
 import numpy as np
 
-from common.spectogram.spectrogram_extractor import extract_spectrogram
+from common.spectrogram.spectrogram_extractor import extract_spectrogram
 from common.utils.load_config import *
 from common.utils.paths import *
 

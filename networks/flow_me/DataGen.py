@@ -7,7 +7,7 @@ from random import randint
 
 from tensorflow.examples.tutorials.mnist import input_data
 
-from common.spectogram.spectrogram_extractor import extract_spectrogram
+from common.spectrogram.spectrogram_extractor import extract_spectrogram
 from common.utils.debug import *
 from common.utils.paths import *
 

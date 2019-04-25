@@ -3,7 +3,7 @@ import pickle
 import numpy as np
 
 
-import common.spectogram.speaker_train_splitter as sts
+import common.spectrogram.speaker_train_splitter as sts
 from .core import plot_saver as ps
 
 np.random.seed(1337)  # for reproducibility

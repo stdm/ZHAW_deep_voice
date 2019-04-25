@@ -12,7 +12,7 @@ from common.utils.paths import *
 
 config = load_config(None, join(get_common(), 'config.cfg'))
 seg_size = config.getint('pairwise_kldiv', 'seg_size')
-spectogram_height = config.getint('pairwise_kldiv', 'spectogram_height')
+spectrogram_height = config.getint('pairwise_kldiv', 'spectrogram_height')
 
 
 def create_network_10_speakers(input_var):
@@ -29,7 +29,7 @@ def create_network_590_speakers(input_var):
 
 def create_network_n_speakers(input_var, n):
     # input layer
-    network = lasagne.layers.InputLayer(shape=(None, 1, spectogram_height, seg_size), input_var=input_var)
+    network = lasagne.layers.InputLayer(shape=(None, 1, spectrogram_height, seg_size), input_var=input_var)
 
     # convolution layers 1
     network = lasagne.layers.Conv2DLayer(network, num_filters=32, filter_size=(4, 4),
@@ -94,7 +94,7 @@ def create_network_clustering_segment_embedding(input_var, input_size=100, max_s
 
 
 def create_identification_network(num_speakers):
-    network = lasagne.layers.InputLayer(shape=(None, 1, spectogram_height, seg_size))
+    network = lasagne.layers.InputLayer(shape=(None, 1, spectrogram_height, seg_size))
 
     # convolution layers 1
     network = lasagne.layers.Conv2DLayer(network, num_filters=32, filter_size=(4, 4))

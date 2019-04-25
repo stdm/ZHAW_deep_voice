@@ -88,5 +88,5 @@ if __name__ == "__main__":
     run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
     run_metadata = tf.RunMetadata()
     print('running stuff')
-    res = sess.run(result, feed_dict={targets: y, predictions: X})
-    print(res)
+    #res = sess.run(result, feed_dict={targets: y, predictions: X})
+    #print(res)

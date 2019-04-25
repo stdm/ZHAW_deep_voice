@@ -17,8 +17,8 @@ import numpy as np
 import theano
 import theano.tensor as T
 
-import common.spectogram.speaker_train_splitter as sts
-from common.spectogram.spectrogram_extractor import extract_spectrogram
+import common.spectrogram.speaker_train_splitter as sts
+from common.spectrogram.spectrogram_extractor import extract_spectrogram
 from common.utils import pickler
 from common.utils.paths import *
 from common.utils.load_config import *
@@ -26,7 +26,7 @@ from . import network_factory as nf
 from .objectives_clustering import create_loss_functions_kl_div
 from ..core import analytics
 from ..core.batch_iterators import SpectTrainBatchIterator, SpectValidBatchIterator
-from common.spectogram.speaker_dev_selector import get_sentences_for_speaker_index
+from common.spectrogram.speaker_dev_selector import get_sentences_for_speaker_index
 
 config = load_config(None, join(get_common(), 'config.cfg'))
 
@@ -156,8 +156,8 @@ def generate_output(X, y, speaker_names, network_params_file_in=None, output_fil
 
 def generate_cluster_data(X, y, overlapping=False):
     seg_size = config.getint('pairwise_kldiv', 'seg_size')
-    spectogram_height = config.getint('pairwise_kldiv', 'spectogram_height')
-    X_cluster = np.zeros((10000, 1, spectogram_height, seg_size), dtype=np.float32)
+    spectrogram_height = config.getint('pairwise_kldiv', 'spectrogram_height')
+    X_cluster = np.zeros((10000, 1, spectrogram_height, seg_size), dtype=np.float32)
     y_cluster = []
 
     step = seg_size
@@ -165,7 +165,7 @@ def generate_cluster_data(X, y, overlapping=False):
         step = seg_size / 2
     pos = 0
     for i in range(len(X)):
-        spect = extract_spectrogram(X[i, 0], seg_size, spectogram_height)
+        spect = extract_spectrogram(X[i, 0], seg_size, spectrogram_height)
 
         for j in range(int(spect.shape[1] / step)):
             y_cluster.append(y[i])
