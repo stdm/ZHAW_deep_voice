@@ -103,18 +103,19 @@ class SpectrogramCnn:
         return net
 
     def _generate_cluster_data(self, X, y):
-        X_cluster = np.zeros((10000, 1, self.config.getint('luvo', 'spectogram_height'),
-                              self.config.getint('luvo', 'seg_size')), dtype=np.float32)
+        seg_size = self.config.getint('luvo', 'seg_size')
+        spectrogram_height = self.config.getint('luvo', 'spectogram_height')
+        X_cluster = np.zeros((10000, 1, spectrogram_height, seg_size), dtype=np.float32)
         y_cluster = []
 
         pos = 0
         for i in range(len(X)):
             spectrogram = self._crop_spectrogram(X[i, 0])
 
-            for j in range(int(spectrogram.shape[1] / self.config.getint('luvo', 'seg_size'))):
+            for j in range(int(spectrogram.shape[1] / seg_size)):
                 y_cluster.append(y[i])
-                seg_idx = j * self.config.getint('luvo', 'seg_size')
-                X_cluster[pos, 0] = spectrogram[:, seg_idx:seg_idx + self.config.getint('luvo', 'seg_size')]
+                seg_idx = j * seg_size
+                X_cluster[pos, 0] = spectrogram[:, seg_idx:seg_idx + seg_size]
                 pos += 1
 
         return X_cluster[0:len(y_cluster)], np.asarray(y_cluster, dtype=np.int32)
