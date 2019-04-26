@@ -7,7 +7,6 @@ import os
 import os.path as path
 
 import common.path_helper as common_helper
-import networks.path_helper as networks_helper
 
 
 def join(base, *args):
@@ -112,3 +111,7 @@ def list_all_files(directory, file_regex):
         if re.match(file_regex, file):
             files.append(file)
     return files
+
+def get_ivec_feature_path(list):
+    return get_training('i_vector', list)
+

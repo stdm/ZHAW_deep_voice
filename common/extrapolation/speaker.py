@@ -4,12 +4,13 @@ A Speaker contains all needed information and methods to create the pickle file 
 Based on previous work of Gerber, Lukic and Vogt, adapted by Heusser
 """
 import pickle
-
 import numpy as np
 
 from common.spectrogram.speaker_train_splitter import SpeakerTrainSplit
 from common.spectrogram.spectrogram_extractor import SpectrogramExtractor
+from common.spectogram.Ivec_feature_extractor import IvecFeatureExtractor
 from common.utils.paths import *
+
 
 
 class Speaker:
@@ -112,3 +113,25 @@ class Speaker:
             return path.exists(get_speaker_pickle(self.output_name + '_train'))
         else:
             return path.exists(get_speaker_pickle(self.output_name + '_cluster'))
+
+    def safe_to_hdf(self):
+        print("Extracting speakers in {} to h5 files".format(self.speaker_list))
+
+        valid_speakers = []
+        with open(get_speaker_list(self.speaker_list), 'rb') as f:
+            for line in f:
+                # Added bytes.decode() because python 2.x ignored leading b' while python 3.x doesn't
+                valid_speakers.append(bytes.decode(line.rstrip()))
+
+        extractor = IvecFeatureExtractor(self.max_speakers, get_training("TIMIT"), valid_speakers, self.speaker_list)
+        extractor.extract_speaker_data()
+
+    def is_safed_to_hdf(self):
+        with open(get_speaker_list(self.speaker_list), 'rb') as f:
+
+            if not os.path.exists(get_ivec_feature_path(self.speaker_list)):
+                return False
+
+            return True
+
+

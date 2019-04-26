@@ -14,6 +14,8 @@ def setup_suite():
     for speaker in create_all_speakers():
         if not speaker.is_pickle_saved():
             threading.Thread(target=speaker.safe_to_pickle).start()
+        if not speaker.is_safed_to_hdf():
+            threading.Thread(target=speaker.safe_to_hdf()).start()
 
 
 def is_suite_setup():
@@ -24,5 +26,8 @@ def is_suite_setup():
     for speaker in create_all_speakers():
         if not speaker.is_pickle_saved():
             return False
+        if not speaker.is_safed_to_hdf():
+            return False
+
 
     return True

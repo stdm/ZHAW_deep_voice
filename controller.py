@@ -34,6 +34,7 @@ from networks.flow_me.me_controller import MEController
 from networks.lu_vo.luvo_controller import LuvoController
 from networks.pairwise_kldiv.kldiv_controller import KLDivController
 from networks.pairwise_lstm.lstm_controller import LSTMController
+from networks.i_vector.ivec_controller import IVECController
 
 
 class Controller:
@@ -89,6 +90,7 @@ class Controller:
             'pairwise_kldiv': [KLDivController(self.config)],
             #'flow_me': [MEController(self.clear, self.debug, False)],
             'luvo': [LuvoController(self.config)],
+            'ivector': [IVECController(self.config)],
             'all': [LSTMController(self.config), KLDivController(self.config), LuvoController(self.config)]
         }
 
