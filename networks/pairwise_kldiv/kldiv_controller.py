@@ -6,19 +6,16 @@ from common.clustering.generate_embeddings import generate_embeddings
 from common.network_controller import NetworkController
 from common.utils import TimeCalculator
 from common.utils.logger import *
-from common.utils.paths import *
 from .analysis.run_analysis_network import run_analysis_network
 from .network_training.clustering_network import create_and_train
 from .network_training.network_factory import *
-from common.utils.load_config import *
-from common.spectrogram.speaker_dev_selector import load_test_data, load_dev_test_data
+from common.spectrogram.speaker_dev_selector import load_test_data
 
 
 class KLDivController(NetworkController):
-    def __init__(self):
-        super().__init__("pairwise_kldiv")
+    def __init__(self, config):
+        super().__init__("pairwise_kldiv", config)
         self.checkpoints = ["pairwise_kldiv_100.pickle"]
-        self.config = load_config(None, join(get_common(), 'config.cfg'))
 
     def train_network(self):
         net_file = get_experiment_nets(self.checkpoints[0])

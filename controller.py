@@ -25,7 +25,6 @@ matplotlib.use('Agg')
 
 from common.analysis.analysis import *
 from common.extrapolation.setup import setup_suite, is_suite_setup
-from common.network_controller import NetworkController
 from common.utils.paths import *
 from common.utils.load_config import *
 
@@ -37,25 +36,18 @@ from networks.pairwise_kldiv.kldiv_controller import KLDivController
 from networks.pairwise_lstm.lstm_controller import LSTMController
 
 
-class Controller(NetworkController):
-    def __init__(self, 
-                 setup, network, train, test,
-                 clear, debug, plot, best,
-                 val_data, dev_val_data, dev_mode):
-
-        super().__init__("Front")
-        self.setup = setup
-        self.network = network
-        self.train = train
-        self.test = test
-        self.clear = clear
-        self.debug = debug
+class Controller:
+    def __init__(self, config):
+        self.setup = config.getboolean('common', 'setup')
+        self.network = config.get('common', 'network')
+        self.train = config.getboolean('common', 'train')
+        self.test = config.getboolean('common', 'test')
+        self.clear = config.getboolean('common', 'clear')
+        self.debug = config.getboolean('common', 'debug')
         self.network_controllers = []
-        self.plot = plot
-        self.best = best
-        self.val_data = val_data
-        self.dev_val_data = dev_val_data
-        self.dev_mode = dev_mode
+        self.plot = config.getboolean('common', 'plot')
+        self.best = config.getboolean('common', 'best')
+        self.config = config
 
 
     def train_network(self):
@@ -93,20 +85,15 @@ class Controller(NetworkController):
     def generate_controllers(self):
 
         controller_dict = {
-            'pairwise_lstm': [LSTMController()],
-            'pairwise_kldiv': [KLDivController()],
-            'flow_me': [MEController(self.clear, self.debug, False)],
-            'luvo': [LuvoController()],
-            'all': [LSTMController(), KLDivController(), MEController(self.clear, self.debug, False), LuvoController()]
+            'pairwise_lstm': [LSTMController(self.config)],
+            'pairwise_kldiv': [KLDivController(self.config)],
+            #'flow_me': [MEController(self.clear, self.debug, False)],
+            'luvo': [LuvoController(self.config)],
+            'all': [LSTMController(self.config), KLDivController(self.config), LuvoController(self.config)]
         }
 
         try:
             self.network_controllers = controller_dict[self.network]
-            for net in self.network_controllers:
-                net.val_data = self.val_data
-                net.dev_val_data = self.dev_val_data
-                net.dev_mode = self.dev_mode
-
         except KeyError:
             print("Network " + self.network + " is not known:")
             print("Valid Names: ", join([k for k in controller_dict.keys()]))
@@ -120,9 +107,9 @@ class Controller(NetworkController):
             setup_suite()
 
     def plot_results(self):
-        plot_files(self.network, self.get_result_files())
+        plot_files(self.network, self._get_result_files())
 
-    def get_result_files(self):
+    def _get_result_files(self):
         if self.network == "all":
             regex = '^.*best\.pickle'
         elif self.best:
@@ -137,12 +124,6 @@ class Controller(NetworkController):
         return files
 
 if __name__ == '__main__':
-
     config = load_config(None, join(get_common(), 'config.cfg'))
-
-    controller = Controller(config.getboolean('common', 'setup'), config.get('common', 'network'),
-                            config.getboolean('common', 'train'), config.getboolean('common', 'test'), config.getboolean('common', 'clear'),
-                            config.getboolean('common', 'debug'), config.getboolean('common', 'plot'), config.getboolean('common', 'best'),
-                            config.get('validation', 'test_pickle'), config.get('validation', 'dev_pickle'),
-                            config.getboolean('validation', 'dev_mode'))
+    controller = Controller(config)
     controller.run()

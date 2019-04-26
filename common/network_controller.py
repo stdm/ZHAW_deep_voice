@@ -13,11 +13,12 @@ from common.utils.paths import get_speaker_pickle
 class NetworkController:
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, name):
-        self.val_data = "speakers_40_clustering_vs_reynolds"
-        self.dev_val_data = 'speakers_80_stratified_dev'
+    def __init__(self, name, config):
+        self.val_data = config.get('validation', 'test_pickle')
+        self.dev_val_data = config.get('validation', 'dev_pickle')
         self.name = name
-        self.dev_mode = True
+        self.dev_mode = config.getboolean('validation', 'dev_mode')
+        self.config = config
 
     def get_validation_train_data(self):
         if self.dev_mode:
