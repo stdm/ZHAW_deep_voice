@@ -32,6 +32,13 @@ class NetworkController:
         else:
             return get_speaker_pickle(self.val_data + "_test")
 
+    def get_validation_data_name(self):
+        if self.dev_mode:
+            return get_speaker_pickle(self.dev_val_data)
+        else:
+            return get_speaker_pickle(self.val_data)
+
+
     @abc.abstractmethod
     def train_network(self):
         """

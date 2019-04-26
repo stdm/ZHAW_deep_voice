@@ -13,12 +13,13 @@ class IvecFeatureExtractor:
     def extract_speaker_data(self):
 
         speaker_names = []
-        global_idx = 0
+        file_names = []
+        speaker_ids = []
         curr_speaker_num = -1
         old_speaker = ''
 
         fe = sidekit.FeaturesExtractor(audio_filename_structure="{}.wav",
-                               feature_filename_structure="common/data/training/i_vector/"+self.speaker_list+"/{}.h5",
+                               feature_filename_structure="common/data/training/i_vector/"+self.speaker_list+"/feat/{}.h5",
                                sampling_frequency=None,
                                lower_frequency=200,
                                higher_frequency=3800,
@@ -55,7 +56,20 @@ class IvecFeatureExtractor:
                     speaker_names.append(speaker)
                     print('Extraction progress: %d/%d' % (curr_speaker_num + 1, self.max_speakers))
 
-                if curr_speaker_num < self.max_speakers:
-                    fe.save(show=root + '/' + os.path.splitext(filename)[0], channel=0, input_audio_filename=None,
-                            output_feature_filename=get_ivec_feature_path(self.speaker_list, speaker) + "/"+os.path.splitext(filename)[0]+".h5", noise_file_name=None, snr=10, reverb_file_name=None,
+                if curr_speaker_num < self.max_speakers: #get_ivec_feature_path(self.speaker_list) + "/feat/"+ speaker + '_' + os.path.splitext(filename)[0]+".h5"
+                    fe.save(show=speaker + '_' + os.path.splitext(filename)[0], channel=0, input_audio_filename=root + '/' + os.path.splitext(filename)[0]+'.wav',
+                            output_feature_filename=None, noise_file_name=None, snr=10, reverb_file_name=None,
                             reverb_level=-26.0)
+                    file_names.append(speaker + '_' + os.path.splitext(filename)[0])
+                    speaker_ids.append(str(curr_speaker_num))
+
+        with open(join(get_training('i_vector', self.speaker_list), self.speaker_list +"_files.txt"), "w+") as fh:
+            for line in file_names:
+                fh.write(line)
+                fh.write('\n')
+
+        with open(join(get_training('i_vector', self.speaker_list), self.speaker_list +"_ids.txt"), "w+") as fh:
+            for line in speaker_ids:
+                fh.write(line)
+                fh.write('\n')
+

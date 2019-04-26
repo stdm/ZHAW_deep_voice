@@ -99,7 +99,7 @@ class Controller(NetworkController):
             'pairwise_kldiv': [KLDivController()],
             'flow_me': [MEController(self.clear, self.debug, False)],
             'luvo': [LuvoController()],
-            'ivector': [IVECController],
+            'ivector': [IVECController()],
             'all': [LSTMController(), KLDivController(), MEController(self.clear, self.debug, False), LuvoController()]
         }
 

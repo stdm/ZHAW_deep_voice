@@ -112,6 +112,6 @@ def list_all_files(directory, file_regex):
             files.append(file)
     return files
 
-def get_ivec_feature_path(list, speaker):
-    return get_training('i_vector', list, speaker)
+def get_ivec_feature_path(list):
+    return get_training('i_vector', list)
 

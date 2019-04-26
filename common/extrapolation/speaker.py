@@ -128,9 +128,9 @@ class Speaker:
 
     def is_safed_to_hdf(self):
         with open(get_speaker_list(self.speaker_list), 'rb') as f:
-            for line in f:
-                if not os.path.exists(get_ivec_feature_path(self.speaker_list, bytes.decode(line.rstrip()))):
-                    return False
+
+            if not os.path.exists(get_ivec_feature_path(self.speaker_list)):
+                return False
 
             return True
 
