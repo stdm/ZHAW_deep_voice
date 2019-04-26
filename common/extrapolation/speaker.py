@@ -8,7 +8,7 @@ import numpy as np
 
 from common.spectrogram.speaker_train_splitter import SpeakerTrainSplit
 from common.spectrogram.spectrogram_extractor import SpectrogramExtractor
-from common.spectogram.Ivec_feature_extractor import IvecFeatureExtractor
+from common.spectrogram.Ivec_feature_extractor import IvecFeatureExtractor
 from common.utils.paths import *
 
 
