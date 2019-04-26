@@ -7,6 +7,7 @@ import os
 import os.path as path
 
 import common.path_helper as common_helper
+import networks.path_helper as networks_helper
 
 
 def join(base, *args):
