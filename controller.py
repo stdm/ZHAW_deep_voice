@@ -41,7 +41,7 @@ class Controller(NetworkController):
     def __init__(self, 
                  setup, network, train, test,
                  clear, debug, plot, best,
-                 val_data, dev_val_data, val_data_size, dev_mode):
+                 val_data, dev_val_data, dev_mode):
 
         super().__init__("Front")
         self.setup = setup
@@ -55,7 +55,6 @@ class Controller(NetworkController):
         self.best = best
         self.val_data = val_data
         self.dev_val_data = dev_val_data
-        self.val_data_size = val_data_size
         self.dev_mode = dev_mode
 
 
@@ -107,7 +106,6 @@ class Controller(NetworkController):
                 net.val_data = self.val_data
                 net.dev_val_data = self.dev_val_data
                 net.dev_mode = self.dev_mode
-                net.val_data_size = self.val_data_size
 
         except KeyError:
             print("Network " + self.network + " is not known:")
@@ -146,5 +144,5 @@ if __name__ == '__main__':
                             config.getboolean('common', 'train'), config.getboolean('common', 'test'), config.getboolean('common', 'clear'),
                             config.getboolean('common', 'debug'), config.getboolean('common', 'plot'), config.getboolean('common', 'best'),
                             config.get('validation', 'test_pickle'), config.get('validation', 'dev_pickle'),
-                            config.getint('validation', 'dev_total_speakers'), config.getboolean('validation', 'dev_mode'))
+                            config.getboolean('validation', 'dev_mode'))
     controller.run()

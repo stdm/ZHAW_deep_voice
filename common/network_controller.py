@@ -16,7 +16,6 @@ class NetworkController:
     def __init__(self, name):
         self.val_data = "speakers_40_clustering_vs_reynolds"
         self.dev_val_data = 'speakers_80_stratified_dev'
-        self.val_data_size = 40
         self.name = name
         self.dev_mode = True
 
