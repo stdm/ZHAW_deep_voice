@@ -12,10 +12,6 @@ from .spectrogram_cnn import SpectrogramCnn
 
 
 class SpectrogramCnn590(SpectrogramCnn):
-    def __init__(self, net_path, config):
-        super().__init__(net_path)
-        self.config = config
-
     def create_paper(self, shape):
         paper = [
             # input layer

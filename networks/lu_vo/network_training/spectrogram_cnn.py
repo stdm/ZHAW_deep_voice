@@ -18,7 +18,6 @@ from common.clustering.generate_embeddings import generate_embeddings
 from common.utils.logger import *
 from common.utils.pickler import load, save
 from networks.lu_vo.network_training.segment_batchiterator import SegmentBatchIterator
-from common.utils.load_config import *
 from common.utils.paths import *
 from common.utils import TimeCalculator
 
@@ -26,11 +25,11 @@ from common.utils import TimeCalculator
 class SpectrogramCnn:
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, net_path):
+    def __init__(self, net_path, config):
         super().__init__()
         self.logger = get_logger("luvo", logging.INFO)
         self.net_path = net_path
-        self.config = load_config(None, join(get_common(), 'config.cfg'))
+        self.config = config
 
     @abc.abstractmethod
     def create_paper(self, shape):
