@@ -120,7 +120,7 @@ class bilstm_2layer_dropout(object):
     def create_round_specific_callbacks(self, global_callbacks, al_round):
         net_checkpoint = keras.callbacks.ModelCheckpoint(
             get_experiment_nets(self.network_name + "_" + str(al_round) + "_{epoch:05d}.h5"), 
-            period=self.epochs
+            period=self.epochs_per_round
         )
 
         return global_callbacks + [net_checkpoint]
@@ -156,9 +156,6 @@ class bilstm_2layer_dropout(object):
             pickle_safe=False,
             verbose=2
         )
-
-        print("saving model")
-        model.save(get_experiment_nets(self.network_name + ".h5"))
 
     def run_network(self):
         # base keras network
@@ -205,6 +202,9 @@ class bilstm_2layer_dropout(object):
             X_v_shapes.append(X_v.shape[0])
 
             ps.save_alr_shape_x_plot(self.network_name, [ X_t_shapes, X_v_shapes ])
+
+        print("saving model")
+        model.save(get_experiment_nets(self.network_name + ".h5"))
 
     def active_learning_round(self, model, known_pool_data: dict, round: int, X_t, X_v, y_t, y_v):
         X_pool, y_pool, pool_ident = self.reader_speaker_data_round(round)
