@@ -15,6 +15,7 @@ from keras.wrappers.scikit_learn import KerasClassifier
 from .core import data_gen as dg
 from .core import pairwise_kl_divergence as kld
 from .core import plot_saver as ps
+from .core.plot_callback import PlotCallback
 
 import common.spectogram.speaker_train_splitter as sts
 from common.utils.paths import *
@@ -37,7 +38,7 @@ from common.utils.paths import *
 
 class bilstm_2layer_dropout(object):
     def __init__(self, name, training_data, n_hidden1, n_hidden2, n_classes, 
-                 epochs, activeLearnerRounds,
+                 epochs, active_learning_rounds,
                  segment_size, frequency=128):
         self.network_name = name
         self.training_data = training_data
@@ -46,8 +47,8 @@ class bilstm_2layer_dropout(object):
         self.n_hidden2 = n_hidden2
         self.n_classes = n_classes
         self.epochs = epochs
-        self.activeLearnerRounds = activeLearnerRounds
-        self.activeLearnerPools = 0
+        self.active_learning_rounds = active_learning_rounds
+        self.active_learning_pools = 0
         self.segment_size = segment_size
         self.input = (segment_size, frequency)
         print(self.network_name)
@@ -87,15 +88,15 @@ class bilstm_2layer_dropout(object):
 
         return (X, y, speaker_pickle)
 
-    def reader_speaker_data_round(self, activeLearningRound):
-        training_data_round = self.training_data + '_' + str(activeLearningRound)
+    def reader_speaker_data_round(self, al_round):
+        training_data_round = self.training_data + '_' + str(al_round)
         speaker_pickle = get_speaker_pickle(training_data_round)
 
         if not path.exists(speaker_pickle):
-            return self.reader_speaker_data_round(activeLearningRound % self.activeLearnerPools)
+            return self.reader_speaker_data_round(al_round % self.active_learning_pools)
         else:
             print('create_train_data', self.training_data, 'pool', training_data_round)
-            self.activeLearnerPools += 1
+            self.active_learning_pools += 1
             return self.read_speaker_data(speaker_pickle)
 
     def split_train_val_data(self, X, y):
@@ -109,15 +110,22 @@ class bilstm_2layer_dropout(object):
         net_saver = keras.callbacks.ModelCheckpoint(
             get_experiment_nets(self.network_name + "_best.h5"),
             monitor='val_loss', verbose=1, save_best_only=True)
-        net_checkpoint = keras.callbacks.ModelCheckpoint(
-            get_experiment_nets(self.network_name + "_{epoch:05d}.h5"), period=100)
+        plott_callback_instance = PlotCallback(self.network_name)
 
-        return [csv_logger, net_saver, net_checkpoint]
+        return [csv_logger, net_saver, plott_callback_instance]
+
+    def create_round_specific_callbacks(self, global_callbacks, al_round):
+        net_checkpoint = keras.callbacks.ModelCheckpoint(
+            get_experiment_nets(self.network_name + "_" + str(al_round) + "_{epoch:05d}.h5"), 
+            period=self.epochs
+        )
+
+        return global_callbacks + [net_checkpoint]
 
     def run_network(self):
         # base keras network
         model = self.create_net()
-        calls = self.create_callbacks()
+        global_calls = self.create_callbacks()
         known_pool_data = dict()
 
         # initial train set
@@ -125,9 +133,11 @@ class bilstm_2layer_dropout(object):
         X_pool, y_pool, _ = self.read_speaker_data(speaker_pickle)
         X_t, y_t, X_v, y_v = self.split_train_val_data(X_pool, y_pool)
 
-        for i in range(self.activeLearnerRounds): # ActiveLearning Rounds
+        for i in range(self.active_learning_rounds): # ActiveLearning Rounds
+            calls = self.create_round_specific_callbacks(global_calls, i)
+
             if i != 0:
-                # query for uncertainty based on pool and append to numpy
+                # query for uncertainty based on pool and append to numpy X_t, X_v, ... arrays
                 self.active_learning_round(model, known_pool_data, i, X_t, X_v, y_t, y_v)
 
             # TODO lehmacl1@2019-03-05: Müssen hier nicht 2er Potenzen als Batchsize (100) mitgegeben werden?
@@ -168,13 +178,11 @@ class bilstm_2layer_dropout(object):
             ps.save_loss_plot(history, self.network_name)
             print("saving model")
             model.save(get_experiment_nets(self.network_name + ".h5"))
-            # print "evaluating model"
-            # da.calculate_test_acccuracies(self.network_name, self.test_data, True, True, True, segment_size=self.segment_size)
 
     def active_learning_round(self, model, known_pool_data: dict, round: int, X_t, X_v, y_t, y_v):
         X_pool, y_pool, pool_ident = self.reader_speaker_data_round(round)
         # query for uncertainty
-        query_idx = self.uncertainty_sampling(model, X_pool, n_instances=10)
+        query_idx = self.uncertainty_sampling(model, X_pool, n_instances=100)
 
         # Converts np.ndarray to dytpe int, default is float
         query_idx = query_idx.astype('int')
@@ -233,7 +241,5 @@ class bilstm_2layer_dropout(object):
             The indices of the n_instances largest values.
         """
         assert n_instances <= values.shape[0], 'n_instances must be less or equal than the size of utility'
-
         max_idx = np.argpartition(-values, n_instances-1, axis=0)[:n_instances]
-        
         return max_idx

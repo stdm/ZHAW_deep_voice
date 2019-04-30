@@ -17,26 +17,24 @@ from .core.pairwise_kl_divergence import pairwise_kl_divergence
 
 
 class LSTMVOX2Controller(NetworkController):
-    def __init__(self, out_layer, seg_size, vec_size):
+    def __init__(self, out_layer, seg_size, vec_size, active_learning_rounds, epochs, n_classes):
         super().__init__("pairwise_lstm_vox2", "vox2_speakers")
         self.out_layer = out_layer
         self.seg_size = seg_size
         self.vec_size = vec_size
+        self.active_learning_rounds = active_learning_rounds
+        self.epochs = epochs
+        self.n_classes = n_classes
 
     def train_network(self):
-        # lehmacl1@2019-04-13: WhyTF do you need to specify the amount
-        # of classes here hardcoded?
-        #
-        nr_classes = 10
-
         bilstm_2layer_dropout(
-            self.name + "_" + str(nr_classes), 
-            'vox2_speakers_' + str(nr_classes) + '_train', # _train suffix for train/test split, _cluster otherwise
+            self.name + "_" + str(self.n_classes), 
+            'vox2_speakers_' + str(self.n_classes) + '_train', # _train suffix for train/test split, _cluster otherwise
             n_hidden1=256, 
             n_hidden2=256, 
-            n_classes=nr_classes, 
-            epochs=1, # TODO: increase
-            activeLearnerRounds=2, # TODO: increase
+            n_classes=self.n_classes, 
+            epochs=self.epochs / self.active_learning_rounds,
+            active_learning_rounds=self.active_learning_rounds,
             segment_size=self.seg_size
         )
 

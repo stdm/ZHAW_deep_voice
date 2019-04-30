@@ -17,12 +17,14 @@ from .core.pairwise_kl_divergence import pairwise_kl_divergence
 
 
 class LSTMController(NetworkController):
-    def __init__(self, out_layer, seg_size, vec_size):
+    def __init__(self, out_layer, seg_size, vec_size, epochs, n_classes):
         super().__init__("pairwise_lstm", "timit_speakers_40_clustering_vs_reynolds")
         self.network_file = self.name + "_100"
         self.out_layer = out_layer
         self.seg_size = seg_size
         self.vec_size = vec_size
+        self.epochs = epochs
+        self.n_classes = n_classes
 
     def train_network(self):
         bilstm_2layer_dropout(
@@ -30,8 +32,8 @@ class LSTMController(NetworkController):
             'timit_speakers_100_50w_50m_not_reynolds_cluster',
             n_hidden1=256, 
             n_hidden2=256, 
-            n_classes=100, 
-            n_10_batches=1000,
+            n_classes=self.n_classes, 
+            n_10_batches=self.epochs,
             segment_size=self.seg_size
         )
 
