@@ -38,6 +38,14 @@ class Speaker:
         self.speakers_per_partition = speakers_per_partition
         self.dataset = dataset
 
+        # :partition_format for VoxCeleb2 is h5, due to the 2GB limit of .pickle files.
+        # In case of different datasets, h5 can be used to more easily work with more data
+        #
+        if self.dataset == "voxceleb2":
+            self.partition_format = '.h5'
+        else:
+            self.partition_format = '.pickle'
+
         if output_name is None:
             self.output_name = speaker_list
         else:
@@ -84,11 +92,10 @@ class Speaker:
             # Split Train and Test Sets not available for VoxCeleb2, as the initial
             # training set is given seperate and these partitions are used to dynamically
             # generate/add new samples
-            
-            # with open(get_speaker_pickle('/mnt/all1/voxceleb2/speaker_pickles/' + self.output_name + '_cluster'), 'wb') as f:
-            # with open(get_speaker_pickle(self.output_name + '_cluster'), 'wb') as f:
-            #     pickle.dump((X, y, speaker_names), f, -1)
-            with h5py.File(get_speaker_pickle('/mnt/all1/voxceleb2/speaker_pickles/' + self.output_name + '_cluster', format='.h5'), 'w') as f:
+            #
+            # When data is located in a different folder:
+            # with h5py.File(get_speaker_pickle('/mnt/all1/voxceleb2/speaker_pickles/' + self.output_name + '_cluster', format=self.partition_format), 'w') as f:
+            with h5py.File(get_speaker_pickle(self.output_name + '_cluster', format=self.partition_format), 'w') as f:
                 f.create_dataset('X', data=X)
                 f.create_dataset('y', data=y)
                 ds = f.create_dataset('speaker_names', (len(speaker_names),), dtype=h5py.special_dtype(vlen=str))
@@ -117,10 +124,9 @@ class Speaker:
                 # training set is given seperate and these partitions are used to dynamically
                 # generate/add new samples
                 #
-                # with open(get_speaker_pickle('/mnt/all1/voxceleb2/speaker_pickles/' + self.output_name + '_cluster_' + str(i)), 'wb') as f:
-                # with open(get_speaker_pickle(self.output_name + '_cluster_' + str(i)), 'wb') as f:
-                #     pickle.dump((X, y, speaker_names), f, -1)
-                with h5py.File(get_speaker_pickle('/mnt/all1/voxceleb2/speaker_pickles/' + self.output_name + '_cluster_' + str(i), format='.h5'), 'w') as f:
+                # When data is located in a different folder:
+                # with h5py.File(get_speaker_pickle('/mnt/all1/voxceleb2/speaker_pickles/' + self.output_name + '_cluster_' + str(i), format=self.partition_format), 'w') as f:
+                with h5py.File(get_speaker_pickle(self.output_name + '_cluster_' + str(i), format=self.partition_format), 'w') as f:
                     f.create_dataset('X', data=X)
                     f.create_dataset('y', data=y)
                     ds = f.create_dataset('speaker_names', (len(speaker_names),), dtype=h5py.special_dtype(vlen=str))
@@ -160,8 +166,9 @@ class Speaker:
         valid_speakers: list of all speakers in this dataset
         """
 
-        speaker_files = self.get_speaker_list_of_files('/mnt/all1/voxceleb2/test/aac', '.wav', valid_speakers)
-        # speaker_files = self.get_speaker_list_of_files(get_training("VOXCELEB2"), '.wav', valid_speakers)
+        # When data is located in a different folder:
+        # speaker_files = self.get_speaker_list_of_files('/mnt/all1/voxceleb2/test/aac', '.wav', valid_speakers)
+        speaker_files = self.get_speaker_list_of_files(get_training("VOXCELEB2"), '.wav', valid_speakers)
         
         # Extract the spectrogram's, speaker numbers and speaker names
         x, y = self.build_array_and_extract_speaker_data(speaker_files)
@@ -238,6 +245,10 @@ class Speaker:
         :return: true if it exists, false otherwise
         """
         if self.split_train_test:
-            return path.exists(get_speaker_pickle('/mnt/all1/voxceleb2/speaker_pickles/' + self.output_name + '_train', format='.h5'))
+            # When data is located in a different folder:
+            # return path.exists(get_speaker_pickle('/mnt/all1/voxceleb2/speaker_pickles/' + self.output_name + '_train', format=self.partition_format))
+            return path.exists(get_speaker_pickle(self.output_name + '_train', format=self.partition_format))
         else:
-            path.exists(get_speaker_pickle('/mnt/all1/voxceleb2/speaker_pickles/' + self.output_name + '_cluster', format='.h5'))
+            # When data is located in a different folder:
+            # return path.exists(get_speaker_pickle('/mnt/all1/voxceleb2/speaker_pickles/' + self.output_name + '_cluster', format=self.partition_format))
+            return path.exists(get_speaker_pickle(self.output_name + '_cluster', format=self.partition_format))
