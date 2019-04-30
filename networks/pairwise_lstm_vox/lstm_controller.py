@@ -5,6 +5,7 @@ The controller to train and test the pairwise_lstm network
 import numpy as np
 from keras.models import Model
 from keras.models import load_model
+from time import gmtime, strftime
 
 from common.clustering.generate_embeddings import generate_embeddings
 from common.network_controller import NetworkController
@@ -28,10 +29,10 @@ class LSTMVOX2Controller(NetworkController):
 
     def train_network(self):
         bilstm_2layer_dropout(
-            self.name + "_" + str(self.n_classes), 
-            'vox2_speakers_5994_dev', # _train suffix for train/test split, _cluster otherwise
-            #'vox2_speakers_120_test', # _train suffix for train/test split, _cluster otherwise
-            #'vox2_speakers_10_test', # _train suffix for train/test split, _cluster otherwise
+            self.name + "_" + str(self.n_classes) + "__" + strftime("%Y%m%d_%H%M%S",gmtime()), 
+            'vox2_speakers_5994_dev_cluster', # _train suffix for train/test split, _cluster otherwise
+            # 'vox2_speakers_120_test_cluster', # _train suffix for train/test split, _cluster otherwise
+            # 'vox2_speakers_10_test_cluster', # _train suffix for train/test split, _cluster otherwise
             n_hidden1=256, 
             n_hidden2=256, 
             n_classes=self.n_classes, 
