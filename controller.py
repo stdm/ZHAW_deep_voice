@@ -199,22 +199,22 @@ if __name__ == '__main__':
                         help='Plots the last results of the specified networks in one file.')
     parser.add_argument('-best', dest='best', action='store_true',
                         help='If a single Network is specified and plot was called, just the best curves will be plotted')
-    parser.add_argument('-val#', dest='validation_number', default=DEFAULT_VAL_NUMBER,
+    parser.add_argument('-val', dest='validation_number', default=DEFAULT_VAL_NUMBER,
                         help='Specify how many speakers should be used for testing (40, 60, 80).')
-    parser.add_argument('-out_layer#', dest='out_layer', default=DEFAULT_OUT_LAYER,
+    parser.add_argument('-out_layer', dest='out_layer', default=DEFAULT_OUT_LAYER,
                         help='Output layer')
-    parser.add_argument('-seg_size#', dest='seg_size', default=DEFAULT_SEG_SIZE,
+    parser.add_argument('-seg_size', dest='seg_size', default=DEFAULT_SEG_SIZE,
                         help='Segment size')
-    parser.add_argument('-vec_size#', dest='vec_size', default=DEFAULT_VEC_SIZE,
+    parser.add_argument('-vec_size', dest='vec_size', default=DEFAULT_VEC_SIZE,
                         help='Vector size')
-    parser.add_argument('-alr#', dest='active_learning_rounds', default=DEFAULT_ACTIVELEARNING_ROUNDS,
-                        help='Active learning rounds (only used by VOX2 currently)')
-    parser.add_argument('-epochs_total#', dest='epochs_total', default=DEFAULT_EPOCHS,
-                        help='Number of epochs to train in total')
-    parser.add_argument('-epochs_pre_alr#', dest='epochs_before_active_learning', default=DEFAULT_EPOCHS_BEFORE_ACTIVE_LEARNING,
-                        help='Number of epochs to train before active learning mechanism kicks in (only used by VOX2 currently)')
-    parser.add_argument('-dense_factor#', dest='dense_factor', default=DEFAULT_DENSE_FACTOR,
-                        help='Factor for dense layer multiplication (Vox2 only)')
+    parser.add_argument('-alr', dest='active_learning_rounds', default=DEFAULT_ACTIVELEARNING_ROUNDS,
+                        help='Active learning rounds (only used by Vox2 currently). If the numbers do not add up, not all rounds can be guaranteed. E.g. with 100 epochs, 7 epoche before active leraning and 20 active learning rounds, math.ceil((100-7)/20)=5 epochs will be done per round, but that means only 18 full rounds and 1 partial round will be done instead of 20.')
+    parser.add_argument('-epochs_total', dest='epochs_total', default=DEFAULT_EPOCHS,
+                        help='Number of epochs to train in total.')
+    parser.add_argument('-epochs_pre_alr', dest='epochs_before_active_learning', default=DEFAULT_EPOCHS_BEFORE_ACTIVE_LEARNING,
+                        help='Number of epochs to train before active learning mechanism kicks in (only used by VOX2 currently). These epochs will be deducted from the amount of epochs run during active learning rounds.')
+    parser.add_argument('-dense_factor', dest='dense_factor', default=DEFAULT_DENSE_FACTOR,
+                        help='Factor for dense layer (size) multiplication (Vox2 only)')
 
     args = parser.parse_args()
     #print(args)

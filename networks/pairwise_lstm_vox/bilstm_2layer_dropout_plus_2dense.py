@@ -11,6 +11,7 @@ from keras.layers import LSTM
 from keras.layers import CuDNNLSTM
 from keras.layers.wrappers import Bidirectional
 from keras.wrappers.scikit_learn import KerasClassifier
+from math import ceil
 
 from .core import data_gen as dg
 from .core import pairwise_kl_divergence as kld
@@ -49,7 +50,7 @@ class bilstm_2layer_dropout(object):
         self.dense_factor = dense_factor
         self.epochs = epochs
         self.epochs_before_active_learning = epochs_before_active_learning
-        self.epochs_per_round = epochs / active_learning_rounds
+        self.epochs_per_round = ceil((epochs - epochs_before_active_learning) / active_learning_rounds)
         self.active_learning_rounds = active_learning_rounds
         self.active_learning_pools = 0
         self.segment_size = segment_size
@@ -112,9 +113,9 @@ class bilstm_2layer_dropout(object):
         net_saver = keras.callbacks.ModelCheckpoint(
             get_experiment_nets(self.network_name + "_best.h5"),
             monitor='val_loss', verbose=1, save_best_only=True)
-        plott_callback_instance = PlotCallback(self.network_name)
+        plot_callback_instance = PlotCallback(self.network_name)
 
-        return [csv_logger, net_saver, plott_callback_instance]
+        return [csv_logger, net_saver, plot_callback_instance]
 
     def create_round_specific_callbacks(self, global_callbacks, al_round):
         net_checkpoint = keras.callbacks.ModelCheckpoint(
@@ -156,9 +157,6 @@ class bilstm_2layer_dropout(object):
             verbose=2
         )
 
-        ps.save_accuracy_plot(history, self.network_name)
-        ps.save_loss_plot(history, self.network_name)
-
         print("saving model")
         model.save(get_experiment_nets(self.network_name + ".h5"))
 
@@ -193,13 +191,15 @@ class bilstm_2layer_dropout(object):
                 epochs_to_run = self.epochs - epochs_trained
 
             # if max epochs to train already reached before all rounds processed we can end the training
-            if epochs_to_run == 0:
+            if epochs_to_run <= 0:
                 print("Max epoch of " + str(self.epochs) + " reached, end of training")
                 break
 
             # query for uncertainty based on pool and append to numpy X_t, X_v, ... arrays
             (X_t, X_v, y_t, y_v) = self.active_learning_round(model, known_pool_data, i, X_t, X_v, y_t, y_v)
             self.fit(model, calls, X_t, X_v, y_t, y_v, epochs_to_run)
+
+            epochs_trained += epochs_to_run
 
             X_t_shapes.append(X_t.shape[0])
             X_v_shapes.append(X_v.shape[0])
