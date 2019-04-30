@@ -140,27 +140,13 @@ class bilstm_2layer_dropout(object):
 
             if i != 0:
                 # query for uncertainty based on pool and append to numpy X_t, X_v, ... arrays
-                self.active_learning_round(model, known_pool_data, i, X_t, X_v, y_t, y_v)
+                (X_t, X_v, y_t, y_v) = self.active_learning_round(model, known_pool_data, i, X_t, X_v, y_t, y_v)
 
             train_gen = dg.batch_generator_lstm(X_t, y_t, 100, segment_size=self.segment_size)
             val_gen = dg.batch_generator_lstm(X_v, y_v, 100, segment_size=self.segment_size)
 
             X_t_shapes.append(X_t.shape[0])
             X_v_shapes.append(X_v.shape[0])
-
-            # NOTE: lehmacl1@2019-04-14: bilstm_2layer_dropout_plus_2dense.py:113: UserWarning:
-            # The semantics of the Keras 2 argument `steps_per_epoch` is not the same as the Keras 1
-            # argument `samples_per_epoch`. `steps_per_epoch` is the number of batches to draw from the
-            # generator at each epoch. Basically steps_per_epoch = samples_per_epoch/batch_size.
-            #
-            # Similarly `nb_val_samples`->`validation_steps` and `val_samples`->`steps`
-            # arguments have changed. Update your method calls accordingly.
-
-            # NOTE: lehmacl1@2019-04-14: bilstm_2layer_dropout_plus_2dense.py:113: UserWarning:
-            # Update your `fit_generator` call to the Keras 2 API:
-            # `fit_generator(<generator..., callbacks=[<keras.ca..., use_multiprocessing=False,
-            # class_weight=None, epochs=1000, workers=1, steps_per_epoch=10, validation_steps=2,
-            # verbose=2, validation_data=<generator..., max_queue_size=10)`
 
             history = model.fit_generator(
                 train_gen, 
@@ -210,10 +196,12 @@ class bilstm_2layer_dropout(object):
         r_x_t, r_y_t, r_x_v, r_y_v = self.split_train_val_data(x_us, y_us)
 
         # append to used / passed sets
-        np.append(X_t, r_x_t)
-        np.append(y_t, r_y_t)
-        np.append(X_v, r_x_v)
-        np.append(y_v, r_y_v)
+        new_X_t = np.append(X_t, r_x_t, axis=0)
+        new_X_v = np.append(X_v, r_x_v, axis=0)
+        new_y_t = np.append(y_t, r_y_t, axis=0)
+        new_y_v = np.append(y_v, r_y_v, axis=0)
+        
+        return new_X_t, new_X_v, new_y_t, new_y_v
 
     def uncertainty_sampling(self, model, X, n_instances: int = 1):
         """

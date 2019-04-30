@@ -95,22 +95,21 @@ def batch_generator_v2(X, y, batch_size=100, segment_size=100):
 # Batch generator von LSTMS
 def batch_generator_lstm(X, y, batch_size=100, segment_size=15):
     segments = X.shape[0]
-    bs = batch_size
     speakers = np.amax(y) + 1
     # build as much batches as fit into the training set
     while 1:
-        for i in range((segments + bs - 1) // bs):
-            Xb = np.zeros((bs, 1, settings.FREQ_ELEMENTS, segment_size), dtype=np.float32)
-            yb = np.zeros(bs, dtype=np.int32)
+        for i in range((segments + batch_size - 1) // batch_size):
+            Xb = np.zeros((batch_size, 1, settings.FREQ_ELEMENTS, segment_size), dtype=np.float32)
+            yb = np.zeros(batch_size, dtype=np.int32)
             # here one batch is generated
-            for j in range(0, bs):
+            for j in range(0, batch_size):
                 speaker_idx = randint(0, len(X) - 1)
                 if y is not None:
                     yb[j] = y[speaker_idx]
                 spect = extract(X[speaker_idx, 0], segment_size)
                 seg_idx = randint(0, spect.shape[1] - segment_size)
                 Xb[j, 0] = spect[:, seg_idx:seg_idx + segment_size]
-            yield Xb.reshape(bs, segment_size, settings.FREQ_ELEMENTS), transformy(yb, bs, speakers)
+            yield Xb.reshape(batch_size, segment_size, settings.FREQ_ELEMENTS), transformy(yb, batch_size, speakers)
 
 
 '''creates the a batch for LSTM networks, with Pairwise Labels, 
