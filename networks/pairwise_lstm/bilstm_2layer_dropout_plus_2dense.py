@@ -78,7 +78,7 @@ class bilstm_2layer_dropout(object):
             get_experiment_nets(self.network_name + "_best.h5"),
             monitor='val_loss', verbose=1, save_best_only=True)
         net_checkpoint = keras.callbacks.ModelCheckpoint(
-            get_experiment_nets(self.network_name + "_{epoch:05d}.h5"), period=100)
+            get_experiment_nets(self.network_name + "_{epoch:05d}.h5"), period=self.n_10_batches / 10)
         return [csv_logger, net_saver, net_checkpoint]
 
     def run_network(self):

@@ -50,13 +50,17 @@ DEFAULT_VAL_NUMBER = 40
 DEFAULT_OUT_LAYER = 2
 DEFAULT_SEG_SIZE = 15
 DEFAULT_VEC_SIZE = 512
+DEFAULT_ACTIVELEARNING_ROUNDS = 50
+DEFAULT_EPOCHS = 1000
+DEFAULT_N_CLASSES = 100
 
 class Controller(NetworkController):
     def __init__(self,
                  setup=DEFAULT_SETUP, network=DEFAULT_NETWORK, train=DEFAULT_TRAIN, test=DEFAULT_TEST,
                  clear=DEFAULT_CLEAR, debug=DEFAULT_DEBUG, plot=DEFAULT_PLOT, best=DEFAULT_BEST,
                  val_number=DEFAULT_VAL_NUMBER, out_layer=DEFAULT_OUT_LAYER, seg_size=DEFAULT_SEG_SIZE,
-                 vec_size=DEFAULT_VEC_SIZE):
+                 vec_size=DEFAULT_VEC_SIZE, active_learning_rounds=DEFAULT_ACTIVELEARNING_ROUNDS,
+                 epochs=DEFAULT_EPOCHS, n_classes=DEFAULT_N_CLASSES):
         super().__init__("Front", "speakers_40_clustering_vs_reynolds")
         self.setup = setup
         self.network = network
@@ -70,6 +74,9 @@ class Controller(NetworkController):
         self.out_layer = out_layer
         self.seg_size = seg_size
         self.vec_size = vec_size
+        self.active_learning_rounds = active_learning_rounds
+        self.epochs = epochs
+        self.n_classes = n_classes
 
         validation_data = {
             40: "speakers_40_clustering_vs_reynolds",
@@ -115,10 +122,27 @@ class Controller(NetworkController):
         self.network_controllers = []
         if self.network == 'pairwise_lstm_vox2':
             from networks.pairwise_lstm_vox.lstm_controller import LSTMVOX2Controller
-            self.network_controllers.append(LSTMVOX2Controller(self.out_layer, self.seg_size, self.vec_size))
+            self.network_controllers.append(
+                LSTMVOX2Controller(
+                    self.out_layer, 
+                    self.seg_size, 
+                    self.vec_size, 
+                    self.active_learning_rounds,
+                    self.epochs,
+                    self.n_classes
+                )
+            )
         if self.network == 'pairwise_lstm':
             from networks.pairwise_lstm.lstm_controller import LSTMController
-            self.network_controllers.append(LSTMController(self.out_layer, self.seg_size, self.vec_size))
+            self.network_controllers.append(
+                LSTMController(
+                    self.out_layer, 
+                    self.seg_size, 
+                    self.vec_size, 
+                    self.epochs,
+                    self.n_classes
+                )
+            )
         if self.network == 'arc_face':
             from networks.lstm_arc_face.arc_face_controller import ArcFaceController
             self.network_controllers.append(ArcFaceController())
@@ -180,9 +204,23 @@ if __name__ == '__main__':
                         help='Segment size')
     parser.add_argument('-vec_size#', dest='vec_size', default=DEFAULT_VEC_SIZE,
                         help='Vector size')
+    parser.add_argument('-alr#', dest='active_learning_rounds', default=DEFAULT_ACTIVELEARNING_ROUNDS,
+                        help='Active learning rounds (only used by VOX2 currently)')
+    parser.add_argument('-e#', dest='epochs', default=DEFAULT_EPOCHS,
+                        help='Number of epochs to train in total')
+    parser.add_argument('-classes#', dest='n_classes', default=DEFAULT_N_CLASSES,
+                        help='Number of classes to train the cluster for')
 
     args = parser.parse_args()
     #print(args)
 
-    controller = Controller(args.setup, args.network, args.train, args.test, args.clear, args.debug, args.plot, args.best, args.validation_number, int(args.out_layer), int(args.seg_size), int(args.vec_size))
+    controller = Controller(
+        setup=args.setup, network=args.network, train=args.train, test=args.test, 
+        clear=args.clear, debug=args.debug, plot=args.plot, best=args.best, 
+        val_number=args.validation_number, out_layer=int(args.out_layer), 
+        seg_size=int(args.seg_size), vec_size=int(args.vec_size),
+        active_learning_rounds=int(args.active_learning_rounds),
+        epochs=int(args.epochs), n_classes=int(args.n_classes)
+    )
+
     controller.run()

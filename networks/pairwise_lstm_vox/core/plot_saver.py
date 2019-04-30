@@ -12,10 +12,14 @@ matplotlib.use('Agg')
 
 
 def save_accuracy_plot(history, name):
+    save_accuracy_plot_direct(name, history.history['acc'], history.history['val_acc'])
+    
+
+def save_accuracy_plot_direct(name, acc, val_acc):
     sav = get_experiment_plots(name + "_acc.png")
     fig = plt.figure()
-    plt.plot(history.history['acc'])
-    plt.plot(history.history['val_acc'])
+    plt.plot(acc)
+    plt.plot(val_acc)
     plt.ylabel('accuracy')
     plt.xlabel('epoch')
     plt.legend(['train_acc', 'val_acc'], loc='lower right')
@@ -24,11 +28,15 @@ def save_accuracy_plot(history, name):
 
 
 def save_loss_plot(history, name):
+    save_loss_plot_direct(name, history.history['loss'], history.history['val_loss'])
+
+
+def save_loss_plot_direct(name, loss, val_loss):
     sav = get_experiment_plots(name + "_loss.png")
     fig = plt.figure()
     ax = fig.gca()
-    plt.plot(history.history['loss'])
-    plt.plot(history.history['val_loss'])
+    plt.plot(loss)
+    plt.plot(val_loss)
     plt.ylabel('loss')
     plt.xlabel('epoch')
     plt.legend(['train_loss', 'val_loss'], loc='upper right')
