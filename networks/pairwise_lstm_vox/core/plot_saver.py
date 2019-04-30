@@ -16,15 +16,7 @@ def save_accuracy_plot(history, name):
     
 
 def save_accuracy_plot_direct(name, acc, val_acc):
-    sav = get_experiment_plots(name + "_acc.png")
-    fig = plt.figure()
-    plt.plot(acc)
-    plt.plot(val_acc)
-    plt.ylabel('accuracy')
-    plt.xlabel('epoch')
-    plt.legend(['train_acc', 'val_acc'], loc='lower right')
-    plt.grid()
-    plt.savefig(sav)
+    save_plot(name + "_acc", [acc, val_acc], 'epoch', 'accuracy', ['train_acc', 'val_acc'], 'lower right')
 
 
 def save_loss_plot(history, name):
@@ -32,13 +24,24 @@ def save_loss_plot(history, name):
 
 
 def save_loss_plot_direct(name, loss, val_loss):
-    sav = get_experiment_plots(name + "_loss.png")
+    save_plot(name + "_loss", [loss, val_loss], 'epoch', 'loss', ['train_loss', 'val_loss'], 'upper right')
+
+
+def save_alr_shape_x_plot(name, shapes_over_time):
+    save_plot(name + "_active_learning", shapes_over_time, 'active learning round', 'count', ['X_train', 'X_valid'], 'upper right')
+
+
+def save_plot(filename, dataparts, xlabel, ylabel, legend, legend_location):
+    sav = get_experiment_plots(filename + ".png")
     fig = plt.figure()
     ax = fig.gca()
-    plt.plot(loss)
-    plt.plot(val_loss)
-    plt.ylabel('loss')
-    plt.xlabel('epoch')
-    plt.legend(['train_loss', 'val_loss'], loc='upper right')
+
+    for datapart in dataparts:
+        plt.plot(datapart)
+    
+    plt.ylabel(ylabel)
+    plt.xlabel(xlabel)
+    plt.legend(legend, loc=legend_location)
     plt.grid()
     plt.savefig(sav)
+    plt.close()

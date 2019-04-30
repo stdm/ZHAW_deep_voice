@@ -132,6 +132,8 @@ class bilstm_2layer_dropout(object):
         speaker_pickle = get_speaker_pickle(self.training_data, format='.h5')
         X_pool, y_pool, _ = self.read_speaker_data(speaker_pickle)
         X_t, y_t, X_v, y_v = self.split_train_val_data(X_pool, y_pool)
+        X_t_shapes = [ X_t.shape[0] ]
+        X_v_shapes = [ X_v.shape[0] ]
 
         for i in range(self.active_learning_rounds): # ActiveLearning Rounds
             calls = self.create_round_specific_callbacks(global_calls, i)
@@ -142,8 +144,9 @@ class bilstm_2layer_dropout(object):
 
             train_gen = dg.batch_generator_lstm(X_t, y_t, 100, segment_size=self.segment_size)
             val_gen = dg.batch_generator_lstm(X_v, y_v, 100, segment_size=self.segment_size)
-            # batches_t = ((X_t.shape[0] + 128 - 1) // 128)
-            # batches_v = ((X_v.shape[0] + 128 - 1) // 128)
+
+            X_t_shapes.append(X_t.shape[0])
+            X_v_shapes.append(X_v.shape[0])
 
             # NOTE: lehmacl1@2019-04-14: bilstm_2layer_dropout_plus_2dense.py:113: UserWarning:
             # The semantics of the Keras 2 argument `steps_per_epoch` is not the same as the Keras 1
@@ -175,6 +178,8 @@ class bilstm_2layer_dropout(object):
 
             ps.save_accuracy_plot(history, self.network_name)
             ps.save_loss_plot(history, self.network_name)
+            ps.save_alr_shape_x_plot(self.network_name, [ X_t_shapes, X_v_shapes ])
+
             print("saving model")
             model.save(get_experiment_nets(self.network_name + ".h5"))
 

@@ -2,19 +2,24 @@ from keras.callbacks import Callback
 from . import plot_saver as ps
 
 class PlotCallback(Callback):
-    def __init__(self, network_name):
+    def __init__(self, network_name, reset_train_begin=False):
         super().__init__()
         self.network_name = network_name
+        self.reset_train_begin = reset_train_begin
+        self.reset()
 
-    def on_train_begin(self, logs={}):
+    def reset(self):
         self.i = 0
         self.x = []
         self.losses = []
         self.val_losses = []
         self.acc = []
         self.val_acc = []
-        
         self.logs = []
+
+    def on_train_begin(self, logs={}):
+        if self.reset_train_begin:
+            self.reset()
 
     def on_epoch_end(self, epoch, logs={}):
         self.logs.append(logs)
