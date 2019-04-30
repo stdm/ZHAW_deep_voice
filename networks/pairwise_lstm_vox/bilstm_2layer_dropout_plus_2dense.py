@@ -168,8 +168,11 @@ class bilstm_2layer_dropout(object):
         speaker_pickle = get_speaker_pickle(self.training_data, format='.h5')
         X_pool, y_pool, _ = self.read_speaker_data(speaker_pickle)
         X_t, y_t, X_v, y_v = self.split_train_val_data(X_pool, y_pool)
+        
         X_t_shapes = [ X_t.shape[0] ]
         X_v_shapes = [ X_v.shape[0] ]
+        X_pool = None
+        y_pool = None
 
         # initial train
         self.fit(model, global_calls, X_t, X_v, y_t, y_v, self.epochs_before_active_learning)
