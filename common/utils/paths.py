@@ -73,14 +73,13 @@ def get_training(*args):
     return join(get_common('data', 'training'), *args)
 
 
-def get_speaker_pickle(speaker):
+def get_speaker_pickle(speaker, format='.pickle'):
     """
     Gets the absolute path to the speaker pickle of that name.
     :param speaker: the name (without .pickle) of the file
     :return: the absolute path of the speakers pickle
     """
-    return get_training('speaker_pickles', speaker + '.pickle')
-
+    return get_training('speaker_pickles', speaker + format)
 
 def get_results(*args):
     return join(get_experiments('results'), *args)

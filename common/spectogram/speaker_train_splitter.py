@@ -36,12 +36,17 @@ class SpeakerTrainSplit(object):
     # There need to be enough files per speaker to ensure that at least 1 file is in each set
     # for each speaker. E.g. for a :eval_size of 0.2, at least 5 files per speaker are encouraged.
     #
-    def __call__(self, X, y, speaker_files):
-        total_files_count = 0
-        for speaker in speaker_files.keys():
-            # print("Speaker {}: {} files".format(speaker, len(speaker_files[speaker])))
-            total_files_count += len(speaker_files[speaker])
-        print("A total of {} speaker files are being split in :speaker_train_splitter.".format(total_files_count))
+    def __call__(self, X, y):
+        # Build speaker file count dict: Iterate over all entries in y (labels) and
+        # sum up the amount of examples for each unique speaker_id (content of y)
+        #
+        speaker_file_count = dict()
+
+        for i in range(len(y)):
+            try:
+                speaker_file_count[y[i]] += 1
+            except KeyError:
+                speaker_file_count[y[i]] = 1
 
         valid_size = int(len(y) * self.eval_size) # 0.2y - len(y) is amount of total audio files
         train_size = int(len(y) - valid_size)     # 0.8y - len(y) is amount of total audio files
@@ -58,40 +63,26 @@ class SpeakerTrainSplit(object):
         valid_index = len(y) - 1
         total_index = 0
 
-        speaker_names_train = dict()
-        speaker_names_valid = dict()
-
         # print("INITIAL: train: {} valid: {} total: {}".format(train_index, valid_index, total_index))
         # print(X.shape)
         # print(y.shape)
 
-        for speaker in speaker_files.keys():
-            speaker_files_count = len(speaker_files[speaker])
-            speaker_valid_size = int(round(speaker_files_count * self.eval_size, 0))
-            speaker_train_size = int(speaker_files_count - speaker_valid_size)
-            # print("")
-            # print("speaker {}: {}/{} ({})".format(speaker, speaker_train_size, speaker_valid_size, speaker_files_count))
+        for speaker_id in speaker_file_count.keys():
+            speaker_valid_size = int(round(speaker_file_count[speaker_id] * self.eval_size, 0))
+            speaker_train_size = int(speaker_file_count[speaker_id] - speaker_valid_size)
 
-            speaker_names_train[speaker] = []
-            speaker_names_valid[speaker] = []
-
-            for i in range(speaker_files_count):
-
-                # print("Processing file {}".format(speaker_files[speaker][i]))
-
+            for i in range(speaker_file_count[speaker_id]):
                 if i > speaker_train_size - 1:
                     X_new[valid_index] = X[total_index]
                     y_new[valid_index] = y[total_index]
                     valid_index -= 1
                     total_index += 1
-                    speaker_names_valid[speaker].append(speaker_files[speaker][i])
                     #print("----VALID #{} train: {} valid: {} total: {}".format(i, train_index, valid_index, total_index))
                 else:
                     X_new[train_index] = X[total_index]
                     y_new[train_index] = y[total_index]
                     train_index += 1
                     total_index += 1
-                    speaker_names_train[speaker].append(speaker_files[speaker][i])
                     #print("TRAIN---- #{} train: {} valid: {} total: {}".format(i, train_index, valid_index, total_index))
 
                 # lehmacl1@2019-04-13: When reading from a pickled dataset, the speaker_files_count for the last entry
@@ -117,4 +108,4 @@ class SpeakerTrainSplit(object):
         # print("y_train ", y_train.shape)
         # print("y_valid ", y_valid.shape)
 
-        return X_train, X_valid, y_train, y_valid, speaker_names_train, speaker_names_valid
+        return X_train, X_valid, y_train, y_valid

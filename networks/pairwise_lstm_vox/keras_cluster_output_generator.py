@@ -12,13 +12,13 @@ from keras.models import load_model
 from keras.models import model_from_json
 
 from common.utils.paths import *
+from common.utils.pickler import load_speaker_pickle_or_h5
 from .core import data_gen as dg
 from .core import pairwise_kl_divergence as kld
 
 
 def generate_cluster_output(network_name, test_data, output_file, one_file, write_to_file, is_LSTM, segment_size=15):
-    with open(get_speaker_pickle(test_data), 'rb') as f:
-        (X, y, s_list) = pickle.load(f)
+    (X, y, s_list) = load_speaker_pickle_or_h5(test_data)
 
     if one_file:
         model = load_model(
