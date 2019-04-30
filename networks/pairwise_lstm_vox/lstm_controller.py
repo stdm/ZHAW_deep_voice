@@ -18,24 +18,24 @@ from .core.pairwise_kl_divergence import pairwise_kl_divergence
 
 
 class LSTMVOX2Controller(NetworkController):
-    def __init__(self, out_layer, seg_size, vec_size, active_learning_rounds, epochs, n_classes):
+    def __init__(self, out_layer, seg_size, vec_size, active_learning_rounds, epochs, dense_factor):
         super().__init__("pairwise_lstm_vox2", "vox2_speakers")
         self.out_layer = out_layer
         self.seg_size = seg_size
         self.vec_size = vec_size
         self.active_learning_rounds = active_learning_rounds
         self.epochs = epochs
-        self.n_classes = n_classes
+        self.dense_factor = dense_factor
 
     def train_network(self):
         bilstm_2layer_dropout(
-            self.name + "_" + str(self.n_classes) + "__" + strftime("%Y%m%d_%H%M%S",gmtime()), 
+            self.name + "__5994_dev__" + str(self.dense_factor) + "__" + strftime("%Y%m%d_%H%M%S",gmtime()), 
             'vox2_speakers_5994_dev_cluster', # _train suffix for train/test split, _cluster otherwise
             # 'vox2_speakers_120_test_cluster', # _train suffix for train/test split, _cluster otherwise
             # 'vox2_speakers_10_test_cluster', # _train suffix for train/test split, _cluster otherwise
             n_hidden1=256, 
             n_hidden2=256, 
-            n_classes=self.n_classes, 
+            dense_factor=self.dense_factor, 
             epochs=self.epochs / self.active_learning_rounds,
             active_learning_rounds=self.active_learning_rounds,
             segment_size=self.seg_size

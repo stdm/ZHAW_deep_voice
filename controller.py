@@ -52,7 +52,7 @@ DEFAULT_SEG_SIZE = 15
 DEFAULT_VEC_SIZE = 512
 DEFAULT_ACTIVELEARNING_ROUNDS = 50
 DEFAULT_EPOCHS = 1000
-DEFAULT_N_CLASSES = 100
+DEFAULT_DENSE_FACTOR = 100
 
 class Controller(NetworkController):
     def __init__(self,
@@ -60,7 +60,7 @@ class Controller(NetworkController):
                  clear=DEFAULT_CLEAR, debug=DEFAULT_DEBUG, plot=DEFAULT_PLOT, best=DEFAULT_BEST,
                  val_number=DEFAULT_VAL_NUMBER, out_layer=DEFAULT_OUT_LAYER, seg_size=DEFAULT_SEG_SIZE,
                  vec_size=DEFAULT_VEC_SIZE, active_learning_rounds=DEFAULT_ACTIVELEARNING_ROUNDS,
-                 epochs=DEFAULT_EPOCHS, n_classes=DEFAULT_N_CLASSES):
+                 epochs=DEFAULT_EPOCHS, dense_factor=DEFAULT_DENSE_FACTOR):
         super().__init__("Front", "speakers_40_clustering_vs_reynolds")
         self.setup = setup
         self.network = network
@@ -76,7 +76,7 @@ class Controller(NetworkController):
         self.vec_size = vec_size
         self.active_learning_rounds = active_learning_rounds
         self.epochs = epochs
-        self.n_classes = n_classes
+        self.dense_factor = dense_factor
 
         validation_data = {
             40: "speakers_40_clustering_vs_reynolds",
@@ -129,7 +129,7 @@ class Controller(NetworkController):
                     self.vec_size, 
                     self.active_learning_rounds,
                     self.epochs,
-                    self.n_classes
+                    self.dense_factor
                 )
             )
         if self.network == 'pairwise_lstm':
@@ -139,8 +139,7 @@ class Controller(NetworkController):
                     self.out_layer, 
                     self.seg_size, 
                     self.vec_size, 
-                    self.epochs,
-                    self.n_classes
+                    self.epochs
                 )
             )
         if self.network == 'arc_face':
@@ -208,8 +207,8 @@ if __name__ == '__main__':
                         help='Active learning rounds (only used by VOX2 currently)')
     parser.add_argument('-e#', dest='epochs', default=DEFAULT_EPOCHS,
                         help='Number of epochs to train in total')
-    parser.add_argument('-classes#', dest='n_classes', default=DEFAULT_N_CLASSES,
-                        help='Number of classes to train the cluster for')
+    parser.add_argument('-df#', dest='dense_factor', default=DEFAULT_DENSE_FACTOR,
+                        help='Factor for dense layer multiplication (Vox2 only)')
 
     args = parser.parse_args()
     #print(args)
@@ -220,7 +219,7 @@ if __name__ == '__main__':
         val_number=args.validation_number, out_layer=int(args.out_layer), 
         seg_size=int(args.seg_size), vec_size=int(args.vec_size),
         active_learning_rounds=int(args.active_learning_rounds),
-        epochs=int(args.epochs), n_classes=int(args.n_classes)
+        epochs=int(args.epochs), dense_factor=int(args.dense_factor)
     )
 
     controller.run()

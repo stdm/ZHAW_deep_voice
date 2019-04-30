@@ -27,7 +27,7 @@ from common.utils.pickler import load_speaker_pickle_or_h5
     training_data: name of the Training data file, expected to be train_xxxx.pickle
     n_hidden1: Units of the first LSTM Layer
     n_hidden2: Units of the second LSTM Layer
-    n_classes: Amount of output classes (Speakers in Trainingset)
+    dense_factor: Amount of output classes (Speakers in Trainingset)
     epochs: Number of Epochs to train the Network per ActiveLearningRound
     activeLearnerRounds: Number of learning rounds to requery the pool for new data
     segment_size: Segment size that is used as input 100 equals 1 second with current Spectrogram extraction
@@ -38,7 +38,7 @@ from common.utils.pickler import load_speaker_pickle_or_h5
 
 
 class bilstm_2layer_dropout(object):
-    def __init__(self, name, training_data, n_hidden1, n_hidden2, n_classes, 
+    def __init__(self, name, training_data, n_hidden1, n_hidden2, dense_factor, 
                  epochs, active_learning_rounds,
                  segment_size, frequency=128):
         self.network_name = name
@@ -46,12 +46,13 @@ class bilstm_2layer_dropout(object):
         self.test_data = 'test' + training_data[5:]
         self.n_hidden1 = n_hidden1
         self.n_hidden2 = n_hidden2
-        self.n_classes = n_classes
+        self.dense_factor = dense_factor
         self.epochs = epochs
         self.active_learning_rounds = active_learning_rounds
         self.active_learning_pools = 0
         self.segment_size = segment_size
         self.input = (segment_size, frequency)
+        
         print(self.network_name)
         self.run_network()
 
@@ -70,10 +71,10 @@ class bilstm_2layer_dropout(object):
         #model.add(Bidirectional(CuDNNLSTM(self.n_hidden2)))
         model.add(Bidirectional(LSTM(self.n_hidden2)))
 
-        model.add(Dense(self.n_classes * 10))
+        model.add(Dense(self.dense_factor * 10))
         model.add(Dropout(0.25))
-        model.add(Dense(self.n_classes * 5))
-        model.add(Dense(self.n_classes))
+        model.add(Dense(self.dense_factor * 5))
+        model.add(Dense(self.dense_factor))
         model.add(Activation('softmax'))
         adam = keras.optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
 
