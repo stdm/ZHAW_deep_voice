@@ -52,6 +52,7 @@ DEFAULT_SEG_SIZE = 15
 DEFAULT_VEC_SIZE = 512
 DEFAULT_ACTIVELEARNING_ROUNDS = 50
 DEFAULT_EPOCHS = 1000
+DEFAULT_EPOCHS_BEFORE_ACTIVE_LEARNING = 100
 DEFAULT_DENSE_FACTOR = 100
 
 class Controller(NetworkController):
@@ -60,7 +61,8 @@ class Controller(NetworkController):
                  clear=DEFAULT_CLEAR, debug=DEFAULT_DEBUG, plot=DEFAULT_PLOT, best=DEFAULT_BEST,
                  val_number=DEFAULT_VAL_NUMBER, out_layer=DEFAULT_OUT_LAYER, seg_size=DEFAULT_SEG_SIZE,
                  vec_size=DEFAULT_VEC_SIZE, active_learning_rounds=DEFAULT_ACTIVELEARNING_ROUNDS,
-                 epochs=DEFAULT_EPOCHS, dense_factor=DEFAULT_DENSE_FACTOR):
+                 epochs=DEFAULT_EPOCHS, epochs_before_active_learning=DEFAULT_EPOCHS_BEFORE_ACTIVE_LEARNING, 
+                 dense_factor=DEFAULT_DENSE_FACTOR):
         super().__init__("Front", "speakers_40_clustering_vs_reynolds")
         self.setup = setup
         self.network = network
@@ -76,6 +78,7 @@ class Controller(NetworkController):
         self.vec_size = vec_size
         self.active_learning_rounds = active_learning_rounds
         self.epochs = epochs
+        self.epochs_before_active_learning = epochs_before_active_learning
         self.dense_factor = dense_factor
 
         validation_data = {
@@ -129,6 +132,7 @@ class Controller(NetworkController):
                     self.vec_size, 
                     self.active_learning_rounds,
                     self.epochs,
+                    self.epochs_before_active_learning,
                     self.dense_factor
                 )
             )
@@ -205,9 +209,11 @@ if __name__ == '__main__':
                         help='Vector size')
     parser.add_argument('-alr#', dest='active_learning_rounds', default=DEFAULT_ACTIVELEARNING_ROUNDS,
                         help='Active learning rounds (only used by VOX2 currently)')
-    parser.add_argument('-e#', dest='epochs', default=DEFAULT_EPOCHS,
+    parser.add_argument('-epochs_total#', dest='epochs_total', default=DEFAULT_EPOCHS,
                         help='Number of epochs to train in total')
-    parser.add_argument('-df#', dest='dense_factor', default=DEFAULT_DENSE_FACTOR,
+    parser.add_argument('-epochs_pre_alr#', dest='epochs_before_active_learning', default=DEFAULT_EPOCHS_BEFORE_ACTIVE_LEARNING,
+                        help='Number of epochs to train before active learning mechanism kicks in (only used by VOX2 currently)')
+    parser.add_argument('-dense_factor#', dest='dense_factor', default=DEFAULT_DENSE_FACTOR,
                         help='Factor for dense layer multiplication (Vox2 only)')
 
     args = parser.parse_args()
@@ -219,7 +225,8 @@ if __name__ == '__main__':
         val_number=args.validation_number, out_layer=int(args.out_layer), 
         seg_size=int(args.seg_size), vec_size=int(args.vec_size),
         active_learning_rounds=int(args.active_learning_rounds),
-        epochs=int(args.epochs), dense_factor=int(args.dense_factor)
+        epochs=int(args.epochs_total), epochs_before_active_learning=int(args.epochs_before_active_learning),
+        dense_factor=int(args.dense_factor)
     )
 
     controller.run()
