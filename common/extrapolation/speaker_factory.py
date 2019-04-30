@@ -26,7 +26,7 @@ def create_all_speakers():
     # yield Speaker(True, 40, 'timit_speakers_40_clustering_vs_reynolds', dataset="timit")
     # yield Speaker(True, 60, 'timit_speakers_60_clustering', dataset="timit")
     # yield Speaker(True, 80, 'timit_speakers_80_clustering', dataset="timit")
-    # yield Speaker(True, 590, 'timit_speakers_590_clustering_without_raynolds', dataset="timit")
+    # yield Speaker(True, 590, 'timit_speakers_590_clustering_without_reynolds', dataset="timit")
 
     # VoxCeleb2 Speakers
     # lehmacl1@2019-04-16: Since some of the voxceleb2 files are >1min long, setting a high
@@ -35,4 +35,4 @@ def create_all_speakers():
     #
     yield Speaker(False, 10, "vox2_speakers_10_test", dataset="voxceleb2", max_audio_length=800, speakers_per_partition=3)
     # yield Speaker(False, 5994, "vox2_speakers_5994_dev", dataset="voxceleb2", max_audio_length=800, speakers_per_partition=100)
-    yield Speaker(False, 120, "vox2_speakers_120_test", dataset="voxceleb2", max_audio_length=800, speakers_per_partition=30)
+    # yield Speaker(False, 120, "vox2_speakers_120_test", dataset="voxceleb2", max_audio_length=800, speakers_per_partition=30)

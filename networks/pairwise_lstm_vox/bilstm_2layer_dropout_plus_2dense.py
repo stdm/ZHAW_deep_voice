@@ -18,6 +18,7 @@ from .core import plot_saver as ps
 
 import common.spectogram.speaker_train_splitter as sts
 from common.utils.paths import *
+from common.utils.pickler import load_speaker_pickle_or_h5
 
 '''This Class Trains a Bidirectional LSTM with 2 Layers, and 2 Denselayer and a Dropout Layers
     Parameters:
@@ -81,15 +82,13 @@ class bilstm_2layer_dropout(object):
 
     def read_speaker_data(self, speaker_pickle):
         print('create_train_data', speaker_pickle)
-
-        with open(speaker_pickle, 'rb') as f:
-            (X, y, _) = pickle.load(f)
+        (X, y, _) = load_speaker_pickle_or_h5(speaker_pickle)
 
         return (X, y, speaker_pickle)
 
     def reader_speaker_data_round(self, activeLearningRound):
         training_data_round = self.training_data + '_' + str(activeLearningRound)
-        speaker_pickle = get_speaker_pickle(training_data_round)
+        speaker_pickle = get_speaker_pickle(training_data_round, format='.h5')
 
         if not path.exists(speaker_pickle):
             return self.reader_speaker_data_round(activeLearningRound % self.activeLearnerPools)
@@ -121,7 +120,7 @@ class bilstm_2layer_dropout(object):
         known_pool_data = dict()
 
         # initial train set
-        speaker_pickle = get_speaker_pickle(self.training_data)
+        speaker_pickle = get_speaker_pickle(self.training_data, format='.h5')
         X_pool, y_pool, _ = self.read_speaker_data(speaker_pickle)
         X_t, y_t, X_v, y_v = self.split_train_val_data(X_pool, y_pool)
 
@@ -130,7 +129,6 @@ class bilstm_2layer_dropout(object):
                 # query for uncertainty based on pool and append to numpy
                 self.active_learning_round(model, known_pool_data, i, X_t, X_v, y_t, y_v)
 
-            # TODO lehmacl1@2019-03-05: Müssen hier nicht 2er Potenzen als Batchsize (100) mitgegeben werden?
             train_gen = dg.batch_generator_lstm(X_t, y_t, 100, segment_size=self.segment_size)
             val_gen = dg.batch_generator_lstm(X_v, y_v, 100, segment_size=self.segment_size)
             # batches_t = ((X_t.shape[0] + 128 - 1) // 128)

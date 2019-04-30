@@ -10,7 +10,7 @@ from common.clustering.generate_embeddings import generate_embeddings
 from common.network_controller import NetworkController
 from common.utils.logger import *
 from common.utils.paths import *
-from common.utils.pickler import load
+from common.utils.pickler import load_speaker_pickle_or_h5
 from .bilstm_2layer_dropout_plus_2dense import bilstm_2layer_dropout
 from .core.data_gen import generate_test_data
 from .core.pairwise_kl_divergence import pairwise_kl_divergence
@@ -24,14 +24,11 @@ class LSTMVOX2Controller(NetworkController):
         self.vec_size = vec_size
 
     def train_network(self):
-        # lehmacl1@2019-04-13: WhyTF do you need to specify the amount
-        # of classes here hardcoded?
-        #
         nr_classes = 10
 
         bilstm_2layer_dropout(
             self.name + "_" + str(nr_classes), 
-            'vox2_speakers_' + str(nr_classes) + '_train', # _train suffix for train/test split, _cluster otherwise
+            'vox2_speakers_' + str(nr_classes) + '_test_cluster', # _train suffix for train/test split, _cluster otherwise
             n_hidden1=256, 
             n_hidden2=256, 
             n_classes=nr_classes, 
@@ -93,8 +90,8 @@ class LSTMVOX2Controller(NetworkController):
 
 def load_and_prepare_data(data_path, segment_size):
     # Load and generate test data
-    x, y, s_list = load(data_path)
-    x, speakers = generate_test_data(x, y, segment_size)
+    (X, y, _) = load_speaker_pickle_or_h5(data_path)
+    X, speakers = generate_test_data(X, y, segment_size)
 
     # Reshape test data because it is an lstm
-    return x.reshape(x.shape[0], x.shape[3], x.shape[2]), speakers
+    return X.reshape(X.shape[0], X.shape[3], X.shape[2]), speakers
