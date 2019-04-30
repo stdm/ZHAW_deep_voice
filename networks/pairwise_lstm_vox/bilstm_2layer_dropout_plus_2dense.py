@@ -39,7 +39,7 @@ from common.utils.pickler import load_speaker_pickle_or_h5
 
 class bilstm_2layer_dropout(object):
     def __init__(self, name, training_data, n_hidden1, n_hidden2, dense_factor, 
-                 epochs, active_learning_rounds,
+                 epochs, epochs_before_active_learning, active_learning_rounds,
                  segment_size, frequency=128):
         self.network_name = name
         self.training_data = training_data
@@ -48,6 +48,8 @@ class bilstm_2layer_dropout(object):
         self.n_hidden2 = n_hidden2
         self.dense_factor = dense_factor
         self.epochs = epochs
+        self.epochs_before_active_learning = epochs_before_active_learning
+        self.epochs_per_round = epochs / active_learning_rounds
         self.active_learning_rounds = active_learning_rounds
         self.active_learning_pools = 0
         self.segment_size = segment_size
@@ -122,11 +124,50 @@ class bilstm_2layer_dropout(object):
 
         return global_callbacks + [net_checkpoint]
 
+    def fit(self, model, calls, X_t, X_v, y_t, y_v, epochs_to_run):
+        train_gen = dg.batch_generator_lstm(X_t, y_t, 100, segment_size=self.segment_size)
+        val_gen = dg.batch_generator_lstm(X_v, y_v, 100, segment_size=self.segment_size)
+
+        # NOTE: lehmacl1@2019-04-14: bilstm_2layer_dropout_plus_2dense.py:113: UserWarning:
+        # The semantics of the Keras 2 argument `steps_per_epoch` is not the same as the Keras 1
+        # argument `samples_per_epoch`. `steps_per_epoch` is the number of batches to draw from the
+        # generator at each epoch. Basically steps_per_epoch = samples_per_epoch/batch_size.
+        #
+        # Similarly `nb_val_samples`->`validation_steps` and `val_samples`->`steps`
+        # arguments have changed. Update your method calls accordingly.
+
+        # NOTE: lehmacl1@2019-04-14: bilstm_2layer_dropout_plus_2dense.py:113: UserWarning:
+        # Update your `fit_generator` call to the Keras 2 API:
+        # `fit_generator(<generator..., callbacks=[<keras.ca..., use_multiprocessing=False,
+        # class_weight=None, epochs=1000, workers=1, steps_per_epoch=10, validation_steps=2,
+        # verbose=2, validation_data=<generator..., max_queue_size=10)`
+
+        history = model.fit_generator(
+            train_gen, 
+            steps_per_epoch=10, 
+            epochs=epochs_to_run,
+            callbacks=calls, 
+            validation_data=val_gen,
+            validation_steps=2, 
+            class_weight=None, 
+            max_q_size=10,
+            nb_worker=1, 
+            pickle_safe=False,
+            verbose=2
+        )
+
+        ps.save_accuracy_plot(history, self.network_name)
+        ps.save_loss_plot(history, self.network_name)
+
+        print("saving model")
+        model.save(get_experiment_nets(self.network_name + ".h5"))
+
     def run_network(self):
         # base keras network
         model = self.create_net()
         global_calls = self.create_callbacks()
         known_pool_data = dict()
+        epochs_trained = 0
 
         # initial train set
         speaker_pickle = get_speaker_pickle(self.training_data, format='.h5')
@@ -135,39 +176,35 @@ class bilstm_2layer_dropout(object):
         X_t_shapes = [ X_t.shape[0] ]
         X_v_shapes = [ X_v.shape[0] ]
 
-        for i in range(self.active_learning_rounds): # ActiveLearning Rounds
+        # initial train
+        self.fit(model, global_calls, X_t, X_v, y_t, y_v, self.epochs_before_active_learning)
+        
+        # update state
+        epochs_trained += self.epochs_before_active_learning
+
+        # active learning
+        for i in range(self.active_learning_rounds): 
+            print("Active learning round " + str(i) + "/" + str(self.active_learning_rounds))
             calls = self.create_round_specific_callbacks(global_calls, i)
 
-            if i != 0:
-                # query for uncertainty based on pool and append to numpy X_t, X_v, ... arrays
-                (X_t, X_v, y_t, y_v) = self.active_learning_round(model, known_pool_data, i, X_t, X_v, y_t, y_v)
+            if self.epochs >= (epochs_trained + self.epochs_per_round):
+                epochs_to_run = self.epochs_per_round
+            else:
+                epochs_to_run = self.epochs - epochs_trained
 
-            train_gen = dg.batch_generator_lstm(X_t, y_t, 100, segment_size=self.segment_size)
-            val_gen = dg.batch_generator_lstm(X_v, y_v, 100, segment_size=self.segment_size)
+            # if max epochs to train already reached before all rounds processed we can end the training
+            if epochs_to_run == 0:
+                print("Max epoch of " + str(self.epochs) + " reached, end of training")
+                break
+
+            # query for uncertainty based on pool and append to numpy X_t, X_v, ... arrays
+            (X_t, X_v, y_t, y_v) = self.active_learning_round(model, known_pool_data, i, X_t, X_v, y_t, y_v)
+            self.fit(model, calls, X_t, X_v, y_t, y_v, epochs_to_run)
 
             X_t_shapes.append(X_t.shape[0])
             X_v_shapes.append(X_v.shape[0])
 
-            history = model.fit_generator(
-                train_gen, 
-                steps_per_epoch=10, 
-                epochs=self.epochs,
-                callbacks=calls, 
-                validation_data=val_gen,
-                validation_steps=2, 
-                class_weight=None, 
-                max_q_size=10,
-                nb_worker=1, 
-                pickle_safe=False,
-                verbose=2
-            )
-
-            ps.save_accuracy_plot(history, self.network_name)
-            ps.save_loss_plot(history, self.network_name)
             ps.save_alr_shape_x_plot(self.network_name, [ X_t_shapes, X_v_shapes ])
-
-            print("saving model")
-            model.save(get_experiment_nets(self.network_name + ".h5"))
 
     def active_learning_round(self, model, known_pool_data: dict, round: int, X_t, X_v, y_t, y_v):
         X_pool, y_pool, pool_ident = self.reader_speaker_data_round(round)
@@ -200,7 +237,7 @@ class bilstm_2layer_dropout(object):
         new_X_v = np.append(X_v, r_x_v, axis=0)
         new_y_t = np.append(y_t, r_y_t, axis=0)
         new_y_v = np.append(y_v, r_y_v, axis=0)
-        
+
         return new_X_t, new_X_v, new_y_t, new_y_v
 
     def uncertainty_sampling(self, model, X, n_instances: int = 1):

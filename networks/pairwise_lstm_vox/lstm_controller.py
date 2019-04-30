@@ -18,13 +18,16 @@ from .core.pairwise_kl_divergence import pairwise_kl_divergence
 
 
 class LSTMVOX2Controller(NetworkController):
-    def __init__(self, out_layer, seg_size, vec_size, active_learning_rounds, epochs, dense_factor):
+    def __init__(self, out_layer, seg_size, vec_size, 
+                 active_learning_rounds, epochs, epochs_before_active_learning, 
+                 dense_factor):
         super().__init__("pairwise_lstm_vox2", "vox2_speakers")
         self.out_layer = out_layer
         self.seg_size = seg_size
         self.vec_size = vec_size
         self.active_learning_rounds = active_learning_rounds
         self.epochs = epochs
+        self.epochs_before_active_learning = epochs_before_active_learning
         self.dense_factor = dense_factor
 
     def train_network(self):
@@ -36,7 +39,8 @@ class LSTMVOX2Controller(NetworkController):
             n_hidden1=256, 
             n_hidden2=256, 
             dense_factor=self.dense_factor, 
-            epochs=self.epochs / self.active_learning_rounds,
+            epochs=self.epochs,
+            epochs_before_active_learning=self.epochs_before_active_learning,
             active_learning_rounds=self.active_learning_rounds,
             segment_size=self.seg_size
         )
