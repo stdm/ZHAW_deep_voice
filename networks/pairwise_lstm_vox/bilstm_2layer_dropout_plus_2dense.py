@@ -212,13 +212,16 @@ class bilstm_2layer_dropout(object):
     def active_learning_round(self, model, known_pool_data: dict, round: int, X_t, X_v, y_t, y_v):
         X_pool, y_pool, pool_ident = self.reader_speaker_data_round(round)
         # query for uncertainty
-        query_idx = self.uncertainty_sampling(model, X_pool, n_instances=100)
+        query_idx = self.uncertainty_sampling(model, X_pool, n_instances=250)
+        # print("active_learning_round_1 round: {}, Xt: {}, Xv: {}, yt: {}, yv: {}, query_idx: {}".format(round, X_t.shape, X_v.shape, y_t.shape, y_v.shape, query_idx.shape))
 
         # Converts np.ndarray to dytpe int, default is float
         query_idx = query_idx.astype('int')
+        # print("active_learning_round_2 query_idx: {}".format(query_idx.shape))
 
         x_us = X_pool[query_idx]
         y_us = y_pool[query_idx]
+        # print("active_learning_round_3 x_us: {}, y_us: {}".format(x_us.shape, y_us.shape))
 
         if not pool_ident in known_pool_data.keys():
             known_pool_data[pool_ident] = []
@@ -232,14 +235,18 @@ class bilstm_2layer_dropout(object):
         x_us = np.delete(x_us, numpArray, axis=0)
         y_us = np.delete(y_us, numpArray, axis=0)
         
+        # print("active_learning_round_4 numpArray: {}, x_us: {}, y_us: {}".format(numpArray.shape, x_us.shape, y_us.shape))
+
         # split the new records into test and val
         r_x_t, r_y_t, r_x_v, r_y_v = self.split_train_val_data(x_us, y_us)
+        # print("active_learning_round_5 rxt: {}, ryt: {}, rxv: {}, ryv: {}".format(r_x_t.shape, r_y_t.shape, r_x_v.shape, r_y_v.shape))
 
         # append to used / passed sets
         new_X_t = np.append(X_t, r_x_t, axis=0)
         new_X_v = np.append(X_v, r_x_v, axis=0)
         new_y_t = np.append(y_t, r_y_t, axis=0)
         new_y_v = np.append(y_v, r_y_v, axis=0)
+        # print("active_learning_round_5 new_X_t: {}, new_X_v: {}, new_y_t: {}, new_y_v: {}".format(new_X_t.shape, new_X_v.shape, new_y_t.shape, new_y_v.shape))
 
         return new_X_t, new_X_v, new_y_t, new_y_v
 
@@ -254,12 +261,21 @@ class bilstm_2layer_dropout(object):
             The indices of the instances from X chosen to be labelled;
         """
         try:
-            classwise_uncertainty = model.predict(X)
+            # lehmacl1@2019-05-01: Currently takes only the first 400ms (segment_size) to evaluate
+            # the classwise uncertainty for comparison
+            #
+            reshaped_X = X.reshape(X.shape[0], X.shape[3], X.shape[2])
+            # print("uncertainty_sampling reshaped_X: {}".format(reshaped_X.shape))
+            resized_X = reshaped_X[:, range(self.segment_size), :]
+            # print("uncertainty_sampling resized_X: {}".format(resized_X.shape))
+            classwise_uncertainty = model.predict(resized_X)
         except ValueError:
-            return np.ones(shape=(X.shape[0], ))
+            classwise_uncertainty = np.ones(shape=(X.shape[0], ))
 
         # for each point, select the maximum uncertainty
         uncertainty = 1 - np.max(classwise_uncertainty, axis=1)
+        # print('')
+        # print("uncertainty_sampling X: {}, n_instances: {}, uncertainty: {}".format(X.shape, n_instances, uncertainty))
         query_idx = self.multi_argmax(uncertainty, n_instances=n_instances)
         return query_idx
 
@@ -274,4 +290,6 @@ class bilstm_2layer_dropout(object):
         """
         assert n_instances <= values.shape[0], 'n_instances must be less or equal than the size of utility'
         max_idx = np.argpartition(-values, n_instances-1, axis=0)[:n_instances]
+        # print('')
+        # print("multi_argmax values: {}, n_instances: {}, max_idx: {}".format(values.shape, n_instances, max_idx.shape))
         return max_idx
