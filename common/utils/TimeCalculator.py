@@ -2,6 +2,13 @@ from collections import Counter
 
 ONE_SECOND = 100
 
+def calc_time_all_utterances(segments_list, seg_length):
+    total_time = []
+    for segments in segments_list:
+        time = calc_time_per_utterance(segments, seg_length)
+        total_time.extend(time)
+    return total_time
+
 def calc_time_long_short_utterances(segments_train, segments_test, seg_length):
     '''
     :param segments_traing: A list containing the utterances corresponding to the segments.
@@ -40,4 +47,8 @@ if __name__ == '__main__':
     segments_test = [0,0,1,1,2,2,2,3]
     seg_length = 100
     time = calc_time_long_short_utterances(segments_train, segments_test, seg_length)
+    assert time == [5.0, 4.0, 7.0, 3.0, 2.0, 2.0, 3.0, 1.0]
+
+    segments_list = [segments_train, segments_test]
+    time = calc_time_all_utterances(segments_list, seg_length)
     assert time == [5.0, 4.0, 7.0, 3.0, 2.0, 2.0, 3.0, 1.0]
