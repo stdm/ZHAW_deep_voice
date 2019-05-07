@@ -88,7 +88,7 @@ class bilstm_2layer_dropout(object):
         adam = keras.optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
 
         model.compile(loss=kld.pairwise_kl_divergence, optimizer=adam, metrics=['accuracy'])
-        print(model)
+        print(model.summary())
         return model
 
     def read_speaker_data(self, speaker_pickle):
