@@ -17,7 +17,7 @@ def load_speaker_pickle_or_h5(path):
 
     if pickle_format == 'h5':
         with h5py.File(path,'r') as f:
-            X = f['X'][:][:][:][:]
+            X = f['X'][:,:,:,:]
             y = f['y'][:]
             speaker_names = f['speaker_names'][:]
             f.close()
