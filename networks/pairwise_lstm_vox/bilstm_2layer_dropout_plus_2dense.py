@@ -49,8 +49,14 @@ class bilstm_2layer_dropout(object):
         self.n_hidden2 = n_hidden2
         self.dense_factor = dense_factor
         self.epochs = epochs
-        self.epochs_before_active_learning = epochs_before_active_learning
-        self.epochs_per_round = ceil((epochs - epochs_before_active_learning) / active_learning_rounds)
+
+        if active_learning_rounds == 0:
+            self.epochs_before_active_learning = epochs
+            self.epochs_per_round = 0
+        else:
+            self.epochs_before_active_learning = epochs_before_active_learning
+            self.epochs_per_round = ceil((epochs - epochs_before_active_learning) / active_learning_rounds)
+        
         self.active_learning_rounds = active_learning_rounds
         self.active_learning_pools = 0
         self.segment_size = segment_size
@@ -175,7 +181,8 @@ class bilstm_2layer_dropout(object):
         y_pool = None
 
         # initial train
-        self.fit(model, global_calls, X_t, X_v, y_t, y_v, self.epochs_before_active_learning)
+        if self.epochs_before_active_learning != 0:
+            self.fit(model, global_calls, X_t, X_v, y_t, y_v, self.epochs_before_active_learning)
         
         # update state
         epochs_trained += self.epochs_before_active_learning
