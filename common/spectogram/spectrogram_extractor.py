@@ -22,23 +22,25 @@ class SpectrogramExtractor:
         """
 
         global_idx = 0
-        curr_speaker_num = -1
+        curr_speaker_num = 0
         max_speakers = len(speaker_files.keys())
 
         # Crawl the base and all sub folders
         for speaker in speaker_files.keys():
             curr_speaker_num += 1
+            speaker_uid = hash(speaker)
 
-            print('Extraction progress: %d/%d' % (curr_speaker_num + 1, max_speakers))
+            print('Extraction progress: %d/%d' % (curr_speaker_num, max_speakers))
 
             # Extract files
             for full_path in speaker_files[speaker]:
-                extract_mel_spectrogram(full_path, X, y, global_idx, curr_speaker_num)
+                extract_mel_spectrogram(full_path, X, y, global_idx, speaker_uid)
                 global_idx += 1
+
 
         return X[0:global_idx], y[0:global_idx]
 
-def extract_mel_spectrogram(wav_path, X, y, index, curr_speaker_num):
+def extract_mel_spectrogram(wav_path, X, y, index, speaker_uid):
     """
     Extracts the mel spectrogram into the X array and saves the speaker into y.
 
@@ -46,7 +48,7 @@ def extract_mel_spectrogram(wav_path, X, y, index, curr_speaker_num):
     :param X: return Array that saves the mel spectrogram
     :param y: return Array that saves the speaker numbers
     :param index: the index in X and y this is stored in
-    :param curr_speaker_num: the speaker number of the current speaker
+    :param speaker_uid: the speaker number of the current speaker (integer hash of his identifier)
     :return: a one (1) to increase the index
     """
     #print('processing ', wav_path)
@@ -58,7 +60,7 @@ def extract_mel_spectrogram(wav_path, X, y, index, curr_speaker_num):
             if j >= X.shape[3]:
                 continue
             X[index, 0, i, j] = Sxx[i, j]
-    y[index] = curr_speaker_num
+    y[index] = speaker_uid
 
 
 # Extracts the spectrogram and discards all padded data

@@ -44,7 +44,6 @@ class bilstm_2layer_dropout(object):
                  segment_size, frequency=128):
         self.network_name = name
         self.training_data = training_data
-        self.test_data = 'test' + training_data[5:]
         self.n_hidden1 = n_hidden1
         self.n_hidden2 = n_hidden2
         self.dense_factor = dense_factor

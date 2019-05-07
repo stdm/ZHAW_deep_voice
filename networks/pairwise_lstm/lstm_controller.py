@@ -25,6 +25,9 @@ class LSTMController(NetworkController):
         self.vec_size = vec_size
         self.epochs = epochs
 
+    def get_network_name(self):
+        return self.name + "_100"
+
     def train_network(self):
 
         n_classes = 100

@@ -21,7 +21,7 @@ class LSTMVOX2Controller(NetworkController):
     def __init__(self, out_layer, seg_size, vec_size, 
                  active_learning_rounds, epochs, epochs_before_active_learning, 
                  dense_factor):
-        super().__init__("pairwise_lstm_vox2", "vox2_speakers")
+        super().__init__("pairwise_lstm_vox2", "vox2_speakers_120_test_cluster")
         self.out_layer = out_layer
         self.seg_size = seg_size
         self.vec_size = vec_size
@@ -30,10 +30,30 @@ class LSTMVOX2Controller(NetworkController):
         self.epochs_before_active_learning = epochs_before_active_learning
         self.dense_factor = dense_factor
 
+        self.train_data = "vox2_speakers_5994_dev_cluster"
+        self.val_data = "vox2_speakers_120_test_cluster"
+
+    
+    def get_validation_train_data(self):
+        return get_speaker_pickle(self.train_data, ".h5")
+
+    def get_validation_test_data(self):
+        return get_speaker_pickle(self.val_data, ".h5")
+
+    def get_network_name(self):
+        return "{}__{}__{}__{}__{}__{}".format(
+            self.name, 
+            self.train_data, 
+            self.dense_factor, 
+            self.epochs, 
+            self.epochs_before_active_learning, 
+            self.active_learning_rounds
+        )
+
     def train_network(self):
         bilstm_2layer_dropout(
-            self.name + "__5994_dev__" + str(self.dense_factor) + "__" + strftime("%Y%m%d_%H%M%S",gmtime()), 
-            'vox2_speakers_5994_dev_cluster', # _train suffix for train/test split, _cluster otherwise
+            self.get_network_name(), 
+            self.train_data, # _train suffix for train/test split, _cluster otherwise
             # 'vox2_speakers_120_test_cluster', # _train suffix for train/test split, _cluster otherwise
             # 'vox2_speakers_10_test_cluster', # _train suffix for train/test split, _cluster otherwise
             n_hidden1=256, 
@@ -60,12 +80,12 @@ class LSTMVOX2Controller(NetworkController):
         set_of_embeddings = []
         set_of_speakers = []
         speaker_numbers = []
-        checkpoints = list_all_files(get_experiment_nets(), "*pairwise_lstm*.h5")
+        checkpoints = list_all_files(get_experiment_nets(), self.get_network_name() + "*.h5")
 
         # Values out of the loop
         metrics = ['accuracy', 'categorical_accuracy', ]
         loss = pairwise_kl_divergence
-        custom_objects = {'pairwise_kl_divergence': pairwise_kl_divergence}
+        custom_objects = { 'pairwise_kl_divergence': pairwise_kl_divergence }
         optimizer = 'rmsprop'
         vector_size = self.vec_size #256 * 2
 
@@ -84,8 +104,10 @@ class LSTMVOX2Controller(NetworkController):
             logger.info('test_output len -> ' + str(test_output.shape))
             logger.info('train_output len -> ' + str(train_output.shape))
 
-            embeddings, speakers, num_embeddings = generate_embeddings(train_output, test_output, speakers_train,
-                                                                       speakers_test, vector_size)
+            embeddings, speakers, num_embeddings = generate_embeddings(
+                train_output, test_output, speakers_train,
+                speakers_test, vector_size
+            )
 
             # Fill the embeddings and speakers into the arrays
             set_of_embeddings.append(embeddings)
