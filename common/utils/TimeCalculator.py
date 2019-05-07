@@ -43,12 +43,20 @@ def calc_time_per_utterance(segments, seg_length):
     return time
 
 if __name__ == '__main__':
-    segments_train = [0,0,0,0,0,1,1,1,1,2,2,2,2,2,2,2,3,3,3]
+    segments_train = [0,0,0,0,0,1,1,1,1,2,2,2,3,2,3,3]
     segments_test = [0,0,1,1,2,2,2,3]
     seg_length = 100
     time = calc_time_long_short_utterances(segments_train, segments_test, seg_length)
-    assert time == [5.0, 4.0, 7.0, 3.0, 2.0, 2.0, 3.0, 1.0]
+    assert time == [5.0, 4.0, 4.0, 3.0, 2.0, 2.0, 3.0, 1.0]
 
     segments_list = [segments_train, segments_test]
     time = calc_time_all_utterances(segments_list, seg_length)
-    assert time == [5.0, 4.0, 7.0, 3.0, 2.0, 2.0, 3.0, 1.0]
+    assert time == [5.0, 4.0, 4.0, 3.0, 2.0, 2.0, 3.0, 1.0]
+
+    segments_list = [[0,0,1,3],
+                [0,1,2,2],
+                [0,1,2,3],
+                [0,1,2,3]]
+
+    time = calc_time_all_utterances(segments_list, seg_length)
+    assert time == [2.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
