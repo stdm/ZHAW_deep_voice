@@ -29,11 +29,17 @@ class LSTMVOX2Controller(NetworkController):
         self.epochs = epochs
         self.epochs_before_active_learning = epochs_before_active_learning
         self.dense_factor = dense_factor
-
+        
+        # Currently prepared speaker_lists have the following datasets:
+        #
+        # 'vox2_speakers_5994_dev_cluster', # _train suffix for train/test split, _cluster otherwise
+        # 'vox2_speakers_120_test_cluster', # _train suffix for train/test split, _cluster otherwise
+        # 'vox2_speakers_10_test_cluster', # _train suffix for train/test split, _cluster otherwise
+        #
         self.train_data = "vox2_speakers_5994_dev_cluster"
+        # :val_data means TEST dataset
         self.val_data = "vox2_speakers_120_test_cluster"
-
-    
+        
     def get_validation_train_data(self):
         return get_speaker_pickle(self.train_data, ".h5")
 
@@ -53,9 +59,7 @@ class LSTMVOX2Controller(NetworkController):
     def train_network(self):
         bilstm_2layer_dropout(
             self.get_network_name(), 
-            self.train_data, # _train suffix for train/test split, _cluster otherwise
-            # 'vox2_speakers_120_test_cluster', # _train suffix for train/test split, _cluster otherwise
-            # 'vox2_speakers_10_test_cluster', # _train suffix for train/test split, _cluster otherwise
+            self.train_data,
             n_hidden1=256, 
             n_hidden2=256, 
             dense_factor=self.dense_factor, 
