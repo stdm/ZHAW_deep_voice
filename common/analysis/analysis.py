@@ -92,10 +92,10 @@ def _plot_curves(plot_file_name, curve_names, metric_sets, number_of_embeddings)
 
     # Define number of figures
     fig1 = plt.figure(1)
-    fig1.set_size_inches(16, 16)
+    fig1.set_size_inches(16, 20)
 
     # Define Plots
-    plot_grid = (len(metric_names),3)
+    plot_grid = (len(metric_names)-1,3)
 
     plots = [None] * len(metric_names)
 
