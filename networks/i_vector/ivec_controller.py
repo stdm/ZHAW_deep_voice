@@ -72,8 +72,8 @@ class IVECController(NetworkController):
         test_iv_short = test_stat_long.estimate_hidden(tv_mean, tv_sigma, V=tv, batch_size=100, num_thread=nbThread)[0]
 
         #generate embeddings
-        embeddings, speakers, num_embeddings=generate_embeddings(test_iv_long, test_iv_short, test_list_long,
-                                                                       test_list_short, vector_size)
+        embeddings, speakers, num_embeddings=generate_embeddings([test_iv_long, test_iv_short], [test_list_long,
+                                                                       test_list_short], vector_size)
 
         set_of_embeddings.append(embeddings)
         set_of_speakers.append(speakers)
