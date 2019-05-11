@@ -98,7 +98,12 @@ class Controller(NetworkController):
             network_controller.test_network(self.out_layer, self.seg_size, self.vec_size, self.best, file_format=self.get_file_format())
 
     def plot_results(self):
-        plot_files(self.network, self.get_result_files())
+        if self.network == 'pairwise_lstm_vox2':
+            plot_name = self.network_controllers[0].get_network_name()
+        else:
+            plot_name = self.network
+            
+        plot_files(plot_name, self.get_result_files())
 
     def get_embeddings(self):
         return None, None, None, None

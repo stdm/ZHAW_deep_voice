@@ -31,7 +31,7 @@ def read_result_pickle(files):
     :return:        curve names, thresholds, mrs, homogeneity scores, completeness scores and number of embeddings
     """
     logger = get_logger('analysis', logging.INFO)
-    logger.info("Read result pickle || files: {}".format(len(files)))
+    logger.info("Read result pickle")
     curve_names = []
 
     # Initialize result sets
@@ -43,28 +43,7 @@ def read_result_pickle(files):
 
     # Fill result sets
     for file in files:
-        # file_split = file.split('.')
-        # file_format = file_split[len(file_split) - 1]
-        # print("file: {}, file_format: {}".format(file, file_format))
-
-        # if file_format == 'h5':
-        #     file_path_without_ext = get_result_pickle(file_split[0], format='.h5')
-        #     print("\tfile_path_without_ext: {}".format(file_path_without_ext))
-        #     (
-        #         curve_name,
-        #         mrs,
-        #         homogeneity_scores,
-        #         completeness_scores,
-        #         number_of_embeddings
-        #     ) = load_h5(file_path_without_ext)
-
-        # else:
         curve_name, mrs, homogeneity_scores, completeness_scores, number_of_embeddings = load(get_result_pickle(file.split('.')[0]))
-        print("curve_name: {}".format(curve_name))
-        print("mrs: {}".format(mrs))
-        print("homogeneity_scores: {}".format(homogeneity_scores))
-        print("completeness_scores: {}".format(completeness_scores))
-        print("number_of_embeddings: {}".format(number_of_embeddings))
 
         for index, curve_name in enumerate(curve_name):
             set_of_mrs.append(mrs[index])
@@ -126,7 +105,14 @@ def plot_curves(plot_file_name, curve_names, mrs, homogeneity_scores, completene
     for index in range(number_of_lines):
         label = curve_names[index] + '\n min MR: ' + str(min_mrs[index])
         color = colors[index]
-        number_of_clusters = np.arange(number_of_embeddings[index], 0, -1)
+
+        # lehmacl1@2019-05-12:
+        # In VoxCeleb2, the number of speakers in the training and test sets are NOT the same,
+        # thus 2*num_speakers as total is wrong. instead look at the amount of entries
+        # 
+        # Original:
+        # number_of_clusters = np.arange(number_of_embeddings[index], 0, -1)
+        number_of_clusters = np.arange(len(curves[0][1][0]), 0, -1)
 
         for plot, value in curves:
             plot.plot(number_of_clusters, value[index], color=color, label=label)
@@ -280,24 +266,6 @@ def write_result_pickle(network_name, checkpoint_names, set_of_mrs, set_of_homog
     logger = get_logger('analysis', logging.INFO)
     logger.info('Write result ' + file_format)
 
-    # if file_format == '.h5':
-    print("checkpoint_names: {}".format(checkpoint_names))
-    print("set_of_mrs: {}".format(set_of_mrs))
-    print("set_of_homogeneity_scores: {}".format(set_of_homogeneity_scores))
-    print("set_of_completeness_scores: {}".format(set_of_completeness_scores))
-    print("number_of_embeddings: {}".format(number_of_embeddings))
-
-    #     save_h5(
-    #         (
-    #             checkpoint_names,
-    #             set_of_mrs,
-    #             set_of_homogeneity_scores,
-    #             set_of_completeness_scores,
-    #             number_of_embeddings
-    #         ),
-    #         get_result_pickle(network_name, format='.h5')
-    #     )
-    # else:
     save(
         (
             checkpoint_names,
