@@ -65,7 +65,7 @@ class NetworkController:
 
         return checkpoint_names, set_of_predicted_clusters, set_of_true_clusters, embeddings_numbers
 
-    def test_network(self, out_layer, seg_size, vec_size, best):
+    def test_network(self, out_layer, seg_size, vec_size, best, file_format='.pickle'):
         """
         Tests the network implementation with the validation data set and saves the result sets
         of the different metrics in analysis.
@@ -84,5 +84,6 @@ class NetworkController:
             checkpoint_names, 
             set_of_predicted_clusters, 
             set_of_true_clusters,
-            embeddings_numbers
+            embeddings_numbers,
+            file_format=file_format
         )

@@ -36,9 +36,11 @@ class LSTMVOX2Controller(NetworkController):
         # 'vox2_speakers_120_test_cluster', # _train suffix for train/test split, _cluster otherwise
         # 'vox2_speakers_10_test_cluster', # _train suffix for train/test split, _cluster otherwise
         #
-        self.train_data = "vox2_speakers_5994_dev_cluster"
+        self.train_data = "vox2_speakers_10_test_cluster"
+        # self.train_data = "vox2_speakers_5994_dev_cluster"
         # :val_data means TEST dataset
-        self.val_data = "vox2_speakers_120_test_cluster"
+        self.val_data = "vox2_speakers_10_test_cluster"
+        # self.val_data = "vox2_speakers_120_test_cluster"
         
     def get_validation_train_data(self):
         return get_speaker_pickle(self.train_data, ".h5")

@@ -1,4 +1,5 @@
 import matplotlib
+import h5py
 
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -8,7 +9,7 @@ from theano.gradient import np
 from common.analysis.mr import misclassification_rate
 from common.utils.logger import *
 from common.utils.paths import *
-from common.utils.pickler import load, save
+from common.utils.pickler import load, load_h5, save, save_h5
 
 
 def plot_files(plot_file_name, files):
@@ -21,7 +22,6 @@ def plot_files(plot_file_name, files):
     curve_names, set_of_mrs, set_of_homogeneity_scores, set_of_completeness_scores, set_of_number_of_embeddings = read_result_pickle(files)
     plot_curves(plot_file_name, curve_names, set_of_mrs, set_of_homogeneity_scores, set_of_completeness_scores, set_of_number_of_embeddings)
 
-
 def read_result_pickle(files):
     """
     Reads the results of a network from these files.
@@ -31,7 +31,7 @@ def read_result_pickle(files):
     :return:        curve names, thresholds, mrs, homogeneity scores, completeness scores and number of embeddings
     """
     logger = get_logger('analysis', logging.INFO)
-    logger.info('Read result pickle')
+    logger.info("Read result pickle || files: {}".format(len(files)))
     curve_names = []
 
     # Initialize result sets
@@ -43,7 +43,28 @@ def read_result_pickle(files):
 
     # Fill result sets
     for file in files:
-        curve_name, mrs, homogeneity_scores, completeness_scores, number_of_embeddings = load(file)
+        # file_split = file.split('.')
+        # file_format = file_split[len(file_split) - 1]
+        # print("file: {}, file_format: {}".format(file, file_format))
+
+        # if file_format == 'h5':
+        #     file_path_without_ext = get_result_pickle(file_split[0], format='.h5')
+        #     print("\tfile_path_without_ext: {}".format(file_path_without_ext))
+        #     (
+        #         curve_name,
+        #         mrs,
+        #         homogeneity_scores,
+        #         completeness_scores,
+        #         number_of_embeddings
+        #     ) = load_h5(file_path_without_ext)
+
+        # else:
+        curve_name, mrs, homogeneity_scores, completeness_scores, number_of_embeddings = load(get_result_pickle(file.split('.')[0]))
+        print("curve_name: {}".format(curve_name))
+        print("mrs: {}".format(mrs))
+        print("homogeneity_scores: {}".format(homogeneity_scores))
+        print("completeness_scores: {}".format(completeness_scores))
+        print("number_of_embeddings: {}".format(number_of_embeddings))
 
         for index, curve_name in enumerate(curve_name):
             set_of_mrs.append(mrs[index])
@@ -134,7 +155,7 @@ def add_cluster_subplot(fig, position, y_lable):
     return subplot
 
 
-def analyse_results(network_name, checkpoint_names, set_of_predicted_clusters, set_of_true_clusters, embedding_numbers):
+def analyse_results(network_name, checkpoint_names, set_of_predicted_clusters, set_of_true_clusters, embedding_numbers, file_format='.pickle'):
     """
     Analyses each checkpoint with the values of set_of_predicted_clusters and set_of_true_clusters.
     After the analysis the result are stored in the Pickle network_name.pickle and the best Result
@@ -161,10 +182,24 @@ def analyse_results(network_name, checkpoint_names, set_of_predicted_clusters, s
         set_of_homogeneity_scores.append(homogeneity_scores)
         set_of_completeness_scores.append(completeness_scores)
 
-    write_result_pickle(network_name, checkpoint_names, set_of_mrs, set_of_homogeneity_scores,
-                        set_of_completeness_scores, embedding_numbers)
-    save_best_results(network_name, checkpoint_names, set_of_mrs, set_of_homogeneity_scores,
-                      set_of_completeness_scores, embedding_numbers)
+    write_result_pickle(
+        network_name, 
+        checkpoint_names, 
+        set_of_mrs, 
+        set_of_homogeneity_scores,
+        set_of_completeness_scores,
+        embedding_numbers,
+        file_format=file_format
+    )
+    save_best_results(
+        network_name, 
+        checkpoint_names, 
+        set_of_mrs, 
+        set_of_homogeneity_scores,
+        set_of_completeness_scores, 
+        embedding_numbers,
+        file_format=file_format
+    )
     logger.info('Analysis done')
 
 
@@ -196,10 +231,17 @@ def calculate_analysis_values(predicted_clusters, true_cluster):
 
 
 def save_best_results(network_name, checkpoint_names, set_of_mrs, set_of_homogeneity_scores,
-                      set_of_completeness_scores, speaker_numbers):
+                      set_of_completeness_scores, speaker_numbers, file_format='.pickle'):
     if len(set_of_mrs) == 1:
-        write_result_pickle(network_name + "_best", checkpoint_names, set_of_mrs,
-                            set_of_homogeneity_scores, set_of_completeness_scores, speaker_numbers)
+        write_result_pickle(
+            network_name + "_best",
+            checkpoint_names,
+            set_of_mrs,
+            set_of_homogeneity_scores,
+            set_of_completeness_scores,
+            speaker_numbers,
+            file_format=file_format
+        )
     else:
 
         # Find best result (min MR)
@@ -222,16 +264,50 @@ def save_best_results(network_name, checkpoint_names, set_of_mrs, set_of_homogen
                 set_of_best_completeness_scores.append(set_of_completeness_scores[index])
                 best_speaker_numbers.append(speaker_numbers[index])
 
-        write_result_pickle(network_name + "_best", best_checkpoint_name, set_of_best_mrs,
-                            set_of_best_homogeneity_scores, set_of_best_completeness_scores, best_speaker_numbers)
+        write_result_pickle(
+            network_name + "_best",
+            best_checkpoint_name,
+            set_of_best_mrs,
+            set_of_best_homogeneity_scores,
+            set_of_best_completeness_scores,
+            best_speaker_numbers,
+            file_format=file_format
+        )
 
 
 def write_result_pickle(network_name, checkpoint_names, set_of_mrs, set_of_homogeneity_scores,
-                        set_of_completeness_scores, number_of_embeddings):
+                        set_of_completeness_scores, number_of_embeddings, file_format='.pickle'):
     logger = get_logger('analysis', logging.INFO)
-    logger.info('Write result pickle')
-    save((checkpoint_names, set_of_mrs, set_of_homogeneity_scores, set_of_completeness_scores,
-          number_of_embeddings), get_result_pickle(network_name))
+    logger.info('Write result ' + file_format)
+
+    # if file_format == '.h5':
+    print("checkpoint_names: {}".format(checkpoint_names))
+    print("set_of_mrs: {}".format(set_of_mrs))
+    print("set_of_homogeneity_scores: {}".format(set_of_homogeneity_scores))
+    print("set_of_completeness_scores: {}".format(set_of_completeness_scores))
+    print("number_of_embeddings: {}".format(number_of_embeddings))
+
+    #     save_h5(
+    #         (
+    #             checkpoint_names,
+    #             set_of_mrs,
+    #             set_of_homogeneity_scores,
+    #             set_of_completeness_scores,
+    #             number_of_embeddings
+    #         ),
+    #         get_result_pickle(network_name, format='.h5')
+    #     )
+    # else:
+    save(
+        (
+            checkpoint_names,
+            set_of_mrs,
+            set_of_homogeneity_scores,
+            set_of_completeness_scores,
+            number_of_embeddings
+        ),
+        get_result_pickle(network_name)
+    )
 
 
 def read_and_safe_best_results():
