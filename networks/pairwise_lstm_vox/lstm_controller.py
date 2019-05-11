@@ -69,7 +69,7 @@ class LSTMVOX2Controller(NetworkController):
             segment_size=self.seg_size
         )
 
-    def get_embeddings(self, out_layer, seg_size, vec_size):
+    def get_embeddings(self, out_layer, seg_size, vec_size, best):
         logger = get_logger('lstm', logging.INFO)
         logger.info('Run pairwise_lstm test')
         logger.info('out_layer -> ' + str(self.out_layer))
@@ -84,7 +84,13 @@ class LSTMVOX2Controller(NetworkController):
         set_of_embeddings = []
         set_of_speakers = []
         speaker_numbers = []
-        checkpoints = list_all_files(get_experiment_nets(), self.get_network_name() + "*.h5")
+
+        if best:
+            file_regex = self.get_network_name() + "*_best.h5"
+        else:
+            file_regex = self.get_network_name() + "*.h5"
+
+        checkpoints = list_all_files(get_experiment_nets(), file_regex)
 
         # Values out of the loop
         metrics = ['accuracy', 'categorical_accuracy', ]

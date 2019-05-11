@@ -36,7 +36,7 @@ class NetworkController:
         pass
 
     @abc.abstractmethod
-    def get_embeddings(self, out_layer, seg_size, vec_size):
+    def get_embeddings(self, out_layer, seg_size, vec_size, best):
         """
         Processes the validation list and get's the embeddings as the network output.
         All return values are sets of possible multiples.
@@ -44,7 +44,7 @@ class NetworkController:
         """
         return None, None, None, None
 
-    def get_clusters(self, out_layer, seg_size, vec_size):
+    def get_clusters(self, out_layer, seg_size, vec_size, best):
         """
         Generates the predicted_clusters with the results of get_embeddings.
         All return values are sets of possible multiples.
@@ -54,18 +54,35 @@ class NetworkController:
         set_of_true_clusters: A 2d array of the validation clusters. [checkpoint, validation-clusters]
         embeddings_numbers: A list which represent the number of embeddings in each checkpoint.
         """
-        checkpoint_names, set_of_embeddings, set_of_true_clusters, embeddings_numbers = self.get_embeddings(out_layer=out_layer, seg_size=seg_size, vec_size=vec_size)
+        checkpoint_names, set_of_embeddings, set_of_true_clusters, embeddings_numbers = self.get_embeddings(
+            out_layer=out_layer, 
+            seg_size=seg_size, 
+            vec_size=vec_size,
+            best=best
+        )
+        
         set_of_predicted_clusters = cluster_embeddings(set_of_embeddings)
 
         return checkpoint_names, set_of_predicted_clusters, set_of_true_clusters, embeddings_numbers
 
-    def test_network(self, out_layer, seg_size, vec_size):
+    def test_network(self, out_layer, seg_size, vec_size, best):
         """
         Tests the network implementation with the validation data set and saves the result sets
         of the different metrics in analysis.
         """
         network_name = self.get_network_name()
-        checkpoint_names, set_of_predicted_clusters, set_of_true_clusters, embeddings_numbers = self.get_clusters(out_layer, seg_size, vec_size)
+
+        checkpoint_names, set_of_predicted_clusters, set_of_true_clusters, embeddings_numbers = self.get_clusters(
+            out_layer=out_layer, 
+            seg_size=seg_size, 
+            vec_size=vec_size,
+            best=best
+        )
         
-        analyse_results(network_name, checkpoint_names, set_of_predicted_clusters, set_of_true_clusters,
-                        embeddings_numbers)
+        analyse_results(
+            network_name, 
+            checkpoint_names, 
+            set_of_predicted_clusters, 
+            set_of_true_clusters,
+            embeddings_numbers
+        )

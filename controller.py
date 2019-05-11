@@ -95,7 +95,10 @@ class Controller(NetworkController):
 
     def test_network(self):
         for network_controller in self.network_controllers:
-            network_controller.test_network(self.out_layer, self.seg_size, self.vec_size)
+            network_controller.test_network(self.out_layer, self.seg_size, self.vec_size, self.best)
+
+    def plot_results(self):
+        plot_files(self.network, self.get_result_files())
 
     def get_embeddings(self):
         return None, None, None, None
@@ -150,7 +153,6 @@ class Controller(NetworkController):
             from networks.lstm_arc_face.arc_face_controller import ArcFaceController
             self.network_controllers.append(ArcFaceController())
 
-
     def setup_networks(self):
         if is_suite_setup():
             print("Already fully setup.")
@@ -158,9 +160,6 @@ class Controller(NetworkController):
             print("Setting up the network suite.")
 
         setup_suite()
-
-    def plot_results(self):
-        plot_files(self.network, self.get_result_files())
 
     def get_result_files(self):
         if self.network == "all":
@@ -172,12 +171,7 @@ class Controller(NetworkController):
             #regex = self.network + ".pickle"
             regex = self.network + '*best*.pickle'
 
-
-        files = list_all_files(get_results(), regex)
-
-        for index, file in enumerate(files):
-            files[index] = get_results(file)
-        return files
+        return list_all_files(get_results(), regex)
 
 if __name__ == '__main__':
     # Parse console Args
@@ -198,7 +192,7 @@ if __name__ == '__main__':
     parser.add_argument('-plot', dest='plot', action='store_true',
                         help='Plots the last results of the specified networks in one file.')
     parser.add_argument('-best', dest='best', action='store_true',
-                        help='If a single Network is specified and plot was called, just the best curves will be plotted')
+                        help='If a single Network is specified and plot was called, just the best curves will be plotted. If test was called only the best network will be tested')
     parser.add_argument('-val', dest='validation_number', default=DEFAULT_VAL_NUMBER,
                         help='Specify how many speakers should be used for testing (40, 60, 80).')
     parser.add_argument('-out_layer', dest='out_layer', default=DEFAULT_OUT_LAYER,

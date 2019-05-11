@@ -104,7 +104,7 @@ class ArcFaceController(NetworkController):
         fig.savefig(get_experiment_nets(settings['SAVE_PATH'] + '/clustering_results'))
         fig.savefig(get_experiment_nets(settings['SAVE_PATH'] + '/clustering_results.svg'), format='svg')
 
-    def test_network(self, out_layer, seg_size, vec_size):
+    def test_network(self, out_layer, seg_size, vec_size, best):
         for settings in get_trained_settings():
             self.test_settings(settings)
 
