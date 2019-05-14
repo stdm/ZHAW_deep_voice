@@ -153,18 +153,39 @@ def analyse_results(network_name, checkpoint_names, set_of_predicted_clusters, s
     set_of_completeness_scores = []
 
     for index, predicted_clusters in enumerate(set_of_predicted_clusters):
-        logger.info('Analysing checkpoint:' + checkpoint_names[index])
+        checkpoint = checkpoint_names[index]
+        logger.info('Analysing checkpoint:' + checkpoint)
 
-        mrs, homogeneity_scores, completeness_scores = calculate_analysis_values(predicted_clusters,
-                                                                                 set_of_true_clusters[index])
+        # Check if checkpoint is already stored
+        _, fn = os.path.split(checkpoint)
+        analysis_pickle = get_result_intermediate_analysis_pickle(fn)
+
+        if os.path.isfile(analysis_pickle):
+            mrs, homogeneity_scores, completeness_scores = load(analysis_pickle)
+        else:
+            mrs, homogeneity_scores, completeness_scores = calculate_analysis_values(predicted_clusters, set_of_true_clusters[index])
+            save((mrs, homogeneity_scores, completeness_scores), analysis_pickle)
+
         set_of_mrs.append(mrs)
         set_of_homogeneity_scores.append(homogeneity_scores)
         set_of_completeness_scores.append(completeness_scores)
 
-    write_result_pickle(network_name, checkpoint_names, set_of_mrs, set_of_homogeneity_scores,
-                        set_of_completeness_scores, embedding_numbers)
-    save_best_results(network_name, checkpoint_names, set_of_mrs, set_of_homogeneity_scores,
-                      set_of_completeness_scores, embedding_numbers)
+    write_result_pickle(network_name, checkpoint_names, set_of_mrs, set_of_homogeneity_scores, set_of_completeness_scores, embedding_numbers)
+    save_best_results(network_name, checkpoint_names, set_of_mrs, set_of_homogeneity_scores, set_of_completeness_scores, embedding_numbers)
+    
+    logger.info('Clearing intermediate result checkpoints')
+    
+    for checkpoint in checkpoint_names:
+        _, fn = os.path.split(checkpoint)
+        analysis_pickle = get_result_intermediate_analysis_pickle(fn)
+        test_pickle = get_result_intermediate_test_pickle(fn)
+
+        if os.path.exists(analysis_pickle):
+            os.remove(analysis_pickle)
+
+        if os.path.exists(test_pickle):
+            os.remove(test_pickle)
+
     logger.info('Analysis done')
 
 

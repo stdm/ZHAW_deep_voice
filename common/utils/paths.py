@@ -49,10 +49,8 @@ def get_experiment_logs(*args):
 def get_experiment_tensorboard_logs(*args):
     return join(get_experiments('tensorboard_logs'), *args)
 
-
 def get_experiment_nets(*args):
     return join(get_experiments('nets'), *args)
-
 
 def get_experiment_plots(*args):
     return join(get_experiments('plots'), *args)
@@ -84,15 +82,36 @@ def get_speaker_pickle(speaker, format='.pickle'):
 def get_results(*args):
     return join(get_experiments('results'), *args)
 
+def get_results_intermediate_test(*args):
+    return join(get_experiments('results'), 'intermediate_test', *args)
 
-def get_result_pickle(network):
+def get_results_intermediate_analysis(*args):
+    return join(get_experiments('results'), 'intermediate_analysis', *args)
+
+
+def get_result_pickle(network, format='.pickle'):
     """
     Gets the absolute path to the result pickle of that network.
     :param network: the name (without .pickle) of the file
     :return: the absolute path of the resut pickle
     """
-    return get_results(network + ".pickle")
+    return get_results(network + format)
 
+def get_result_intermediate_test_pickle(network, format='.pickle'):
+    """
+    Gets the absolute path to the result pickle of that network.
+    :param network: the name (without .pickle) of the file
+    :return: the absolute path of the resut pickle
+    """
+    return get_results_intermediate_test(network + format)
+
+def get_result_intermediate_analysis_pickle(network, format='.pickle'):
+    """
+    Gets the absolute path to the result pickle of that network.
+    :param network: the name (without .pickle) of the file
+    :return: the absolute path of the resut pickle
+    """
+    return get_results_intermediate_analysis(network + format)
 
 def get_result_png(network):
     """
