@@ -103,10 +103,10 @@ def list_all_files(directory, file_regex):
     returns the filenames of all files in specified directory. The values are only the filename and NOT the fully qualified path
     :param directory: the absolut path to de directory
     :param file_regex: a String that the files should match (fnmatch.fnmatch(file, file_regex))
-    :return: the absolute path of al the files that match the file_regex an ar in the top level of the directory
+    :return: returns the filenames of all files in specified directory. The values are only the filename and NOT the fully qualified path
     """
     files = []
     for file in os.listdir(directory):
         if fnmatch.fnmatch(file, file_regex):
             files.append(file)
-    return files
+    return sorted(files)
