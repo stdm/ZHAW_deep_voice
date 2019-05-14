@@ -269,16 +269,10 @@ def save_best_results(network_name, checkpoint_names, set_of_mrs, set_of_homogen
 def write_result_pickle(network_name, checkpoint_names, set_of_mrs, set_of_homogeneity_scores,
                         set_of_completeness_scores, number_of_embeddings):
     logger = get_logger('analysis', logging.INFO)
-    logger.info('Write result')
+    logger.info('Write result pickle')
 
     save(
-        (
-            checkpoint_names,
-            set_of_mrs,
-            set_of_homogeneity_scores,
-            set_of_completeness_scores,
-            number_of_embeddings
-        ),
+        (checkpoint_names, set_of_mrs, set_of_homogeneity_scores, set_of_completeness_scores, number_of_embeddings),
         get_result_pickle(network_name)
     )
 

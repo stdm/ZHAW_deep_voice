@@ -123,7 +123,6 @@ def get_result_png(network):
 
 
 def list_all_files(directory, file_regex):
-    print("list_all_files dir: {}, regex: {}".format(directory, file_regex))
     """
     returns the absolute paths to the specified files.
     :param directory: the absolut path to de directory
@@ -132,7 +131,6 @@ def list_all_files(directory, file_regex):
     """
     files = []
     for file in os.listdir(directory):
-        print("list_all_files [{}]: {}".format(fnmatch.fnmatch(file, file_regex), file))
         if fnmatch.fnmatch(file, file_regex):
             files.append(file)
     return files
