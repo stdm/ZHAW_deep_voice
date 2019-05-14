@@ -106,13 +106,7 @@ def plot_curves(plot_file_name, curve_names, mrs, homogeneity_scores, completene
         label = curve_names[index] + '\n min MR: ' + str(min_mrs[index])
         color = colors[index]
 
-        # lehmacl1@2019-05-12:
-        # In VoxCeleb2, the number of speakers in the training and test sets are NOT the same,
-        # thus 2*num_speakers as total is wrong. instead look at the amount of entries
-        # 
-        # Original:
-        # number_of_clusters = np.arange(number_of_embeddings[index], 0, -1)
-        number_of_clusters = np.arange(len(curves[0][1][0]), 0, -1)
+        number_of_clusters = np.arange(number_of_embeddings[index], 0, -1)
 
         for plot, value in curves:
             plot.plot(number_of_clusters, value[index], color=color, label=label)

@@ -14,6 +14,7 @@ from common.utils.paths import *
 from .bilstm_2layer_dropout_plus_2dense import bilstm_2layer_dropout
 from .core.data_gen import generate_test_data
 from .core.pairwise_kl_divergence import pairwise_kl_divergence
+from common.spectogram.speaker_train_splitter import SpeakerTrainSplit
 
 import common.utils.pickler as pickler
 
@@ -39,11 +40,8 @@ class LSTMVOX2Controller(NetworkController):
         self.train_data = "vox2_speakers_5994_dev_cluster"
         # :val_data means TEST dataset
         self.val_data = "vox2_speakers_120_test_cluster"
-        
-    def get_validation_train_data(self):
-        return get_speaker_pickle(self.train_data, ".h5")
-
-    def get_validation_test_data(self):
+    
+    def get_validation_data(self):
         return get_speaker_pickle(self.val_data, ".h5")
 
     def get_network_name(self):
@@ -69,6 +67,16 @@ class LSTMVOX2Controller(NetworkController):
             segment_size=self.seg_size
         )
 
+    # Loads the validation dataset as '_cluster' and splits it for further use
+    # 
+    def get_validation_datasets(self):
+        train_test_splitter = SpeakerTrainSplit(0.2)
+        X, speakers = load_and_prepare_data(self.get_validation_data(), self.seg_size)
+
+        X_train, X_test, y_train, y_test = train_test_splitter(X, speakers)
+
+        return X_train, y_train, X_test, y_test
+
     def get_embeddings(self, out_layer, seg_size, vec_size, best):
         logger = get_logger('lstm', logging.INFO)
         logger.info('Run pairwise_lstm test')
@@ -77,9 +85,8 @@ class LSTMVOX2Controller(NetworkController):
         logger.info('vec_size -> ' + str(self.vec_size))
 
         # Load and prepare train/test data
-        x_test, speakers_test = load_and_prepare_data(self.get_validation_test_data(), self.seg_size)
-        x_train, speakers_train = load_and_prepare_data(self.get_validation_train_data(), self.seg_size)
-
+        x_train, speakers_train, x_test, speakers_test = self.get_validation_datasets()
+        
         # Prepare return values
         set_of_embeddings = []
         set_of_speakers = []
