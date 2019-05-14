@@ -115,7 +115,10 @@ class LSTMVOX2Controller(NetworkController):
 
                 # Get a Model with the embedding layer as output and predict
                 model_partial = Model(inputs=model_full.input, outputs=model_full.layers[self.out_layer].output)
+
+                logger.info('running predict on test set')
                 test_output = np.asarray(model_partial.predict(x_test))
+                logger.info('running predict on train set')
                 train_output = np.asarray(model_partial.predict(x_train))
                 logger.info('test_output len -> ' + str(test_output.shape))
                 logger.info('train_output len -> ' + str(train_output.shape))
