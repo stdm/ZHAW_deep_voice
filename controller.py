@@ -95,7 +95,7 @@ class Controller(NetworkController):
 
     def test_network(self):
         for network_controller in self.network_controllers:
-            network_controller.test_network(self.out_layer, self.seg_size, self.vec_size, self.best, file_format=self.get_file_format())
+            network_controller.test_network(self.out_layer, self.seg_size, self.vec_size, self.best)
 
     def plot_results(self):
         if self.network == 'pairwise_lstm_vox2':

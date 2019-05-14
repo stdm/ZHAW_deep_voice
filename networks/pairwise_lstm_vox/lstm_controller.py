@@ -11,11 +11,11 @@ from common.clustering.generate_embeddings import generate_embeddings
 from common.network_controller import NetworkController
 from common.utils.logger import *
 from common.utils.paths import *
-from common.utils.pickler import load_speaker_pickle_or_h5
 from .bilstm_2layer_dropout_plus_2dense import bilstm_2layer_dropout
 from .core.data_gen import generate_test_data
 from .core.pairwise_kl_divergence import pairwise_kl_divergence
 
+import common.utils.pickler as pickler
 
 class LSTMVOX2Controller(NetworkController):
     def __init__(self, out_layer, seg_size, vec_size, 
@@ -102,22 +102,31 @@ class LSTMVOX2Controller(NetworkController):
         # Fill return values
         for checkpoint in checkpoints:
             logger.info('Running checkpoint: ' + checkpoint)
-            # Load and compile the trained network
-            network_file = get_experiment_nets(checkpoint)
-            model_full = load_model(network_file, custom_objects=custom_objects)
-            model_full.compile(loss=loss, optimizer=optimizer, metrics=metrics)
 
-            # Get a Model with the embedding layer as output and predict
-            model_partial = Model(inputs=model_full.input, outputs=model_full.layers[self.out_layer].output)
-            test_output = np.asarray(model_partial.predict(x_test))
-            train_output = np.asarray(model_partial.predict(x_train))
-            logger.info('test_output len -> ' + str(test_output.shape))
-            logger.info('train_output len -> ' + str(train_output.shape))
+            # Check if checkpoint is already processed and stored in intermediate results
+            _, fn = os.path.split(checkpoint)
+            checkpoint_result_pickle = get_result_intermediate_test_pickle(fn)
 
-            embeddings, speakers, num_embeddings = generate_embeddings(
-                train_output, test_output, speakers_train,
-                speakers_test, vector_size
-            )
+            if os.path.isfile(checkpoint_result_pickle):
+                embeddings, speakers, num_embeddings = pickler.load(checkpoint_result_pickle)
+            else:
+                # Load and compile the trained network
+                model_full = load_model(checkpoint, custom_objects=custom_objects)
+                model_full.compile(loss=loss, optimizer=optimizer, metrics=metrics)
+
+                # Get a Model with the embedding layer as output and predict
+                model_partial = Model(inputs=model_full.input, outputs=model_full.layers[self.out_layer].output)
+                test_output = np.asarray(model_partial.predict(x_test))
+                train_output = np.asarray(model_partial.predict(x_train))
+                logger.info('test_output len -> ' + str(test_output.shape))
+                logger.info('train_output len -> ' + str(train_output.shape))
+
+                embeddings, speakers, num_embeddings = generate_embeddings(
+                    train_output, test_output, speakers_train,
+                    speakers_test, vector_size
+                )
+
+                pickler.save((embeddings, speakers, num_embeddings), checkpoint_result_pickle)
 
             # Fill the embeddings and speakers into the arrays
             set_of_embeddings.append(embeddings)
@@ -130,7 +139,7 @@ class LSTMVOX2Controller(NetworkController):
 
 def load_and_prepare_data(data_path, segment_size):
     # Load and generate test data
-    (X, y, _) = load_speaker_pickle_or_h5(data_path)
+    (X, y, _) = pickler.load_speaker_pickle_or_h5(data_path)
     X, speakers = generate_test_data(X, y, segment_size)
 
     # Reshape test data because it is an lstm
