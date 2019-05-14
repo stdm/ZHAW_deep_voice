@@ -164,7 +164,7 @@ def analyse_results(network_name, checkpoint_names, set_of_predicted_clusters, s
         logger.info('Analysing checkpoint:' + checkpoint)
 
         # Check if checkpoint is already stored
-        analysis_pickle = get_result_intermediate_analysis(checkpoint)
+        analysis_pickle = get_results_intermediate_analysis(checkpoint)
 
         if os.path.isfile(analysis_pickle):
             mrs, homogeneity_scores, completeness_scores = load(analysis_pickle)
@@ -182,8 +182,8 @@ def analyse_results(network_name, checkpoint_names, set_of_predicted_clusters, s
     logger.info('Clearing intermediate result checkpoints')
     
     for checkpoint in checkpoint_names:
-        analysis_pickle = get_result_intermediate_analysis(checkpoint)
-        test_pickle = get_result_intermediate_test(checkpoint)
+        analysis_pickle = get_results_intermediate_analysis(checkpoint)
+        test_pickle = get_results_intermediate_test(checkpoint)
 
         if os.path.exists(analysis_pickle):
             os.remove(analysis_pickle)
