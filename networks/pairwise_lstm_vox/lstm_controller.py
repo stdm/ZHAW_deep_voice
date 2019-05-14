@@ -104,8 +104,7 @@ class LSTMVOX2Controller(NetworkController):
             logger.info('Running checkpoint: ' + checkpoint)
 
             # Check if checkpoint is already processed and stored in intermediate results
-            _, fn = os.path.split(checkpoint)
-            checkpoint_result_pickle = get_result_intermediate_test_pickle(fn)
+            checkpoint_result_pickle = get_result_intermediate_test(checkpoint)
 
             if os.path.isfile(checkpoint_result_pickle):
                 embeddings, speakers, num_embeddings = pickler.load(checkpoint_result_pickle)

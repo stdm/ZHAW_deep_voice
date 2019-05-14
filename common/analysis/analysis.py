@@ -9,7 +9,7 @@ from theano.gradient import np
 from common.analysis.mr import misclassification_rate
 from common.utils.logger import *
 from common.utils.paths import *
-from common.utils.pickler import load, load_h5, save, save_h5
+from common.utils.pickler import load, save
 
 
 def plot_files(plot_file_name, files):
@@ -164,8 +164,7 @@ def analyse_results(network_name, checkpoint_names, set_of_predicted_clusters, s
         logger.info('Analysing checkpoint:' + checkpoint)
 
         # Check if checkpoint is already stored
-        _, fn = os.path.split(checkpoint)
-        analysis_pickle = get_result_intermediate_analysis_pickle(fn)
+        analysis_pickle = get_result_intermediate_analysis(checkpoint)
 
         if os.path.isfile(analysis_pickle):
             mrs, homogeneity_scores, completeness_scores = load(analysis_pickle)
@@ -183,9 +182,8 @@ def analyse_results(network_name, checkpoint_names, set_of_predicted_clusters, s
     logger.info('Clearing intermediate result checkpoints')
     
     for checkpoint in checkpoint_names:
-        _, fn = os.path.split(checkpoint)
-        analysis_pickle = get_result_intermediate_analysis_pickle(fn)
-        test_pickle = get_result_intermediate_test_pickle(fn)
+        analysis_pickle = get_result_intermediate_analysis(checkpoint)
+        test_pickle = get_result_intermediate_test(checkpoint)
 
         if os.path.exists(analysis_pickle):
             os.remove(analysis_pickle)

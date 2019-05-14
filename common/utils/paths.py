@@ -16,14 +16,11 @@ def join(base, *args):
 
     return base
 
-
 def get_common(*args):
     return join(common_helper.get_common_path(), *args)
 
-
 def get_networks(*args):
     return join(networks_helper.get_networks_path(), *args)
-
 
 def get_configs(config):
     """
@@ -33,18 +30,14 @@ def get_configs(config):
     """
     return get_networks('flow_me', 'config', config + '.cfg')
 
-
 def get_data(*args):
     return join(get_common('data'), *args)
-
 
 def get_experiments(*args):
     return join(get_data('experiments'), *args)
 
-
 def get_experiment_logs(*args):
     return join(get_experiments('logs'), *args)
-
 
 def get_experiment_tensorboard_logs(*args):
     return join(get_experiments('tensorboard_logs'), *args)
@@ -83,11 +76,10 @@ def get_results(*args):
     return join(get_experiments('results'), *args)
 
 def get_results_intermediate_test(*args):
-    return join(get_experiments('results'), 'intermediate_test', *args)
+    return get_results('intermediate_test', *args)
 
 def get_results_intermediate_analysis(*args):
-    return join(get_experiments('results'), 'intermediate_analysis', *args)
-
+    return get_results('intermediate_analysis', *args)
 
 def get_result_pickle(network, format='.pickle'):
     """
@@ -96,22 +88,6 @@ def get_result_pickle(network, format='.pickle'):
     :return: the absolute path of the resut pickle
     """
     return get_results(network + format)
-
-def get_result_intermediate_test_pickle(network, format='.pickle'):
-    """
-    Gets the absolute path to the result pickle of that network.
-    :param network: the name (without .pickle) of the file
-    :return: the absolute path of the resut pickle
-    """
-    return get_results_intermediate_test(network + format)
-
-def get_result_intermediate_analysis_pickle(network, format='.pickle'):
-    """
-    Gets the absolute path to the result pickle of that network.
-    :param network: the name (without .pickle) of the file
-    :return: the absolute path of the resut pickle
-    """
-    return get_results_intermediate_analysis(network + format)
 
 def get_result_png(network):
     """
@@ -124,7 +100,7 @@ def get_result_png(network):
 
 def list_all_files(directory, file_regex):
     """
-    returns the absolute paths to the specified files.
+    returns the filenames of all files in specified directory. The values are only the filename and NOT the fully qualified path
     :param directory: the absolut path to de directory
     :param file_regex: a String that the files should match (fnmatch.fnmatch(file, file_regex))
     :return: the absolute path of al the files that match the file_regex an ar in the top level of the directory

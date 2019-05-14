@@ -1,31 +1,54 @@
 import pickle
 import h5py
 
-def save(obj, path):
-    with open(path, 'wb') as f:
-        pickle.dump(obj, f, -1)
-
-
-def load(path):
-    with open(path, 'rb') as f:
-        obj = pickle.load(f)
-    return obj
-
-def load_speaker_pickle_or_h5(path):
+def path_is_pickle(path):
     pickle_format = path.split('.')
     pickle_format = pickle_format[len(pickle_format) - 1]
+    return pickle_format == 'pickle'
 
-    if pickle_format == 'h5':
+def save(obj, path):
+    if path_is_pickle(path):
+        save_pickle(obj, path)
+    else:
+        save_h5(obj, path)
+
+def load(path):
+    if path_is_pickle(path):
+        return load_pickle(path)
+    else:
+        return load_h5(path)
+
+def load_speaker_pickle_or_h5(path):
+    if path_is_pickle(path):
+        (X, y, speaker_names) = load_pickle(path)
+    else:
         with h5py.File(path,'r') as f:
             X = f['X'][:,:,:,:]
             y = f['y'][:]
             speaker_names = f['speaker_names'][:]
             f.close()
-    else:
-        with open(path, 'rb') as f:
-            (X, y, speaker_names) = pickle.load(f)
 
     return (X, y, speaker_names)
+
+
+# Pickles
+# -----------------------------------------------------------
+
+# Save a pickle file
+def save_pickle(obj, path):
+    with open(path, 'wb') as f:
+        pickle.dump(obj, f, -1)
+
+# Load a pickle file
+def load_pickle(path):
+    with open(path, 'rb') as f:
+        obj = pickle.load(f)
+    return obj
+
+
+
+# H5
+# -----------------------------------------------------------
 
 # Saves given tuple to the .h5 with the given path
 # 
