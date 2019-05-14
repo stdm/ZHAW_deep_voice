@@ -54,6 +54,7 @@ class NetworkController:
         set_of_true_clusters: A 2d array of the validation clusters. [checkpoint, validation-clusters]
         embeddings_numbers: A list which represent the number of embeddings in each checkpoint.
         """
+
         checkpoint_names, set_of_embeddings, set_of_true_clusters, embeddings_numbers = self.get_embeddings(
             out_layer=out_layer, 
             seg_size=seg_size, 

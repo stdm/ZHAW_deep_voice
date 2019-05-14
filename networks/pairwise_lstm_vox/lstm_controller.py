@@ -111,7 +111,7 @@ class LSTMVOX2Controller(NetworkController):
                 embeddings, speakers, num_embeddings = pickler.load(checkpoint_result_pickle)
             else:
                 # Load and compile the trained network
-                model_full = load_model(checkpoint, custom_objects=custom_objects)
+                model_full = load_model(get_experiment_nets(checkpoint), custom_objects=custom_objects)
                 model_full.compile(loss=loss, optimizer=optimizer, metrics=metrics)
 
                 # Get a Model with the embedding layer as output and predict

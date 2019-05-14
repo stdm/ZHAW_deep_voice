@@ -1,4 +1,5 @@
 import matplotlib
+import h5py
 
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -8,7 +9,7 @@ from theano.gradient import np
 from common.analysis.mr import misclassification_rate
 from common.utils.logger import *
 from common.utils.paths import *
-from common.utils.pickler import load, save
+from common.utils.pickler import load, load_h5, save, save_h5
 
 
 def plot_files(plot_file_name, files):
@@ -21,7 +22,6 @@ def plot_files(plot_file_name, files):
     curve_names, set_of_mrs, set_of_homogeneity_scores, set_of_completeness_scores, set_of_number_of_embeddings = read_result_pickle(files)
     plot_curves(plot_file_name, curve_names, set_of_mrs, set_of_homogeneity_scores, set_of_completeness_scores, set_of_number_of_embeddings)
 
-
 def read_result_pickle(files):
     """
     Reads the results of a network from these files.
@@ -31,7 +31,7 @@ def read_result_pickle(files):
     :return:        curve names, thresholds, mrs, homogeneity scores, completeness scores and number of embeddings
     """
     logger = get_logger('analysis', logging.INFO)
-    logger.info('Read result pickle')
+    logger.info("Read result pickle")
     curve_names = []
 
     # Initialize result sets
@@ -43,7 +43,7 @@ def read_result_pickle(files):
 
     # Fill result sets
     for file in files:
-        curve_name, mrs, homogeneity_scores, completeness_scores, number_of_embeddings = load(file)
+        curve_name, mrs, homogeneity_scores, completeness_scores, number_of_embeddings = load(get_result_pickle(file.split('.')[0]))
 
         for index, curve_name in enumerate(curve_name):
             set_of_mrs.append(mrs[index])
@@ -105,7 +105,14 @@ def plot_curves(plot_file_name, curve_names, mrs, homogeneity_scores, completene
     for index in range(number_of_lines):
         label = curve_names[index] + '\n min MR: ' + str(min_mrs[index])
         color = colors[index]
-        number_of_clusters = np.arange(number_of_embeddings[index], 0, -1)
+
+        # lehmacl1@2019-05-12:
+        # In VoxCeleb2, the number of speakers in the training and test sets are NOT the same,
+        # thus 2*num_speakers as total is wrong. instead look at the amount of entries
+        # 
+        # Original:
+        # number_of_clusters = np.arange(number_of_embeddings[index], 0, -1)
+        number_of_clusters = np.arange(len(curves[0][1][0]), 0, -1)
 
         for plot, value in curves:
             plot.plot(number_of_clusters, value[index], color=color, label=label)
@@ -219,8 +226,14 @@ def calculate_analysis_values(predicted_clusters, true_cluster):
 def save_best_results(network_name, checkpoint_names, set_of_mrs, set_of_homogeneity_scores,
                       set_of_completeness_scores, speaker_numbers):
     if len(set_of_mrs) == 1:
-        write_result_pickle(network_name + "_best", checkpoint_names, set_of_mrs,
-                            set_of_homogeneity_scores, set_of_completeness_scores, speaker_numbers)
+        write_result_pickle(
+            network_name + "_best",
+            checkpoint_names,
+            set_of_mrs,
+            set_of_homogeneity_scores,
+            set_of_completeness_scores,
+            speaker_numbers
+        )
     else:
 
         # Find best result (min MR)
@@ -243,16 +256,25 @@ def save_best_results(network_name, checkpoint_names, set_of_mrs, set_of_homogen
                 set_of_best_completeness_scores.append(set_of_completeness_scores[index])
                 best_speaker_numbers.append(speaker_numbers[index])
 
-        write_result_pickle(network_name + "_best", best_checkpoint_name, set_of_best_mrs,
-                            set_of_best_homogeneity_scores, set_of_best_completeness_scores, best_speaker_numbers)
+        write_result_pickle(
+            network_name + "_best",
+            best_checkpoint_name,
+            set_of_best_mrs,
+            set_of_best_homogeneity_scores,
+            set_of_best_completeness_scores,
+            best_speaker_numbers
+        )
 
 
 def write_result_pickle(network_name, checkpoint_names, set_of_mrs, set_of_homogeneity_scores,
                         set_of_completeness_scores, number_of_embeddings):
     logger = get_logger('analysis', logging.INFO)
     logger.info('Write result pickle')
-    save((checkpoint_names, set_of_mrs, set_of_homogeneity_scores, set_of_completeness_scores,
-          number_of_embeddings), get_result_pickle(network_name))
+
+    save(
+        (checkpoint_names, set_of_mrs, set_of_homogeneity_scores, set_of_completeness_scores, number_of_embeddings),
+        get_result_pickle(network_name)
+    )
 
 
 def read_and_safe_best_results():

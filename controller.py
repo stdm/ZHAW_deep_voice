@@ -98,7 +98,12 @@ class Controller(NetworkController):
             network_controller.test_network(self.out_layer, self.seg_size, self.vec_size, self.best)
 
     def plot_results(self):
-        plot_files(self.network, self.get_result_files())
+        if self.network == 'pairwise_lstm_vox2':
+            plot_name = self.network_controllers[0].get_network_name()
+        else:
+            plot_name = self.network
+            
+        plot_files(plot_name, self.get_result_files())
 
     def get_embeddings(self):
         return None, None, None, None
@@ -161,15 +166,23 @@ class Controller(NetworkController):
 
         setup_suite()
 
+    def get_file_format(self):
+        if self.network == 'pairwise_lstm_vox2':
+            return '.h5'
+        else:
+            return '.pickle'
+
     def get_result_files(self):
+        file_format = '.pickle'
+
         if self.network == "all":
-            regex = '*best*.pickle'
+            regex = '*' + file_format
         elif self.best:
-            regex = self.network + '*best*.pickle'
+            regex = self.network + '*best*' + file_format
         else:
             # TODO: Funktioniert aktuell nicht ohne "-best" Flag
-            #regex = self.network + ".pickle"
-            regex = self.network + '*best*.pickle'
+            #regex = self.network + file_format
+            regex = self.network + '*' + file_format
 
         return list_all_files(get_results(), regex)
 
