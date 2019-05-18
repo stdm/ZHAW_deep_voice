@@ -78,7 +78,7 @@ class LSTMVOX2Controller(NetworkController):
         return X_train, y_train, X_test, y_test
 
     def get_embeddings(self, out_layer, seg_size, vec_size, best):
-        logger = get_logger('lstm', logging.INFO)
+        logger = get_logger('lstm_vox', logging.INFO)
         logger.info('Run pairwise_lstm test')
         logger.info('out_layer -> ' + str(self.out_layer))
         logger.info('seg_size -> ' + str(self.seg_size))

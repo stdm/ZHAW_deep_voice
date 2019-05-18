@@ -19,6 +19,7 @@ from .core import plot_saver as ps
 from .core.plot_callback import PlotCallback
 
 import common.spectogram.speaker_train_splitter as sts
+from common.utils.logger import *
 from common.utils.paths import *
 from common.utils.pickler import load_speaker_pickle_or_h5
 
@@ -42,6 +43,7 @@ class bilstm_2layer_dropout(object):
     def __init__(self, name, training_data, n_hidden1, n_hidden2, dense_factor, 
                  epochs, epochs_before_active_learning, active_learning_rounds,
                  segment_size, frequency=128):
+
         self.network_name = name
         self.training_data = training_data
         self.n_hidden1 = n_hidden1
@@ -58,10 +60,12 @@ class bilstm_2layer_dropout(object):
         
         self.active_learning_rounds = active_learning_rounds
         self.active_learning_pools = 0
+        self.active_learning_pools_increment_active = True
         self.segment_size = segment_size
         self.input = (segment_size, frequency)
+        self.logger = get_logger('lstm_vox', logging.INFO)
         
-        print(self.network_name)
+        self.logger.info(self.network_name)
         self.run_network()
 
     def create_net(self):
@@ -87,24 +91,30 @@ class bilstm_2layer_dropout(object):
         adam = keras.optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
 
         model.compile(loss=kld.pairwise_kl_divergence, optimizer=adam, metrics=['accuracy'])
-        print(model.summary())
+        self.logger.info("\n" + model.summary())
         return model
 
     def read_speaker_data(self, speaker_pickle):
-        print('create_train_data', speaker_pickle)
+        self.logger.info('create_train_data ' + speaker_pickle)
         (X, y, _) = load_speaker_pickle_or_h5(speaker_pickle)
 
         return (X, y, speaker_pickle)
 
-    def reader_speaker_data_round(self, al_round):
+    def reader_speaker_data_round(self, al_round, recurse=0):
+        if recurse >= 2:
+            raise Exception("Recursion was not applied correctly in active learning speaker pool detection!")
+
         training_data_round = self.training_data + '_' + str(al_round)
         speaker_pickle = get_speaker_pickle(training_data_round, format='.h5')
 
         if not path.exists(speaker_pickle):
-            return self.reader_speaker_data_round(al_round % self.active_learning_pools)
+            self.active_learning_pools_increment_active = False
+            return self.reader_speaker_data_round(al_round=al_round % self.active_learning_pools, recurse=recurse+1)
         else:
-            print('create_train_data', self.training_data, 'pool', training_data_round)
-            self.active_learning_pools += 1
+            if self.active_learning_pools_increment_active:
+                self.active_learning_pools += 1
+            
+            self.logger.info('create_train_data ' + self.training_data + ' pool ' + training_data_round)
             return self.read_speaker_data(speaker_pickle)
 
     def split_train_val_data(self, X, y):
@@ -188,7 +198,7 @@ class bilstm_2layer_dropout(object):
 
         # active learning
         for i in range(self.active_learning_rounds): 
-            print("Active learning round " + str(i) + "/" + str(self.active_learning_rounds))
+            self.logger.info("Active learning round " + str(i) + "/" + str(self.active_learning_rounds))
             calls = self.create_round_specific_callbacks(global_calls, i)
 
             if self.epochs >= (epochs_trained + self.epochs_per_round):
@@ -198,7 +208,7 @@ class bilstm_2layer_dropout(object):
 
             # if max epochs to train already reached before all rounds processed we can end the training
             if epochs_to_run <= 0:
-                print("Max epoch of " + str(self.epochs) + " reached, end of training")
+                self.logger.info("Max epoch of " + str(self.epochs) + " reached, end of training")
                 break
 
             # query for uncertainty based on pool and append to numpy X_t, X_v, ... arrays
@@ -212,11 +222,12 @@ class bilstm_2layer_dropout(object):
 
             ps.save_alr_shape_x_plot(self.network_name, [ X_t_shapes, X_v_shapes ])
 
-        print("saving model")
+        self.logger.info("saving model")
         model.save(get_experiment_nets(self.network_name + ".h5"))
 
     def active_learning_round(self, model, known_pool_data: dict, round: int, X_t, X_v, y_t, y_v):
         X_pool, y_pool, pool_ident = self.reader_speaker_data_round(round)
+
         # query for uncertainty
         query_idx = self.uncertainty_sampling(model, X_pool, n_instances=250)
         # print("active_learning_round_1 round: {}, Xt: {}, Xv: {}, yt: {}, yv: {}, query_idx: {}".format(round, X_t.shape, X_v.shape, y_t.shape, y_v.shape, query_idx.shape))
@@ -240,7 +251,6 @@ class bilstm_2layer_dropout(object):
         numpArray = np.array(known_pool_data[pool_ident])
         x_us = np.delete(x_us, numpArray, axis=0)
         y_us = np.delete(y_us, numpArray, axis=0)
-        
         # print("active_learning_round_4 numpArray: {}, x_us: {}, y_us: {}".format(numpArray.shape, x_us.shape, y_us.shape))
 
         # split the new records into test and val
