@@ -15,10 +15,10 @@ from nolearn.lasagne import BatchIterator
 from nolearn.lasagne import NeuralNet, TrainSplit
 
 from common.clustering.generate_embeddings import generate_embeddings
+from common.utils.ShortUtteranceConverter import create_data_lists
 from common.utils.logger import *
 from common.utils.pickler import load, save
 from networks.lu_vo.network_training.segment_batchiterator import SegmentBatchIterator
-from common.utils.paths import *
 from common.utils import TimeCalculator
 
 
@@ -61,8 +61,16 @@ class SpectrogramCnn:
         save(net, self.net_path)
 
     def create_embeddings(self, X_train, y_train, X_test, y_test):
-        x_train_cluster, y_train_cluster = self._generate_cluster_data(X_train, y_train)
-        x_test_cluster, y_test_cluster = self._generate_cluster_data(X_test, y_test)
+        short_utterance = self.config.getboolean('validation', 'short_utterances')
+
+        x_list, y_list, _ = create_data_lists(short_utterance, X_train, X_test, y_train, y_test)
+
+        x_cluster_list = []
+        y_cluster_list = []
+        for x_data, y_data in zip(x_list, y_list):
+            x_cluster, y_cluster = self._generate_cluster_data(x_data, y_data)
+            x_cluster_list.append(x_cluster)
+            y_cluster_list.append(y_cluster)
 
         # Load the network and add Batchiterator
         net = load(self.net_path)
@@ -72,16 +80,15 @@ class SpectrogramCnn:
         # predict = prepare_predict(net)
         # output_train = predict(x_train_cluster)
         # output_test = predict(x_test_cluster)
-
-        output_train = net.predict_proba(x_train_cluster)
-        output_test = net.predict_proba(x_test_cluster)
+        outputs = [None] * len(x_cluster_list)
+        for i, x_cluster in enumerate(x_cluster_list):
+            outputs[i] = net.predict_proba(x_cluster)
 
         embeddings, speakers, number_embeddings =\
-            generate_embeddings(output_train, output_test, y_train_cluster, y_test_cluster, output_train.shape[1])
+            generate_embeddings(outputs, y_cluster_list, outputs[0].shape[1])
 
         #Calculate the time per utterance
-        time = TimeCalculator.calc_time_long_short_utterances(y_train_cluster, y_test_cluster,
-                                                              self.config.getint('luvo', 'seg_size'))
+        time = TimeCalculator.calc_time_all_utterances(y_cluster_list, self.config.getint('luvo', 'seg_size'))
 
         return embeddings, speakers, number_embeddings, time
 

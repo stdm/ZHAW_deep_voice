@@ -9,6 +9,7 @@ from keras.models import load_model
 from common.clustering.generate_embeddings import generate_embeddings
 from common.network_controller import NetworkController
 from common.utils import TimeCalculator
+from common.utils.ShortUtteranceConverter import create_data_lists
 from common.utils.logger import *
 from common.utils.paths import *
 from .bilstm_2layer_dropout_plus_2dense import bilstm_2layer_dropout
@@ -33,6 +34,7 @@ class LSTMController(NetworkController):
         )
 
     def get_embeddings(self):
+        short_utterance = self.config.getboolean('validation', 'short_utterances')
         out_layer = self.config.getint('pairwise_lstm', 'out_layer')
         seg_size = self.config.getint('pairwise_lstm', 'seg_size')
         vec_size = self.config.getint('pairwise_lstm', 'vec_size')
@@ -48,6 +50,9 @@ class LSTMController(NetworkController):
         x_test, speakers_test, s_list_test = load_test_data(self.get_validation_test_data())
         x_train, speakers_train, = prepare_data(x_train, speakers_train, seg_size)
         x_test, speakers_test = prepare_data(x_test, speakers_test, seg_size)
+
+        x_list, y_list, s_list = create_data_lists(short_utterance, x_train, x_test,
+                                                   speakers_train, speakers_test, s_list_train, s_list_test)
 
         # Prepare return values
         set_of_embeddings = []
@@ -73,13 +78,15 @@ class LSTMController(NetworkController):
 
             # Get a Model with the embedding layer as output and predict
             model_partial = Model(inputs=model_full.input, outputs=model_full.layers[out_layer].output)
-            test_output = np.asarray(model_partial.predict(x_test))
-            train_output = np.asarray(model_partial.predict(x_train))
-            logger.info('test_output len -> ' + str(test_output.shape))
-            logger.info('train_output len -> ' + str(train_output.shape))
 
-            embeddings, speakers, num_embeddings = generate_embeddings(train_output, test_output, speakers_train,
-                                                                       speakers_test, vector_size)
+            x_cluster_list = []
+            y_cluster_list = []
+            for x, y, s in zip(x_list, y_list, s_list):
+                x_cluster = np.asarray(model_partial.predict(x))
+                x_cluster_list.append(x_cluster)
+                y_cluster_list.append(y)
+
+            embeddings, speakers, num_embeddings = generate_embeddings(x_cluster_list, y_cluster_list, vector_size)
 
             # Fill the embeddings and speakers into the arrays
             set_of_embeddings.append(embeddings)
@@ -87,7 +94,7 @@ class LSTMController(NetworkController):
             speaker_numbers.append(num_embeddings)
 
             # Calculate the time per utterance
-            time = TimeCalculator.calc_time_long_short_utterances(speakers_train, speakers_test, seg_size)
+            time = TimeCalculator.calc_time_all_utterances(y_cluster_list, seg_size)
             set_of_total_times.append(time)
 
         logger.info('Pairwise_lstm test done.')

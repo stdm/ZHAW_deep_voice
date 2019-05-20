@@ -3,7 +3,7 @@ import numpy as np
 from common.utils.logger import *
 
 
-def generate_embeddings(train_output, test_output, train_speakers, test_speakers, vector_size):
+def generate_embeddings(outputs, speakers_inputs, vector_size):
     """
     Combines the utterances of the speakers in the train- and testing-set and combines them into embeddings.
     :param train_output: The training output (8 sentences)
@@ -15,27 +15,22 @@ def generate_embeddings(train_output, test_output, train_speakers, test_speakers
     """
     logger = get_logger('clustering', logging.INFO)
     logger.info('Generate embeddings')
-    num_speakers = len(set(test_speakers))
+    num_speakers = len(set(speakers_inputs[0]))
 
     # Prepare return variable
-    number_embeddings = 2 * num_speakers
+    number_embeddings = len(outputs) * num_speakers
     embeddings = []
     speakers = []
 
-    # Create utterances
-    embeddings_train, speakers_train = create_utterances(num_speakers, vector_size, train_output, train_speakers)
-    embeddings_test, speakers_test = create_utterances(num_speakers, vector_size, test_output, test_speakers)
-
-    # Merge utterances
-    embeddings.extend(embeddings_train)
-    embeddings.extend(embeddings_test)
-    speakers.extend(speakers_train)
-    speakers.extend(speakers_test)
+    for output, speakers_input in zip(outputs, speakers_inputs):
+        embeddings_output, speakers_output = _create_utterances(num_speakers, vector_size, output, speakers_input)
+        embeddings.extend(embeddings_output)
+        speakers.extend(speakers_output)
 
     return embeddings, speakers, number_embeddings
 
 
-def create_utterances(num_speakers, vector_size, vectors, y):
+def _create_utterances(num_speakers, vector_size, vectors, y):
     """
     Creates one utterance for each speaker in the vectors.
     :param num_speakers: Number of distinct speakers in this vector
