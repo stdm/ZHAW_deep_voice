@@ -63,13 +63,5 @@ class IvecFeatureExtractor:
                     file_names.append(speaker + '_' + os.path.splitext(filename)[0])
                     speaker_ids.append(str(curr_speaker_num))
 
-        with open(join(get_training('i_vector', self.speaker_list), self.speaker_list +"_files.txt"), "w+") as fh:
-            for line in file_names:
-                fh.write(line)
-                fh.write('\n')
-
-        with open(join(get_training('i_vector', self.speaker_list), self.speaker_list +"_ids.txt"), "w+") as fh:
-            for line in speaker_ids:
-                fh.write(line)
-                fh.write('\n')
+        return file_names,speaker_ids
 

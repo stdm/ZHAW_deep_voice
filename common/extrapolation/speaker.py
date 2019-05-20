@@ -124,7 +124,57 @@ class Speaker:
                 valid_speakers.append(bytes.decode(line.rstrip()))
 
         extractor = IvecFeatureExtractor(self.max_speakers, get_training("TIMIT"), valid_speakers, self.speaker_list)
-        extractor.extract_speaker_data()
+        filenames,speaker_ids=extractor.extract_speaker_data()
+
+        if self.split_train_test:
+            nth_elem = self.sentences - self.sentences * 0.2
+            filenames_train=[]
+            speaker_ids_train=[]
+            filenames_test=[]
+            speaker_ids_test=[]
+
+            for i in range(len(filenames)):
+                if i % self.sentences >= nth_elem:
+                    filenames_test.append(filenames[i])
+                    speaker_ids_test.append(speaker_ids[i])
+                else:
+                    filenames_train.append(filenames[i])
+                    speaker_ids_train.append(speaker_ids[i])
+
+                with open(join(get_training('i_vector', self.speaker_list), self.speaker_list + "_train_files.txt"),
+                          "w+") as fh:
+                    for line in filenames_train:
+                        fh.write(line)
+                        fh.write('\n')
+
+                with open(join(get_training('i_vector', self.speaker_list), self.speaker_list + "_test_files.txt"),
+                          "w+") as fh:
+                    for line in filenames_test:
+                        fh.write(line)
+                        fh.write('\n')
+
+                with open(join(get_training('i_vector', self.speaker_list), self.speaker_list + "_train_ids.txt"),
+                          "w+") as fh:
+                    for line in speaker_ids_train:
+                        fh.write(line)
+                        fh.write('\n')
+
+                with open(join(get_training('i_vector', self.speaker_list), self.speaker_list + "_test_ids.txt"),
+                          "w+") as fh:
+                    for line in speaker_ids_test:
+                        fh.write(line)
+                        fh.write('\n')
+
+        else:
+            with open(join(get_training('i_vector', self.speaker_list), self.speaker_list + "_files.txt"), "w+") as fh:
+                for line in filenames:
+                    fh.write(line)
+                    fh.write('\n')
+
+            with open(join(get_training('i_vector', self.speaker_list), self.speaker_list + "_ids.txt"), "w+") as fh:
+                for line in speaker_ids:
+                    fh.write(line)
+                    fh.write('\n')
 
     def is_safed_to_hdf(self):
         with open(get_speaker_list(self.speaker_list), 'rb') as f:

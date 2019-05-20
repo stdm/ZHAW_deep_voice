@@ -18,7 +18,7 @@ class IVECController(NetworkController):
     def train_network(self):
         self.logger.info('Runnin ivector system: training')
 
-        ubm_list, train_idmap = self.load_data(self.config.get('train', 'pickle'))
+        ubm_list, train_idmap = self.load_data(self.config.get('train', 'pickle'),self.config.get('train', 'pickle'))
 
         ubm, fs = self.train_ubm(get_training('i_vector'), self.config.get('train', 'pickle'), ubm_list, self.config.getint('ivector', 'distrib_nb'))
 
@@ -30,20 +30,21 @@ class IVECController(NetworkController):
         '''
         speaker_list=self.get_validation_data_name()
         distrib_nb=self.config.getint('ivector', 'distrib_nb')
-        nbThread = self.config.get('ivector', 'nbThread')
-        vector_size=self.config.get('ivector', 'vector_size')
+        nbThread = self.config.getint('ivector', 'nbThread')
+        vector_size=self.config.getint('ivector', 'vector_size')
         feature_extension = 'h5'
 
         set_of_embeddings = []
         set_of_speakers = []
         set_of_num_embeddings = []
+        set_of_times=[]
         checkpoints=["/TV_{}".format(self.network_file)]
 
         #load data:
         ubm = sidekit.Mixture()
         ubm.read(get_experiment_nets()+'/ubm_{}.h5'.format(self.network_file))
-        ubm_list, test_list_long = self.load_data(self.get_validation_train_data())
-        ubm_list, test_list_short = self.load_data(self.get_validation_test_data())
+        ubm_list, test_list_long = self.load_data(speaker_list,os.path.splitext(os.path.split(self.get_validation_train_data())[1])[0])
+        ubm_list, test_list_short = self.load_data(speaker_list,os.path.splitext(os.path.split(self.get_validation_test_data())[1])[0])
         tv, tv_mean, tv_sigma = sidekit.sidekit_io.read_tv_hdf5(get_experiment_nets()+"/TV_{}".format(self.network_file))
 
         fs = sidekit.FeaturesServer(feature_filename_structure=(
@@ -69,17 +70,19 @@ class IVECController(NetworkController):
                                        num_thread=nbThread)
 
         test_iv_long = test_stat_long.estimate_hidden(tv_mean, tv_sigma, V=tv, batch_size=100, num_thread=nbThread)[0]
-        test_iv_short = test_stat_long.estimate_hidden(tv_mean, tv_sigma, V=tv, batch_size=100, num_thread=nbThread)[0]
+        test_iv_short = test_stat_short.estimate_hidden(tv_mean, tv_sigma, V=tv, batch_size=100, num_thread=nbThread)[0]
+
 
         #generate embeddings
-        embeddings, speakers, num_embeddings=generate_embeddings([test_iv_long, test_iv_short], [test_list_long,
-                                                                       test_list_short], vector_size)
+        embeddings, speakers, num_embeddings=generate_embeddings(test_iv_long.stat1, test_iv_short.stat1, test_list_long.leftids.astype(int),
+                                                                       test_list_short.leftids.astype(int), vector_size)
 
         set_of_embeddings.append(embeddings)
         set_of_speakers.append(speakers)
         set_of_num_embeddings.append(num_embeddings)
+        set_of_times = [np.zeros((len(test_list_long.leftids)+len(test_list_short.leftids),), dtype=int)]
 
-        return checkpoints, set_of_embeddings, set_of_speakers, set_of_num_embeddings
+        return checkpoints, set_of_embeddings, set_of_speakers, set_of_num_embeddings, set_of_times
 
     def train_ubm(self, feature_dir, speaker_list, ubm_list, distrib_nb, feature_extension='h5', num_threads=10):
         '''
@@ -128,14 +131,14 @@ class IVECController(NetworkController):
 
         sidekit.sidekit_io.write_tv_hdf5((tv, tv_mean, tv_sigma), get_experiment_nets()+"/TV_{}".format(self.network_file))
 
-    def load_data(self, speaker_list):
+    def load_data(self, folder_name, speaker_list):
 
         self.logger.info('load data')
 
-        with open(join(get_training('i_vector', speaker_list), speaker_list +"_files.txt"), "r") as fh:
+        with open(join(get_training('i_vector', folder_name), speaker_list +"_files.txt"), "r") as fh:
             ubm_list = np.array([line.rstrip() for line in fh])
 
-        with open(join(get_training('i_vector', speaker_list), speaker_list +"_ids.txt"), "r") as fh:
+        with open(join(get_training('i_vector', folder_name), speaker_list +"_ids.txt"), "r") as fh:
             id_list = np.array([line.rstrip() for line in fh])
 
 
