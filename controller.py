@@ -90,7 +90,7 @@ class Controller:
             'pairwise_kldiv': [KLDivController(self.config)],
             #'flow_me': [MEController(self.clear, self.debug, False)],
             'luvo': [LuvoController(self.config)],
-            'ivector': [IVECController(self.config)],
+            'i_vector': [IVECController(self.config)],
             'all': [LSTMController(self.config), KLDivController(self.config), LuvoController(self.config)]
         }
 

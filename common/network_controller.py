@@ -34,12 +34,12 @@ class NetworkController:
 
     def get_validation_data_name(self):
         if self.dev_mode:
-            return get_speaker_pickle(self.dev_val_data)
+            return self.dev_val_data
         else:
-            return get_speaker_pickle(self.val_data)
+            return self.val_data
 
 
-    @abc.abstractmethod
+    @abc.abstractmethodne
     def train_network(self):
         """
         This method implements the training/fitting of the neural netowrk this controller implements.
