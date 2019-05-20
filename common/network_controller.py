@@ -39,7 +39,7 @@ class NetworkController:
             return self.val_data
 
 
-    @abc.abstractmethodne
+    @abc.abstractmethod
     def train_network(self):
         """
         This method implements the training/fitting of the neural netowrk this controller implements.
