@@ -46,7 +46,7 @@ class SpectTrainBatchIterator(BatchIterator):
                     if speaker_idx_offset >= len(inputs):
                         speaker_idx_offset = speaker_idx - speaker_offset
                     spect = extract_spectrogram(inputs[speaker_idx, 0], seg_size, spectrogram_height)
-                    self.extract_segments(Xb, yb, targets, j + speaker_offset * 2, speaker_idx_offset, spect,
+                    self._extract_segments(Xb, yb, targets, j + speaker_offset * 2, speaker_idx_offset, spect,
                                           self.segments_per_sentence)
             yield Xb, yb
 
