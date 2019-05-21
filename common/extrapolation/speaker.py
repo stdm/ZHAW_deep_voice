@@ -87,7 +87,7 @@ class Speaker:
 
             # extract slice into pickle (w/ or w/o train_test split)
             #
-            X, y, speaker_names = self.extract_voxceleb2(valid_speakers=initial_dataset_speakers)
+            X, y, speaker_names = self.extract_voxceleb2(valid_speakers=initial_dataset_speakers, offset=0)
 
             # Split Train and Test Sets not available for VoxCeleb2, as the initial
             # training set is given seperate and these partitions are used to dynamically
@@ -112,13 +112,14 @@ class Speaker:
             #
             speaker_count = len(list_of_speakers)
             speaker_splits = np.array_split(list_of_speakers, ceil(speaker_count / self.speakers_per_partition))
-            
+            speaker_offset = len(speaker_names)
+
             for i in range(len(speaker_splits)):
                 print("Extracting Voxceleb2 SpeakerSplit {}".format(i))
 
                 # extract slice into pickle (w/ or w/o train_test split)
                 #
-                X, y, speaker_names = self.extract_voxceleb2(valid_speakers=speaker_splits[i])
+                X, y, speaker_names = self.extract_voxceleb2(valid_speakers=speaker_splits[i], offset=speaker_offset)
 
                 # Split Train and Test Sets not available for VoxCeleb2, as the initial
                 # training set is given seperate and these partitions are used to dynamically
@@ -133,6 +134,7 @@ class Speaker:
                     ds[:] = speaker_names
                     f.close()
 
+                speaker_offset += len(speaker_names)
                 print("Done Extracting Voxceleb2 SpeakerSplit {}".format(i))
 
         else:
@@ -157,7 +159,7 @@ class Speaker:
         x, y = self.build_array_and_extract_speaker_data(speaker_files)
         return x, y, valid_speakers
 
-    def extract_voxceleb2(self, valid_speakers):
+    def extract_voxceleb2(self, valid_speakers, offset):
         """
         Extracts the training and testing data from the speaker list of the VoxCeleb2 Dataset
         :return:
@@ -171,7 +173,7 @@ class Speaker:
         speaker_files = self.get_speaker_list_of_files(get_training("VOXCELEB2"), '.wav', valid_speakers)
         
         # Extract the spectrogram's, speaker numbers and speaker names
-        x, y = self.build_array_and_extract_speaker_data(speaker_files)
+        x, y = self.build_array_and_extract_speaker_data(speaker_files, offset)
         return x, y, valid_speakers
 
     def get_valid_speakers(self):
@@ -221,7 +223,7 @@ class Speaker:
                 
         return result
 
-    def build_array_and_extract_speaker_data(self, speaker_files):
+    def build_array_and_extract_speaker_data(self, speaker_files, offset=0):
         """
         Initialises an array based on the dimensions / count of given speaker files, frequency_elements and max_audio_length
         Extracts the spectrograms into the new array
@@ -237,7 +239,7 @@ class Speaker:
         print('build_array_and_extract_speaker_data', x.shape)
 
         # Extract the spectrogram's, speaker numbers and speaker names
-        return SpectrogramExtractor().extract_speaker_data(x, y, speaker_files)
+        return SpectrogramExtractor().extract_speaker_data(x, y, speaker_files, offset)
 
     def is_pickle_saved(self):
         """
