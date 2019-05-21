@@ -37,9 +37,9 @@ class LSTMVOX2Controller(NetworkController):
         # 'vox2_speakers_120_test_cluster', # _train suffix for train/test split, _cluster otherwise
         # 'vox2_speakers_10_test_cluster', # _train suffix for train/test split, _cluster otherwise
         #
-        self.train_data = "vox2_speakers_5994_dev_cluster"
+        self.train_data = "vox2_speakers_10_test_base_all_speakers"
         # :val_data means TEST dataset
-        self.val_data = "vox2_speakers_120_test_cluster"
+        self.val_data = "vox2_speakers_10_test_base_all_speakers"
     
     def get_validation_data(self):
         return get_speaker_pickle(self.val_data, ".h5")
@@ -58,8 +58,10 @@ class LSTMVOX2Controller(NetworkController):
         bilstm_2layer_dropout(
             self.get_network_name(), 
             self.train_data,
-            n_hidden1=256, 
-            n_hidden2=256, 
+            n_hidden1=32, 
+            n_hidden2=32, 
+            # n_hidden1=256, 
+            # n_hidden2=256, 
             dense_factor=self.dense_factor, 
             epochs=self.epochs,
             epochs_before_active_learning=self.epochs_before_active_learning,

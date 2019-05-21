@@ -6,6 +6,7 @@ np.random.seed(1337)  # for reproducibility
 import keras
 from keras import backend
 from keras.models import Sequential
+from keras.initializers import Constant
 from keras.layers import Dense, Dropout, Activation
 from keras.layers import LSTM
 from keras.layers import CuDNNLSTM
@@ -86,7 +87,7 @@ class bilstm_2layer_dropout(object):
         model.add(Dense(self.dense_factor * 10))
         model.add(Dropout(0.25))
         model.add(Dense(self.dense_factor * 5))
-        model.add(Dense(self.dense_factor))
+        model.add(Dense(self.dense_factor, kernel_initializer=Constant(1/self.dense_factor)))
         model.add(Activation('softmax'))
         adam = keras.optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
 
@@ -229,7 +230,7 @@ class bilstm_2layer_dropout(object):
         X_pool, y_pool, pool_ident = self.reader_speaker_data_round(round)
 
         # query for uncertainty
-        query_idx = self.uncertainty_sampling(model, X_pool, n_instances=250)
+        query_idx = self.uncertainty_sampling(model, X_pool, y_pool, n_instances=250)
         # print("active_learning_round_1 round: {}, Xt: {}, Xv: {}, yt: {}, yv: {}, query_idx: {}".format(round, X_t.shape, X_v.shape, y_t.shape, y_v.shape, query_idx.shape))
 
         # Converts np.ndarray to dytpe int, default is float
@@ -266,12 +267,13 @@ class bilstm_2layer_dropout(object):
 
         return new_X_t, new_X_v, new_y_t, new_y_v
 
-    def uncertainty_sampling(self, model, X, n_instances: int = 1):
+    def uncertainty_sampling(self, model, X, y, n_instances: int = 1):
         """
         Uncertainty sampling query strategy. Selects the least sure instances for labelling.
         Args:
             model: The model for which the labels are to be queried.
             X: The pool of samples to query from.
+            y: The speaker labels as indices
             n_instances: Number of samples to be queried.
         Returns:
             The indices of the instances from X chosen to be labelled;
@@ -290,8 +292,7 @@ class bilstm_2layer_dropout(object):
 
         # for each point, select the maximum uncertainty
         uncertainty = 1 - np.max(classwise_uncertainty, axis=1)
-        # print('')
-        # print("uncertainty_sampling X: {}, n_instances: {}, uncertainty: {}".format(X.shape, n_instances, uncertainty))
+        
         query_idx = self.multi_argmax(uncertainty, n_instances=n_instances)
         return query_idx
 
