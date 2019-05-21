@@ -28,7 +28,7 @@ class SpectrogramExtractor:
         # Crawl the base and all sub folders
         for speaker in speaker_files.keys():
             curr_speaker_num += 1
-            speaker_uid = hash(speaker)
+            speaker_uid = curr_speaker_num
 
             print('Extraction progress: %d/%d' % (curr_speaker_num, max_speakers))
 

@@ -17,7 +17,7 @@ from math import ceil
 from .core import data_gen as dg
 from .core import pairwise_kl_divergence as kld
 from .core import plot_saver as ps
-from .core.plot_callback import PlotCallback
+from .core.callbacks import PlotCallback, ActiveLearningModelCheckpoint, ActiveLearningEpochLogger
 
 import common.spectogram.speaker_train_splitter as sts
 from common.utils.logger import *
@@ -98,7 +98,6 @@ class bilstm_2layer_dropout(object):
     def read_speaker_data(self, speaker_pickle):
         self.logger.info('create_train_data ' + speaker_pickle)
         (X, y, _) = load_speaker_pickle_or_h5(speaker_pickle)
-
         return (X, y, speaker_pickle)
 
     def reader_speaker_data_round(self, al_round, recurse=0):
@@ -126,22 +125,19 @@ class bilstm_2layer_dropout(object):
     def create_callbacks(self):
         csv_logger = keras.callbacks.CSVLogger(
             get_experiment_logs(self.network_name + '.csv'))
+        info_logger = ActiveLearningEpochLogger(self.logger, self.epochs)
         net_saver = keras.callbacks.ModelCheckpoint(
             get_experiment_nets(self.network_name + "_best.h5"),
             monitor='val_loss', verbose=1, save_best_only=True)
+        net_checkpoint = ActiveLearningModelCheckpoint(
+            get_experiment_nets(self.network_name + "_{epoch:05d}.h5"), 
+            period=int(self.epochs / 10)
+        )
         plot_callback_instance = PlotCallback(self.network_name)
 
-        return [csv_logger, net_saver, plot_callback_instance]
+        return [csv_logger, info_logger, net_saver, net_checkpoint, plot_callback_instance]
 
-    def create_round_specific_callbacks(self, global_callbacks, al_round):
-        net_checkpoint = keras.callbacks.ModelCheckpoint(
-            get_experiment_nets(self.network_name + "_" + str(al_round) + "_{epoch:05d}.h5"), 
-            period=self.epochs_per_round
-        )
-
-        return global_callbacks + [net_checkpoint]
-
-    def fit(self, model, calls, X_t, X_v, y_t, y_v, epochs_to_run):
+    def fit(self, model, callbacks, X_t, X_v, y_t, y_v, epochs_to_run):
         train_gen = dg.batch_generator_lstm(X_t, y_t, 100, segment_size=self.segment_size)
         val_gen = dg.batch_generator_lstm(X_v, y_v, 100, segment_size=self.segment_size)
 
@@ -163,7 +159,7 @@ class bilstm_2layer_dropout(object):
             train_gen, 
             steps_per_epoch=10, 
             epochs=epochs_to_run,
-            callbacks=calls, 
+            callbacks=callbacks, 
             validation_data=val_gen,
             validation_steps=2, 
             class_weight=None, 
@@ -176,7 +172,7 @@ class bilstm_2layer_dropout(object):
     def run_network(self):
         # base keras network
         model = self.create_net()
-        global_calls = self.create_callbacks()
+        callbacks = self.create_callbacks()
         known_pool_data = dict()
         epochs_trained = 0
 
@@ -192,7 +188,7 @@ class bilstm_2layer_dropout(object):
 
         # initial train
         if self.epochs_before_active_learning != 0:
-            self.fit(model, global_calls, X_t, X_v, y_t, y_v, self.epochs_before_active_learning)
+            self.fit(model, callbacks, X_t, X_v, y_t, y_v, self.epochs_before_active_learning)
         
         # update state
         epochs_trained += self.epochs_before_active_learning
@@ -200,7 +196,6 @@ class bilstm_2layer_dropout(object):
         # active learning
         for i in range(self.active_learning_rounds): 
             self.logger.info("Active learning round " + str(i) + "/" + str(self.active_learning_rounds))
-            calls = self.create_round_specific_callbacks(global_calls, i)
 
             if self.epochs >= (epochs_trained + self.epochs_per_round):
                 epochs_to_run = self.epochs_per_round
@@ -214,7 +209,7 @@ class bilstm_2layer_dropout(object):
 
             # query for uncertainty based on pool and append to numpy X_t, X_v, ... arrays
             (X_t, X_v, y_t, y_v) = self.active_learning_round(model, known_pool_data, i, X_t, X_v, y_t, y_v)
-            self.fit(model, calls, X_t, X_v, y_t, y_v, epochs_to_run)
+            self.fit(model, callbacks, X_t, X_v, y_t, y_v, epochs_to_run)
 
             epochs_trained += epochs_to_run
 
