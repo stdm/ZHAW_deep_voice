@@ -18,7 +18,7 @@ random.seed(1234)
 
 class Speaker:
     def __init__(self, split_train_test, max_speakers, speaker_list, dataset, output_name=None,
-                 frequency_elements=128, max_audio_length=800, max_files_per_partition=8000,
+                 frequency_elements=128, max_audio_length=800, max_files_per_partition=-1,
                  stop_after_speaker_has_no_more_files=True):
         """
         Represents a fully defined speaker in the Speaker clustering suite.
@@ -32,6 +32,7 @@ class Speaker:
         :param max_audio_length: How long the audio of the speaker can maximally be
         :param max_files_per_partition: How many files at max should be used in a partition, 
             must be greater than number of speakers, as it is divided by it, you can set -1 to load all files into initial partition
+            if split_train_test is set to True, this parameter will be set to -1 per design
         :param stop_after_speaker_has_no_more_files: stops extracting after all files for a single speaker
             have been processed, even if other speakers had more files, to prevent bias.
         """
@@ -43,6 +44,14 @@ class Speaker:
         self.max_files_per_partition = max_files_per_partition
         self.stop_after_speaker_has_no_more_files = stop_after_speaker_has_no_more_files
         self.dataset = dataset
+
+        # :split_train_test is not allowed together with max_files_per_partition
+        if self.split_train_test:
+            self.max_files_per_partition = -1
+
+        # :split_train_test is not allowed with dataset=voxceleb2
+        if self.split_train_test and self.dataset == "voxceleb2":
+            raise Exception("Invalid arguments, split-train-test is not allowed with voxceleb2 data")
 
         # :partition_format for VoxCeleb2 is h5, due to the 2GB limit of .pickle files.
         # In case of different datasets, h5 can be used to more easily work with more data
@@ -64,51 +73,17 @@ class Speaker:
         print("Extracting {}".format(self.speaker_list))
 
         if self.dataset == "timit":
-            # Extract the spectrogram's, speaker numbers and speaker names
-            X, y, speaker_names = self.extract_timit()
-
-            # Safe Test-Data to disk
-            if self.split_train_test:
-                speaker_train_split = SpeakerTrainSplit(0.2)
-                X_train, X_test, y_train, y_test = speaker_train_split(X, y)
-
-                with open(get_speaker_pickle(self.output_name + '_train'), 'wb') as f:
-                    pickle.dump((X_train, y_train, speaker_names), f, -1)
-
-                with open(get_speaker_pickle(self.output_name + '_test'), 'wb') as f:
-                    pickle.dump((X_test, y_test, speaker_names), f, -1)
-            else:
-                with open(get_speaker_pickle(self.output_name + '_cluster'), 'wb') as f:
-                    pickle.dump((X, y, speaker_names), f, -1)
-
+            self.extract(self.extract_timit_callback, get_training("TIMIT"), '_RIFF.WAV')
         elif self.dataset == "voxceleb2":
-            self.extract_voxceleb2()
-
+            self.extract(self.extract_voxceleb2_callback, get_training("VOXCELEB2"), '.wav')
         else:
             raise ValueError("self.dataset can only be one of ('timit', 'voxceleb2'), was " + self.dataset + ".")
 
         print("Done Extracting {}".format(self.speaker_list))
-        print("Saved to pickle.\n")
 
-    def extract_timit(self):
+    def extract(self, save_callback, base_folder, file_ending):
         """
-        Extracts the training and testing data from the speaker list of the TIMIT Dataset
-        :return:
-        x: the filled training data in the 4D array [Speaker, Channel, Frequency, Time]
-        y: the filled testing data in a list of speaker_numbers
-        valid_speakers: list of all speakers in this dataset
-        """
-        # Add all valid speakers
-        valid_speakers = self.get_valid_speakers()
-        speaker_files = self.get_speaker_list_of_files(get_training("TIMIT"), '_RIFF.WAV', valid_speakers)
-
-        # Extract the spectrogram's, speaker numbers and speaker names
-        x, y = self.build_array_and_extract_speaker_data(speaker_files)
-        return x, y, valid_speakers
-
-    def extract_voxceleb2(self):
-        """
-        Extracts the training and testing data from the speaker list of the VoxCeleb2 Dataset
+        Extracts the training and testing data from the speaker list of the dataset
         """
 
         # Split Train and Test Sets not available for VoxCeleb2, as the initial
@@ -116,7 +91,7 @@ class Speaker:
         # generate/add new samples
 
         valid_speakers = self.get_valid_speakers()
-        speaker_files = self.get_speaker_list_of_files(get_training("VOXCELEB2"), '.wav', valid_speakers)
+        speaker_files = self.get_speaker_list_of_files(base_folder, file_ending, valid_speakers)
         speaker_count = len(valid_speakers)
         speaker_files_count = self.flattened_sum(speaker_files)
         speaker_files_per_partition = int(self.max_files_per_partition / speaker_count)
@@ -154,29 +129,49 @@ class Speaker:
             # extract and process spectrograms
             x, y = self.build_array_and_extract_speaker_data(partition_speaker_files)
 
-            if partition_number == -1:
-                # store initial dataset
-                with h5py.File(get_speaker_pickle(self.output_name + '_cluster', format=self.partition_format), 'w') as f:
-                    f.create_dataset('X', data=x)
-                    f.create_dataset('y', data=y)
-                    ds = f.create_dataset('speaker_names', (len(valid_speakers),), dtype=h5py.special_dtype(vlen=str))
-                    ds[:] = valid_speakers
-                    f.close()
-
-                print("Done Extracting Voxceleb2 Initial Dataset")
-            else:
-                # store cluster datasets
-                with h5py.File(get_speaker_pickle(self.output_name + '_cluster_' + str(partition_number), format=self.partition_format), 'w') as f:
-                    f.create_dataset('X', data=x)
-                    f.create_dataset('y', data=y)
-                    ds = f.create_dataset('speaker_names', (len(valid_speakers),), dtype=h5py.special_dtype(vlen=str))
-                    ds[:] = valid_speakers
-                    f.close()
-
-                print("Done Extracting Voxceleb2 SpeakerSplit {}".format(partition_number))
+            save_callback(x, y, valid_speakers, partition_number)
 
             partition_number += 1
             has_files_left = self.flattened_sum(speaker_files)
+
+    def extract_timit_callback(self, x, y, valid_speakers, partition_number):
+
+        # Safe Test-Data to disk
+        if self.split_train_test:
+            speaker_train_split = SpeakerTrainSplit(0.2)
+            X_train, X_test, y_train, y_test = speaker_train_split(x, y)
+
+            with open(get_speaker_pickle(self.output_name + '_train'), 'wb') as f:
+                pickle.dump((X_train, y_train, valid_speakers), f, -1)
+
+            with open(get_speaker_pickle(self.output_name + '_test'), 'wb') as f:
+                pickle.dump((X_test, y_test, valid_speakers), f, -1)
+        else:
+            if partition_number == -1:
+                suffix = "_cluster"
+            else:
+                suffix = "_cluster_" + str(partition_number)
+
+            with open(get_speaker_pickle(self.output_name + suffix), 'wb') as f:
+                pickle.dump((x, y, valid_speakers), f, -1)
+        
+
+    def extract_voxceleb2_callback(self, x, y, valid_speakers, partition_number):
+            if partition_number == -1:
+                suffix = "_cluster"
+            else:
+                suffix = "_cluster_" + str(partition_number)
+                
+            # store dataset
+            with h5py.File(get_speaker_pickle(self.output_name + suffix, format=self.partition_format), 'w') as f:
+                f.create_dataset('X', data=x)
+                f.create_dataset('y', data=y)
+                ds = f.create_dataset('speaker_names', (len(valid_speakers),), dtype=h5py.special_dtype(vlen=str))
+                ds[:] = valid_speakers
+                f.close()
+
+            print("Done Extracting Voxceleb2 partition {}".format(partition_number))
+
 
     def get_valid_speakers(self):
         """
