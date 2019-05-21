@@ -11,7 +11,7 @@ import common.spectogram.spectrogram_converter as spectrogram_converter
 
 class SpectrogramExtractor:
 
-    def extract_speaker_data(self, X, y, speaker_files, offset):
+    def extract_speaker_data(self, X, y, speaker_files):
         """
         Extract spectrogram and speaker names from given folder.
 
@@ -28,7 +28,7 @@ class SpectrogramExtractor:
         # Crawl the base and all sub folders
         for speaker in speaker_files.keys():
             curr_speaker_num += 1
-            speaker_uid = curr_speaker_num + offset
+            speaker_uid = curr_speaker_num
 
             print('Extraction progress: %d/%d' % (curr_speaker_num, max_speakers))
 

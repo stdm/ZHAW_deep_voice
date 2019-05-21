@@ -18,7 +18,8 @@ random.seed(1234)
 
 class Speaker:
     def __init__(self, split_train_test, max_speakers, speaker_list, dataset, output_name=None,
-                 frequency_elements=128, max_audio_length=800, speakers_per_partition=40):
+                 frequency_elements=128, max_audio_length=800, max_files_per_partition=8000,
+                 stop_after_speaker_has_no_more_files=True):
         """
         Represents a fully defined speaker in the Speaker clustering suite.
 
@@ -29,13 +30,18 @@ class Speaker:
         :param output_train: File name in which the train output pickle gets stored in
         :param output_test: File name in which the test output pickle gets stored in
         :param max_audio_length: How long the audio of the speaker can maximally be
+        :param max_files_per_partition: How many files at max should be used in a partition, 
+            must be greater than number of speakers, as it is divided by it, you can set -1 to load all files into initial partition
+        :param stop_after_speaker_has_no_more_files: stops extracting after all files for a single speaker
+            have been processed, even if other speakers had more files, to prevent bias.
         """
         self.frequency_elements = frequency_elements
         self.split_train_test = split_train_test
         self.max_speakers = max_speakers
         self.speaker_list = speaker_list
         self.max_audio_length = max_audio_length
-        self.speakers_per_partition = speakers_per_partition
+        self.max_files_per_partition = max_files_per_partition
+        self.stop_after_speaker_has_no_more_files = stop_after_speaker_has_no_more_files
         self.dataset = dataset
 
         # :partition_format for VoxCeleb2 is h5, due to the 2GB limit of .pickle files.
@@ -76,66 +82,7 @@ class Speaker:
                     pickle.dump((X, y, speaker_names), f, -1)
 
         elif self.dataset == "voxceleb2":
-            # take list of all speakers and shuffle them
-            #
-            list_of_speakers = self.get_valid_speakers()
-            
-            # Extract initial dataset
-            #
-            initial_dataset_speakers = list_of_speakers[0:self.speakers_per_partition]
-            print("Extracting Voxceleb2 Initial Dataset")
-
-            # extract slice into pickle (w/ or w/o train_test split)
-            #
-            X, y, speaker_names = self.extract_voxceleb2(valid_speakers=initial_dataset_speakers, offset=0)
-
-            # Split Train and Test Sets not available for VoxCeleb2, as the initial
-            # training set is given seperate and these partitions are used to dynamically
-            # generate/add new samples
-            #
-            # When data is located in a different folder:
-            # with h5py.File(get_speaker_pickle('/mnt/all1/voxceleb2/speaker_pickles/' + self.output_name + '_cluster', format=self.partition_format), 'w') as f:
-            with h5py.File(get_speaker_pickle(self.output_name + '_cluster', format=self.partition_format), 'w') as f:
-                f.create_dataset('X', data=X)
-                f.create_dataset('y', data=y)
-                ds = f.create_dataset('speaker_names', (len(speaker_names),), dtype=h5py.special_dtype(vlen=str))
-                ds[:] = speaker_names
-                f.close()
-
-            print("Done Extracting Voxceleb2 Initial Dataset")
-
-            list_of_speakers = list_of_speakers[self.speakers_per_partition:]
-            random.shuffle(list_of_speakers)
-
-            # slice the speaker list into partitions N partitions, this is calculataed by the total number of 
-            # speakers and divided by the expected elements per partition, rounded up
-            #
-            speaker_count = len(list_of_speakers)
-            speaker_splits = np.array_split(list_of_speakers, ceil(speaker_count / self.speakers_per_partition))
-            speaker_offset = len(speaker_names)
-
-            for i in range(len(speaker_splits)):
-                print("Extracting Voxceleb2 SpeakerSplit {}".format(i))
-
-                # extract slice into pickle (w/ or w/o train_test split)
-                #
-                X, y, speaker_names = self.extract_voxceleb2(valid_speakers=speaker_splits[i], offset=speaker_offset)
-
-                # Split Train and Test Sets not available for VoxCeleb2, as the initial
-                # training set is given seperate and these partitions are used to dynamically
-                # generate/add new samples
-                #
-                # When data is located in a different folder:
-                # with h5py.File(get_speaker_pickle('/mnt/all1/voxceleb2/speaker_pickles/' + self.output_name + '_cluster_' + str(i), format=self.partition_format), 'w') as f:
-                with h5py.File(get_speaker_pickle(self.output_name + '_cluster_' + str(i), format=self.partition_format), 'w') as f:
-                    f.create_dataset('X', data=X)
-                    f.create_dataset('y', data=y)
-                    ds = f.create_dataset('speaker_names', (len(speaker_names),), dtype=h5py.special_dtype(vlen=str))
-                    ds[:] = speaker_names
-                    f.close()
-
-                speaker_offset += len(speaker_names)
-                print("Done Extracting Voxceleb2 SpeakerSplit {}".format(i))
+            self.extract_voxceleb2()
 
         else:
             raise ValueError("self.dataset can only be one of ('timit', 'voxceleb2'), was " + self.dataset + ".")
@@ -159,22 +106,73 @@ class Speaker:
         x, y = self.build_array_and_extract_speaker_data(speaker_files)
         return x, y, valid_speakers
 
-    def extract_voxceleb2(self, valid_speakers, offset):
+    def extract_voxceleb2(self):
         """
         Extracts the training and testing data from the speaker list of the VoxCeleb2 Dataset
-        :return:
-        x: the filled training data in the 4D array [Speaker, Channel, Frequency, Time]
-        y: the filled testing data in a list of speaker_numbers
-        valid_speakers: list of all speakers in this dataset
         """
 
-        # When data is located in a different folder:
-        # speaker_files = self.get_speaker_list_of_files('/mnt/all1/voxceleb2/test/aac', '.wav', valid_speakers)
+        # Split Train and Test Sets not available for VoxCeleb2, as the initial
+        # training set is given seperate and these partitions are used to dynamically
+        # generate/add new samples
+
+        valid_speakers = self.get_valid_speakers()
         speaker_files = self.get_speaker_list_of_files(get_training("VOXCELEB2"), '.wav', valid_speakers)
+        speaker_count = len(valid_speakers)
+        speaker_files_per_partition = int(self.max_files_per_partition / speaker_count)
+
+        has_files_left = len(speaker_files.values()) > 0
+        partition_speaker_files = dict()
+        partition_number = -1
         
-        # Extract the spectrogram's, speaker numbers and speaker names
-        x, y = self.build_array_and_extract_speaker_data(speaker_files, offset)
-        return x, y, valid_speakers
+        while has_files_left:
+            if self.max_files_per_partition == -1:
+                partition_speaker_files = speaker_files
+                speaker_files = dict()
+            else:
+                for speaker in speaker_files.keys():
+                    sf = speaker_files[speaker]
+                    sf_len = len(sf)
+                    random.shuffle(sf)
+
+                    if (sf_len > speaker_files_per_partition):
+                        partition_speaker_files[speaker] = sf[:speaker_files_per_partition]
+                        speaker_files[speaker] = sf[speaker_files_per_partition:]
+                    elif sf_len == speaker_files_per_partition:
+                        partition_speaker_files[speaker] = sf
+                        speaker_files[speaker] = []
+                    elif self.stop_after_speaker_has_no_more_files:
+                        has_files_left = False
+                        break
+                    
+                if not has_files_left:
+                    return
+
+            # extract and process spectrograms
+            x, y = self.build_array_and_extract_speaker_data(partition_speaker_files)
+
+            if partition_number == -1:
+                # store initial dataset
+                with h5py.File(get_speaker_pickle(self.output_name + '_cluster', format=self.partition_format), 'w') as f:
+                    f.create_dataset('X', data=x)
+                    f.create_dataset('y', data=y)
+                    ds = f.create_dataset('speaker_names', (len(valid_speakers),), dtype=h5py.special_dtype(vlen=str))
+                    ds[:] = valid_speakers
+                    f.close()
+
+                print("Done Extracting Voxceleb2 Initial Dataset")
+            else:
+                # store cluster datasets
+                with h5py.File(get_speaker_pickle(self.output_name + '_cluster_' + str(partition_number), format=self.partition_format), 'w') as f:
+                    f.create_dataset('X', data=x)
+                    f.create_dataset('y', data=y)
+                    ds = f.create_dataset('speaker_names', (len(valid_speakers),), dtype=h5py.special_dtype(vlen=str))
+                    ds[:] = valid_speakers
+                    f.close()
+
+                print("Done Extracting Voxceleb2 SpeakerSplit {}".format(partition_number))
+
+            partition_number += 1
+            has_files_left = len(speaker_files.values()) > 0
 
     def get_valid_speakers(self):
         """
@@ -223,7 +221,7 @@ class Speaker:
                 
         return result
 
-    def build_array_and_extract_speaker_data(self, speaker_files, offset=0):
+    def build_array_and_extract_speaker_data(self, speaker_files):
         """
         Initialises an array based on the dimensions / count of given speaker files, frequency_elements and max_audio_length
         Extracts the spectrograms into the new array
@@ -239,7 +237,7 @@ class Speaker:
         print('build_array_and_extract_speaker_data', x.shape)
 
         # Extract the spectrogram's, speaker numbers and speaker names
-        return SpectrogramExtractor().extract_speaker_data(x, y, speaker_files, offset)
+        return SpectrogramExtractor().extract_speaker_data(x, y, speaker_files)
 
     def is_pickle_saved(self):
         """
