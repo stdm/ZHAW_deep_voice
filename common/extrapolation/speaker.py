@@ -3,7 +3,6 @@ A Speaker contains all needed information and methods to create the pickle file 
 
 Based on previous work of Gerber, Lukic and Vogt, adapted by Heusser
 """
-import random
 from math import ceil
 
 import pickle
@@ -13,8 +12,6 @@ import numpy as np
 from common.spectogram.speaker_train_splitter import SpeakerTrainSplit
 from common.spectogram.spectrogram_extractor import SpectrogramExtractor
 from common.utils.paths import *
-
-random.seed(1234)
 
 class Speaker:
     def __init__(self, split_train_test, max_speakers, speaker_list, dataset, output_name=None,
@@ -101,6 +98,7 @@ class Speaker:
 
         print("Extracting {} total speakers with {} files".format(speaker_count, speaker_files_count))
         
+        # generate the partitions
         while has_files_left:
             partition_speaker_files = dict()
 
@@ -111,7 +109,6 @@ class Speaker:
                 for speaker in speaker_files.keys():
                     sf = speaker_files[speaker]
                     sf_len = len(sf)
-                    random.shuffle(sf)
 
                     if (sf_len > speaker_files_per_partition):
                         partition_speaker_files[speaker] = sf[:speaker_files_per_partition]
