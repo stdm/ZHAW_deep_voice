@@ -118,13 +118,17 @@ class Speaker:
         valid_speakers = self.get_valid_speakers()
         speaker_files = self.get_speaker_list_of_files(get_training("VOXCELEB2"), '.wav', valid_speakers)
         speaker_count = len(valid_speakers)
+        speaker_files_count = self.flattened_sum(speaker_files)
         speaker_files_per_partition = int(self.max_files_per_partition / speaker_count)
 
-        has_files_left = len(speaker_files.values()) > 0
-        partition_speaker_files = dict()
+        has_files_left = speaker_files_count > 0
         partition_number = -1
+
+        print("Extracting {} total speakers with {} files".format(speaker_count, speaker_files_count))
         
         while has_files_left:
+            partition_speaker_files = dict()
+
             if self.max_files_per_partition == -1:
                 partition_speaker_files = speaker_files
                 speaker_files = dict()
@@ -172,7 +176,7 @@ class Speaker:
                 print("Done Extracting Voxceleb2 SpeakerSplit {}".format(partition_number))
 
             partition_number += 1
-            has_files_left = len(speaker_files.values()) > 0
+            has_files_left = self.flattened_sum(speaker_files)
 
     def get_valid_speakers(self):
         """
@@ -230,7 +234,7 @@ class Speaker:
         x: the filled training data in the 4D array [Speaker, Channel, Frequency, Time]
         y: the filled testing data in a list of speaker_numbers
         """
-        audio_file_count = sum(len(n) for n in speaker_files.values())
+        audio_file_count = self.flattened_sum(speaker_files)
         
         x = np.zeros((audio_file_count, 1, self.frequency_elements, self.max_audio_length), dtype=np.float32)
         y = np.zeros(audio_file_count, dtype=np.int32)
@@ -252,3 +256,6 @@ class Speaker:
             # When data is located in a different folder:
             # return path.exists(get_speaker_pickle('/mnt/all1/voxceleb2/speaker_pickles/' + self.output_name + '_cluster', format=self.partition_format))
             return path.exists(get_speaker_pickle(self.output_name + '_cluster', format=self.partition_format))
+
+    def flattened_sum(self, dic):
+        return sum(len(n) for n in dic.values())
