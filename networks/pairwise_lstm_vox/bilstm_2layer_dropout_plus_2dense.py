@@ -6,7 +6,6 @@ np.random.seed(1337)  # for reproducibility
 import keras
 from keras import backend
 from keras.models import Sequential
-from keras.initializers import Constant
 from keras.layers import Dense, Dropout, Activation
 from keras.layers import LSTM
 from keras.layers import CuDNNLSTM
@@ -41,7 +40,7 @@ from common.utils.pickler import load_speaker_pickle_or_h5
 
 
 class bilstm_2layer_dropout(object):
-    def __init__(self, name, training_data, n_hidden1, n_hidden2, dense_factor, 
+    def __init__(self, name, training_data, n_hidden1, n_hidden2, dense_factor, output_size, 
                  epochs, epochs_before_active_learning, active_learning_rounds,
                  segment_size, frequency=128):
 
@@ -50,6 +49,7 @@ class bilstm_2layer_dropout(object):
         self.n_hidden1 = n_hidden1
         self.n_hidden2 = n_hidden2
         self.dense_factor = dense_factor
+        self.output_size = output_size
         self.epochs = epochs
 
         if active_learning_rounds == 0:
@@ -87,7 +87,7 @@ class bilstm_2layer_dropout(object):
         model.add(Dense(self.dense_factor * 10))
         model.add(Dropout(0.25))
         model.add(Dense(self.dense_factor * 5))
-        model.add(Dense(self.dense_factor, kernel_initializer=Constant(1/self.dense_factor)))
+        model.add(Dense(self.output_size))
         model.add(Activation('softmax'))
         adam = keras.optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
 

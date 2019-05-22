@@ -54,6 +54,7 @@ DEFAULT_ACTIVELEARNING_ROUNDS = 50
 DEFAULT_EPOCHS = 1000
 DEFAULT_EPOCHS_BEFORE_ACTIVE_LEARNING = 100
 DEFAULT_DENSE_FACTOR = 100
+DEFAULT_OUTPUT_SIZE = 100
 
 class Controller(NetworkController):
     def __init__(self,
@@ -62,7 +63,7 @@ class Controller(NetworkController):
                  val_number=DEFAULT_VAL_NUMBER, out_layer=DEFAULT_OUT_LAYER, seg_size=DEFAULT_SEG_SIZE,
                  vec_size=DEFAULT_VEC_SIZE, active_learning_rounds=DEFAULT_ACTIVELEARNING_ROUNDS,
                  epochs=DEFAULT_EPOCHS, epochs_before_active_learning=DEFAULT_EPOCHS_BEFORE_ACTIVE_LEARNING, 
-                 dense_factor=DEFAULT_DENSE_FACTOR):
+                 dense_factor=DEFAULT_DENSE_FACTOR, output_size=DEFAULT_OUTPUT_SIZE):
         super().__init__("Front", "speakers_40_clustering_vs_reynolds")
         self.setup = setup
         self.network = network
@@ -80,6 +81,7 @@ class Controller(NetworkController):
         self.epochs = epochs
         self.epochs_before_active_learning = epochs_before_active_learning
         self.dense_factor = dense_factor
+        self.output_size = output_size
 
         validation_data = {
             40: "speakers_40_clustering_vs_reynolds",
@@ -145,7 +147,8 @@ class Controller(NetworkController):
                     self.active_learning_rounds,
                     self.epochs,
                     self.epochs_before_active_learning,
-                    self.dense_factor
+                    self.dense_factor,
+                    self.output_size
                 )
             )
         if self.network == 'pairwise_lstm':
@@ -213,6 +216,8 @@ if __name__ == '__main__':
                         help='Number of epochs to train before active learning mechanism kicks in (only used by VOX2 currently). These epochs will be deducted from the amount of epochs run during active learning rounds.')
     parser.add_argument('-dense_factor', dest='dense_factor', default=DEFAULT_DENSE_FACTOR,
                         help='Factor for dense layer (size) multiplication (Vox2 only)')
+    parser.add_argument('-output_size', dest='output_size', default=DEFAULT_OUTPUT_SIZE,
+                            help='Size of the last layer during training, should match the amount of classes/speakers given during training.')
 
     args = parser.parse_args()
     #print(args)
