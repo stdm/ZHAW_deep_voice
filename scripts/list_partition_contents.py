@@ -54,9 +54,4 @@ for file_name in files:
                 speaker_dict[y[i]] = 1
 
         print("Processing H5 {}...\tLen {}\tMin {}\tMax {}".format(file_name, len(set(y)), max(speaker_dict.values()), min(speaker_dict.values())))
-        # print("\tAmount of speakers: {}".format(len(set(y))))
-        # print("\tMaximum files: {}".format(max(speaker_dict.values())))
-        # print("\tMinimum files: {}".format(min(speaker_dict.values())))
-        # print("\t{}".format(sorted(speaker_dict.values())))
-
         f.close()

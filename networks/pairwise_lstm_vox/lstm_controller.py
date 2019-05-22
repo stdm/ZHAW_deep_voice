@@ -35,10 +35,9 @@ class LSTMVOX2Controller(NetworkController):
         # Currently prepared speaker_lists have the following datasets:
         #
         # 'vox2_speakers_5994_dev_cluster', # _train suffix for train/test split, _cluster otherwise
+        # 'vox2_speakers_5994_dev_600_base', # _train suffix for train/test split, _cluster otherwise
         # 'vox2_speakers_120_test_cluster', # _train suffix for train/test split, _cluster otherwise
-        # 'vox2_speakers_120_test_base', # _train suffix for train/test split, _cluster otherwise
         # 'vox2_speakers_10_test_cluster', # _train suffix for train/test split, _cluster otherwise
-        # 'vox2_speakers_10_test_base', # _train suffix for train/test split, _cluster otherwise
         #
         self.train_data = "vox2_speakers_5994_dev_600_base"
         # :val_data means TEST dataset
