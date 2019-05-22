@@ -47,13 +47,15 @@ class LSTMVOX2Controller(NetworkController):
         return get_speaker_pickle(self.val_data, ".h5")
 
     def get_network_name(self):
-        return "{}__{}__{}__{}__{}__{}".format(
-            self.name, 
+        return "{}__{}__d{}__o{}__e{}__p{}__a{}__s{}".format(
+            'lstm_vox2', 
             self.train_data, 
-            self.dense_factor, 
+            self.dense_factor,
+            self.output_size, 
             self.epochs, 
             self.epochs_before_active_learning, 
-            self.active_learning_rounds
+            self.active_learning_rounds,
+            self.seg_size
         )
 
     def train_network(self):

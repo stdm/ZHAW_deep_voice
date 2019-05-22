@@ -54,7 +54,7 @@ DEFAULT_ACTIVELEARNING_ROUNDS = 50
 DEFAULT_EPOCHS = 1000
 DEFAULT_EPOCHS_BEFORE_ACTIVE_LEARNING = 100
 DEFAULT_DENSE_FACTOR = 100
-DEFAULT_OUTPUT_SIZE = 100
+DEFAULT_OUTPUT_SIZE = DEFAULT_DENSE_FACTOR
 
 class Controller(NetworkController):
     def __init__(self,
@@ -229,7 +229,8 @@ if __name__ == '__main__':
         seg_size=int(args.seg_size), vec_size=int(args.vec_size),
         active_learning_rounds=int(args.active_learning_rounds),
         epochs=int(args.epochs_total), epochs_before_active_learning=int(args.epochs_before_active_learning),
-        dense_factor=int(args.dense_factor)
+        dense_factor=int(args.dense_factor),
+        output_size=int(args.output_size)
     )
 
     controller.run()
