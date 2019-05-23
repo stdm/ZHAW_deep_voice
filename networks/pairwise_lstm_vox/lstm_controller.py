@@ -21,7 +21,7 @@ import common.utils.pickler as pickler
 class LSTMVOX2Controller(NetworkController):
     def __init__(self, out_layer, seg_size, vec_size, 
                  active_learning_rounds, epochs, epochs_before_active_learning, 
-                 dense_factor):
+                 dense_factor, output_size):
         super().__init__("pairwise_lstm_vox2", "vox2_speakers_120_test_cluster")
         self.out_layer = out_layer
         self.seg_size = seg_size
@@ -30,14 +30,16 @@ class LSTMVOX2Controller(NetworkController):
         self.epochs = epochs
         self.epochs_before_active_learning = epochs_before_active_learning
         self.dense_factor = dense_factor
+        self.output_size = output_size
         
         # Currently prepared speaker_lists have the following datasets:
         #
         # 'vox2_speakers_5994_dev_cluster', # _train suffix for train/test split, _cluster otherwise
+        # 'vox2_speakers_5994_dev_600_base', # _train suffix for train/test split, _cluster otherwise
         # 'vox2_speakers_120_test_cluster', # _train suffix for train/test split, _cluster otherwise
         # 'vox2_speakers_10_test_cluster', # _train suffix for train/test split, _cluster otherwise
         #
-        self.train_data = "vox2_speakers_5994_dev_cluster"
+        self.train_data = "vox2_speakers_5994_dev_600_base"
         # :val_data means TEST dataset
         self.val_data = "vox2_speakers_120_test_cluster"
     
@@ -45,13 +47,15 @@ class LSTMVOX2Controller(NetworkController):
         return get_speaker_pickle(self.val_data, ".h5")
 
     def get_network_name(self):
-        return "{}__{}__{}__{}__{}__{}".format(
-            self.name, 
+        return "{}__{}__d{}__o{}__e{}__p{}__a{}__s{}".format(
+            'lstm_vox2', 
             self.train_data, 
-            self.dense_factor, 
+            self.dense_factor,
+            self.output_size, 
             self.epochs, 
             self.epochs_before_active_learning, 
-            self.active_learning_rounds
+            self.active_learning_rounds,
+            self.seg_size
         )
 
     def train_network(self):
@@ -60,7 +64,8 @@ class LSTMVOX2Controller(NetworkController):
             self.train_data,
             n_hidden1=256, 
             n_hidden2=256, 
-            dense_factor=self.dense_factor, 
+            dense_factor=self.dense_factor,
+            output_size=self.output_size,
             epochs=self.epochs,
             epochs_before_active_learning=self.epochs_before_active_learning,
             active_learning_rounds=self.active_learning_rounds,

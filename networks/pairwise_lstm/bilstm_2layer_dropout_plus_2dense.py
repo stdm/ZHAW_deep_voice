@@ -95,6 +95,9 @@ class bilstm_2layer_dropout(object):
                                       verbose=2, callbacks=calls, validation_data=val_gen,
                                       validation_steps=2, class_weight=None, max_q_size=10,
                                       nb_worker=1, pickle_safe=False)
+
+        
+
         ps.save_accuracy_plot(history, self.network_name)
         ps.save_loss_plot(history, self.network_name)
         print("saving model")

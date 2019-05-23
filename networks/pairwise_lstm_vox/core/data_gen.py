@@ -109,6 +109,7 @@ def batch_generator_lstm(X, y, batch_size=100, segment_size=15):
                 spect = extract(X[speaker_idx, 0], segment_size)
                 seg_idx = randint(0, spect.shape[1] - segment_size)
                 Xb[j, 0] = spect[:, seg_idx:seg_idx + segment_size]
+
             yield Xb.reshape(batch_size, segment_size, settings.FREQ_ELEMENTS), transformy(yb, batch_size, speakers)
 
 
