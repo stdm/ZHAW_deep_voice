@@ -25,11 +25,11 @@ class SpeakerTrainSplit(object):
     # Due to the nature that data per speaker does not need to be uniform,
     # it can be that we need to round the eval_size according to the number
     # of files per speaker.
-    # 
+    #
     # (for eval_size = 0.2)
     # We cannot assume that exactly 20% of the total number of files will end up
     # in the validation set while the training set contains exactly 80%. Instead,
-    # for each speaker we round so that the ratio per speaker in the validation 
+    # for each speaker we round so that the ratio per speaker in the validation
     # and train set is as close to the eval_size as possible.
     #
     # IMPORTANT!!!
@@ -40,13 +40,13 @@ class SpeakerTrainSplit(object):
         # Build speaker file count dict: Iterate over all entries in y (labels) and
         # sum up the amount of examples for each unique speaker_id (content of y)
         #
-        speaker_file_count = dict()
+        speaker_file_dict = dict()
 
         for i in range(len(y)):
             try:
-                speaker_file_count[y[i]] += 1
+                speaker_file_dict[y[i]].append(i)
             except KeyError:
-                speaker_file_count[y[i]] = 1
+                speaker_file_dict[y[i]] = [i]
 
         valid_size = int(len(y) * self.eval_size) # 0.2y - len(y) is amount of total audio files
         train_size = int(len(y) - valid_size)     # 0.8y - len(y) is amount of total audio files
@@ -61,51 +61,42 @@ class SpeakerTrainSplit(object):
         #
         train_index = 0
         valid_index = len(y) - 1
-        total_index = 0
 
-        # print("INITIAL: train: {} valid: {} total: {}".format(train_index, valid_index, total_index))
         # print(X.shape)
         # print(y.shape)
 
-        for speaker_id in speaker_file_count.keys():
-            speaker_valid_size = int(round(speaker_file_count[speaker_id] * self.eval_size, 0))
-            speaker_train_size = int(speaker_file_count[speaker_id] - speaker_valid_size)
+        for speaker_id in speaker_file_dict.keys():
+            num_files_for_speaker = len(speaker_file_dict[speaker_id])
 
-            for i in range(speaker_file_count[speaker_id]):
+            speaker_valid_size = int(round(num_files_for_speaker * self.eval_size, 0))
+            speaker_train_size = int(num_files_for_speaker - speaker_valid_size)
+
+            # print("Speaker {} has {} files:\ttrain{}\tvalid{}".format(speaker_id, num_files_for_speaker, speaker_train_size, speaker_valid_size))
+
+            for i in range(num_files_for_speaker):
+                dataset_index = speaker_file_dict[speaker_id][i]
+
                 if i > speaker_train_size - 1:
-                    X_new[valid_index] = X[total_index]
-                    y_new[valid_index] = y[total_index]
+                    X_new[valid_index] = X[dataset_index]
+                    y_new[valid_index] = y[dataset_index]
                     valid_index -= 1
-                    total_index += 1
-                    #print("----VALID #{} train: {} valid: {} total: {}".format(i, train_index, valid_index, total_index))
-                else:
-                    X_new[train_index] = X[total_index]
-                    y_new[train_index] = y[total_index]
-                    train_index += 1
-                    total_index += 1
-                    #print("TRAIN---- #{} train: {} valid: {} total: {}".format(i, train_index, valid_index, total_index))
 
-                # lehmacl1@2019-04-13: When reading from a pickled dataset, the speaker_files_count for the last entry
-                # seems to be faulty. Break here if this happens. --> TODO: should be further investigated and fixed
-                #
-                if total_index == X.shape[0]:
-                    break
-                
+                else:
+                    X_new[train_index] = X[dataset_index]
+                    y_new[train_index] = y[dataset_index]
+                    train_index += 1
+
+            # print("\tSpeaker {}, y_valid: {}, y_train: {}".format(speaker_id, y_new[valid_index + 1], y_new[train_index - 1]))
+
         # The indices were incremented / decremented after the last step, with this correction
         # we get the last used indices for both
         #
         valid_index += 1
         train_index -= 1
-        # print("indices train: {} valid: {} total: {}".format(train_index, valid_index, total_index))
-            
+
         # Split the new sorted array into the train and validation parts
         #
         [X_train, X_valid] = np.split(X_new, [train_index]) # pylint: disable=unbalanced-tuple-unpacking
-        # print("X_train ", X_train.shape)
-        # print("X_valid ", X_valid.shape)
-
-        [y_train, y_valid] = np.split(y_new, [train_index]) # pylint: disable=unbalanced-tuple-unpacking        
-        # print("y_train ", y_train.shape)
-        # print("y_valid ", y_valid.shape)
+        [y_train, y_valid] = np.split(y_new, [train_index]) # pylint: disable=unbalanced-tuple-unpacking
 
         return X_train, X_valid, y_train, y_valid

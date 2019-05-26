@@ -57,7 +57,7 @@ def create_utterances(num_speakers, vector_size, vectors, y):
 
         # Fetch values where same speaker and add to utterance
         indices = np.where(y == i)[0]
-        print("create_utterances :indices {}".format(indices))
+        
         outputs = np.take(vectors, indices, axis=0)
         for value in outputs:
             utterance = np.add(utterance, value)
