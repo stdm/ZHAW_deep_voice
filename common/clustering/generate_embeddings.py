@@ -15,17 +15,16 @@ def generate_embeddings(train_output, test_output, train_speakers, test_speakers
     """
     logger = get_logger('clustering', logging.INFO)
     logger.info('Generate embeddings')
-    num_train_speakers = len(set(train_speakers))
-    num_test_speakers = len(set(test_speakers))
+    num_speakers = len(set(train_speakers))
 
     # Prepare return variable
-    number_embeddings = num_test_speakers + num_test_speakers
+    number_embeddings = 2 * num_speakers
     embeddings = []
     speakers = []
 
     # Create utterances
-    embeddings_train, speakers_train = create_utterances(num_train_speakers, vector_size, train_output, train_speakers)
-    embeddings_test, speakers_test = create_utterances(num_test_speakers, vector_size, test_output, test_speakers)
+    embeddings_train, speakers_train = create_utterances(num_speakers, vector_size, train_output, train_speakers)
+    embeddings_test, speakers_test = create_utterances(num_speakers, vector_size, test_output, test_speakers)
 
     # Merge utterances
     embeddings.extend(embeddings_train)
@@ -58,6 +57,7 @@ def create_utterances(num_speakers, vector_size, vectors, y):
 
         # Fetch values where same speaker and add to utterance
         indices = np.where(y == i)[0]
+        print("create_utterances :indices {}".format(indices))
         outputs = np.take(vectors, indices, axis=0)
         for value in outputs:
             utterance = np.add(utterance, value)
