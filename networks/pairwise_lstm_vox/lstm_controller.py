@@ -103,10 +103,6 @@ class LSTMVOX2Controller(NetworkController):
             file_regex = self.get_network_name() + "*.h5"
 
         checkpoints = list_all_files(get_experiment_nets(), file_regex)
-        # Add out_layer to checkpoint name
-        # 
-        checkpoints = map(lambda x: x.split('.')[0] + '__ol' + str(self.out_layer) + '.' + x.split('.')[1], checkpoints)
-        print("checkpoints: {}".format(checkpoints))
 
         # Values out of the loop
         metrics = ['accuracy', 'categorical_accuracy', ]
@@ -121,6 +117,9 @@ class LSTMVOX2Controller(NetworkController):
 
             # Check if checkpoint is already processed and stored in intermediate results
             checkpoint_result_pickle = get_results_intermediate_test(checkpoint)
+            
+            # Add out_layer to checkpoint name
+            checkpoint_result_pickle = checkpoint_result_pickle.split('.')[0] + '__ol' + str(self.out_layer) + '.' + checkpoint_result_pickle.split('.')[1]
 
             if os.path.isfile(checkpoint_result_pickle):
                 embeddings, speakers, num_embeddings = pickler.load(checkpoint_result_pickle)
@@ -150,6 +149,10 @@ class LSTMVOX2Controller(NetworkController):
             set_of_embeddings.append(embeddings)
             set_of_speakers.append(speakers)
             speaker_numbers.append(num_embeddings)
+
+        # Add out_layer to checkpoint names
+        checkpoints = list(map(lambda x: x.split('.')[0] + '__ol' + str(self.out_layer) + '.' + x.split('.')[1], checkpoints))
+        print("checkpoints: {}".format(checkpoints))
 
         logger.info('Pairwise_lstm test done.')
         return checkpoints, set_of_embeddings, set_of_speakers, speaker_numbers
