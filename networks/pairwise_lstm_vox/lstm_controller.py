@@ -105,7 +105,7 @@ class LSTMVOX2Controller(NetworkController):
         checkpoints = list_all_files(get_experiment_nets(), file_regex)
         # Add out_layer to checkpoint name
         # 
-        checkpoints = map(lambda x: x.split('.')[0] + '__ol' + str(self.out_layer) + x.split('.')[1], checkpoints)
+        checkpoints = map(lambda x: x.split('.')[0] + '__ol' + str(self.out_layer) + '.' + x.split('.')[1], checkpoints)
         print("checkpoints: {}".format(checkpoints))
 
         # Values out of the loop
