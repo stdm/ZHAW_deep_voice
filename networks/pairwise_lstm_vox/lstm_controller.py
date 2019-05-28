@@ -55,6 +55,9 @@ class LSTMVOX2Controller(NetworkController):
             self.seg_size
         )
 
+    def get_formatted_result_network_name(self, out_layer, seg_size, vec_size):
+        return "{}_ol{}_vs{}".format(self.get_network_name(), out_layer, vec_size)
+
     def train_network(self):
         bilstm_2layer_dropout(
             self.get_network_name(), 

@@ -101,13 +101,15 @@ class Controller(NetworkController):
 
     def plot_results(self):
         for network_controller in self.network_controllers:
+            nn = network_controller.get_formatted_result_network_name(self.out_layer, self.seg_size, self.vec_size)
+
             if self.best:
-                regex = network_controller.get_network_name() + '*_best' + '.pickle'
+                regex = nn + '*_best' + '.pickle'
             else:
-                regex = network_controller.get_network_name() + '*' + '.pickle'
+                regex = nn + '*' + '.pickle'
 
             files = list_all_files(get_results(), regex)
-            plot_files(network_controller.get_network_name(), files)
+            plot_files(nn, files)
 
     def get_embeddings(self):
         return None, None, None, None

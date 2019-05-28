@@ -26,6 +26,9 @@ class NetworkController:
     def get_validation_test_data(self):
         return get_speaker_pickle(self.val_data + "_test")
 
+    def get_formatted_result_network_name(self, out_layer, seg_size, vec_size):
+        return "{}_ol{}_s{}_vs{}".format(self.get_network_name(), out_layer, seg_size, vec_size)
+
     @abc.abstractmethod
     def train_network(self):
         """
@@ -71,7 +74,7 @@ class NetworkController:
         Tests the network implementation with the validation data set and saves the result sets
         of the different metrics in analysis.
         """
-        network_name = self.get_network_name()
+        network_name = self.get_formatted_result_network_name(out_layer, seg_size, vec_size)
 
         checkpoint_names, set_of_predicted_clusters, set_of_true_clusters, embeddings_numbers = self.get_clusters(
             out_layer=out_layer, 
