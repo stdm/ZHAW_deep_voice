@@ -101,12 +101,10 @@ class Controller(NetworkController):
 
     def plot_results(self):
         for network_controller in self.network_controllers:
-            file_format = '.pickle'
-            
             if self.best:
-                regex = network_controller.get_network_name() + '*_best' + file_format
+                regex = network_controller.get_network_name() + '*_best' + '.pickle'
             else:
-                regex = network_controller.get_network_name() + '*' + file_format
+                regex = network_controller.get_network_name() + '*' + '.pickle'
 
             files = list_all_files(get_results(), regex)
             plot_files(network_controller.get_network_name(), files)
