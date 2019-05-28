@@ -19,13 +19,10 @@ from common.spectogram.speaker_train_splitter import SpeakerTrainSplit
 import common.utils.pickler as pickler
 
 class LSTMVOX2Controller(NetworkController):
-    def __init__(self, out_layer, seg_size, vec_size, 
-                 active_learning_rounds, epochs, epochs_before_active_learning, 
-                 dense_factor, output_size):
+    def __init__(self, seg_size, active_learning_rounds, epochs, 
+                 epochs_before_active_learning, dense_factor, output_size):
         super().__init__("pairwise_lstm_vox2", "vox2_speakers_120_test_cluster")
-        self.out_layer = out_layer
         self.seg_size = seg_size
-        self.vec_size = vec_size
         self.active_learning_rounds = active_learning_rounds
         self.epochs = epochs
         self.epochs_before_active_learning = epochs_before_active_learning
@@ -83,11 +80,14 @@ class LSTMVOX2Controller(NetworkController):
         return X_train, y_train, X_test, y_test
 
     def get_embeddings(self, out_layer, seg_size, vec_size, best):
+        # Passed seg_size parameter is ignored 
+        # because it is already used during training and must stay equal
+        
         logger = get_logger('lstm_vox', logging.INFO)
         logger.info('Run pairwise_lstm test')
-        logger.info('out_layer -> ' + str(self.out_layer))
+        logger.info('out_layer -> ' + str(out_layer))
         logger.info('seg_size -> ' + str(self.seg_size))
-        logger.info('vec_size -> ' + str(self.vec_size))
+        logger.info('vec_size -> ' + str(vec_size))
 
         # Load and prepare train/test data
         x_train, speakers_train, x_test, speakers_test = self.get_validation_datasets()
@@ -109,7 +109,6 @@ class LSTMVOX2Controller(NetworkController):
         loss = pairwise_kl_divergence
         custom_objects = { 'pairwise_kl_divergence': pairwise_kl_divergence }
         optimizer = 'rmsprop'
-        vector_size = self.vec_size #256 * 2
 
         # Fill return values
         for checkpoint in checkpoints:
@@ -119,7 +118,7 @@ class LSTMVOX2Controller(NetworkController):
             checkpoint_result_pickle = get_results_intermediate_test(checkpoint)
             
             # Add out_layer to checkpoint name
-            checkpoint_result_pickle = checkpoint_result_pickle.split('.')[0] + '__ol' + str(self.out_layer) + '.' + checkpoint_result_pickle.split('.')[1]
+            checkpoint_result_pickle = checkpoint_result_pickle.split('.')[0] + '__ol' + str(out_layer) + '.' + checkpoint_result_pickle.split('.')[1]
 
             if os.path.isfile(checkpoint_result_pickle):
                 embeddings, speakers, num_embeddings = pickler.load(checkpoint_result_pickle)
@@ -129,7 +128,7 @@ class LSTMVOX2Controller(NetworkController):
                 model_full.compile(loss=loss, optimizer=optimizer, metrics=metrics)
 
                 # Get a Model with the embedding layer as output and predict
-                model_partial = Model(inputs=model_full.input, outputs=model_full.layers[self.out_layer].output)
+                model_partial = Model(inputs=model_full.input, outputs=model_full.layers[out_layer].output)
 
                 logger.info('running predict on test set')
                 test_output = np.asarray(model_partial.predict(x_test))
@@ -140,7 +139,7 @@ class LSTMVOX2Controller(NetworkController):
 
                 embeddings, speakers, num_embeddings = generate_embeddings(
                     train_output, test_output, speakers_train,
-                    speakers_test, vector_size
+                    speakers_test, vec_size
                 )
 
                 pickler.save((embeddings, speakers, num_embeddings), checkpoint_result_pickle)
@@ -151,7 +150,7 @@ class LSTMVOX2Controller(NetworkController):
             speaker_numbers.append(num_embeddings)
 
         # Add out_layer to checkpoint names
-        checkpoints = list(map(lambda x: x.split('.')[0] + '__ol' + str(self.out_layer) + '.' + x.split('.')[1], checkpoints))
+        checkpoints = list(map(lambda x: x.split('.')[0] + '__ol' + str(out_layer) + '.' + x.split('.')[1], checkpoints))
         print("checkpoints: {}".format(checkpoints))
 
         logger.info('Pairwise_lstm test done.')
