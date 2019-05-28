@@ -22,6 +22,9 @@ def create_network_10_speakers(input_var):
 def create_network_100_speakers(input_var):
     return create_network_n_speakers(input_var=input_var, n=100)
 
+def create_network_470_speakers(input_var):
+    return create_network_n_speakers(input_var=input_var, n=470)
+
 
 def create_network_590_speakers(input_var):
     return create_network_n_speakers(input_var=input_var, n=590)

@@ -28,7 +28,7 @@ class KLDivController(NetworkController):
                          network_params_file_out=net_file,
                          train_file=train_file,
                          epoch_batches=config.getint('pairwise_kldiv', 'epoch_batches'),
-                         network_fun=create_network_100_speakers, with_validation=False)
+                         network_fun=create_network_470_speakers, with_validation=False)
 
     def get_embeddings(self):
         short_utterance = self.config.getboolean('validation', 'short_utterances')

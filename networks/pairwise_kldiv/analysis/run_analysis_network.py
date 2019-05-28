@@ -15,7 +15,7 @@ def run_analysis_network(network_file, X_input, y_input, speaker_list, conv_netw
     # Generate output train data
     X_output, y_output, speaker_names = clustering_network.generate_output(X_input, y_input, speaker_list, network_params_file_in=network_file,
                                                                                output_file_out=None,
-                                                                               network_fun=network_factory.create_network_100_speakers,
+                                                                               network_fun=network_factory.create_network_470_speakers,
                                                                                get_conv_output=get_conv_output,
                                                                                output_layer=7)
 
