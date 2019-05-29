@@ -1,40 +1,43 @@
 """
 The main entry point of the speaker clustering suite.
 You can use this file to setup, train and test any network provided in the suite.
+Note that not all networks use all of the available parameters. Check their implementation beforehand.
 
 Usage: controller.py [-h] [-setup] [-n NETWORK] [-train] [-test] [-clear]
-                     [-debug]
 
 Controller suite for Speaker clustering
 
 optional arguments:
-  -h, --help  show this help message and exit
-  -setup      Run project setup.
-  -n NETWORK  The network to use for training or analysis.
-  -train      Train the specified network.
-  -test       Test the specified network.
-  -clear      Clean directories before starting network.
-  -debug      Set loglevel for TensorFlow and Logger to debug.
-  -plot       Plots the last results of the specified networks in one file.
+  -h, --help         show this help message and exit
+  -setup             Run project setup.
+  -n NETWORK         The network to use for training or analysis.
+  -train             Train the specified network.
+  -test              Test the specified network.
+  -clear             Clean directories before starting network.
+  -debug             Set loglevel for TensorFlow and Logger to debug.
+  -best              Just the best results of the networks will be used in -train or -plot
+  -plot              Plots the last results of the specified networks in one file.
+  -seg_size          The segment size used during training and testing
+  -vec_size          The vector size to be expected when choosing a certain out_layer
+  -out_layer         The layer index of the network to use for testing / creating the embeddings
+  -epoch_total       number of epochs to train the network
+  -epochs_pre_alr    number of epochs to train before active learning process starts
+  -alr               number of active learning rounds (can be 0)
+  -dense_factor      width of certain dense layers can be controlled via this parameter
+  -output_size       width of the last dense layer (should be >= dense_factor)
 
 """
+
 import argparse
 import sys
 
 import matplotlib
 matplotlib.use('Agg')
 
-
 from common.analysis.analysis import *
 from common.extrapolation.setup import setup_suite, is_suite_setup
 from common.network_controller import NetworkController
 from common.utils.paths import *
-
-# Controllers
-# -------------------
-# from networks.flow_me.me_controller import MEController
-# from networks.lu_vo.luvo_controller import LuvoController
-# from networks.pairwise_kldiv.kldiv_controller import KLDivController
 
 # Constants
 # -------------------
@@ -46,7 +49,6 @@ DEFAULT_CLEAR = False
 DEFAULT_DEBUG = False
 DEFAULT_PLOT = False
 DEFAULT_BEST = False
-DEFAULT_VAL_NUMBER = 40
 DEFAULT_OUT_LAYER = 2
 DEFAULT_SEG_SIZE = 40
 DEFAULT_VEC_SIZE = 512
@@ -60,7 +62,7 @@ class Controller(NetworkController):
     def __init__(self,
                  setup=DEFAULT_SETUP, network=DEFAULT_NETWORK, train=DEFAULT_TRAIN, test=DEFAULT_TEST,
                  clear=DEFAULT_CLEAR, debug=DEFAULT_DEBUG, plot=DEFAULT_PLOT, best=DEFAULT_BEST,
-                 val_number=DEFAULT_VAL_NUMBER, out_layer=DEFAULT_OUT_LAYER, seg_size=DEFAULT_SEG_SIZE,
+                 out_layer=DEFAULT_OUT_LAYER, seg_size=DEFAULT_SEG_SIZE,
                  vec_size=DEFAULT_VEC_SIZE, active_learning_rounds=DEFAULT_ACTIVELEARNING_ROUNDS,
                  epochs=DEFAULT_EPOCHS, epochs_before_active_learning=DEFAULT_EPOCHS_BEFORE_ACTIVE_LEARNING, 
                  dense_factor=DEFAULT_DENSE_FACTOR, output_size=DEFAULT_OUTPUT_SIZE):
@@ -82,14 +84,6 @@ class Controller(NetworkController):
         self.epochs_before_active_learning = epochs_before_active_learning
         self.dense_factor = dense_factor
         self.output_size = output_size
-
-        validation_data = {
-            40: "speakers_40_clustering_vs_reynolds",
-            60: "speakers_60_clustering",
-            80: "speakers_80_clustering"
-        }
-
-        self.val_data = validation_data[val_number]
 
     def train_network(self):
         for network_controller in self.network_controllers:
@@ -137,6 +131,7 @@ class Controller(NetworkController):
 
     def generate_controllers(self):
         self.network_controllers = []
+        # Active Learning Pairwise LSTM with Vox2 dataset
         if self.network == 'pairwise_lstm_vox2':
             from networks.pairwise_lstm_vox.lstm_controller import LSTMVOX2Controller
             self.network_controllers.append(
@@ -149,6 +144,7 @@ class Controller(NetworkController):
                     self.output_size
                 )
             )
+        # Pairwise LSTM network (timit dataset per default)
         if self.network == 'pairwise_lstm':
             from networks.pairwise_lstm.lstm_controller import LSTMController
             self.network_controllers.append(
@@ -159,9 +155,22 @@ class Controller(NetworkController):
                     self.epochs
                 )
             )
+        # mxnet arcface network
         if self.network == 'arc_face':
             from networks.lstm_arc_face.arc_face_controller import ArcFaceController
             self.network_controllers.append(ArcFaceController())
+        # flow me network
+        if self.network == 'flow_me':
+            from networks.flow_me.me_controller import MEController
+            self.network_controllers.append(MEController(self.clear, self.debug, False))
+        # luvo network
+        if self.network == 'luvo': 
+            from networks.lu_vo.luvo_controller import LuvoController
+            self.network_controllers.append(LuvoController())
+        # pairwise_kldiv network
+        if self.network == 'pairwise_kldiv':
+            from networks.pairwise_kldiv.kldiv_controller import KLDivController
+            self.network_controllers.append([KLDivController()])
 
     def setup_networks(self):
         if is_suite_setup():
@@ -198,8 +207,6 @@ if __name__ == '__main__':
                         help='Plots the last results of the specified networks in one file.')
     parser.add_argument('-best', dest='best', action='store_true',
                         help='If a single Network is specified and plot was called, just the best curves will be plotted. If test was called only the best network will be tested')
-    parser.add_argument('-val', dest='validation_number', default=DEFAULT_VAL_NUMBER,
-                        help='Specify how many speakers should be used for testing (40, 60, 80).')
     parser.add_argument('-out_layer', dest='out_layer', default=DEFAULT_OUT_LAYER,
                         help='Output layer')
     parser.add_argument('-seg_size', dest='seg_size', default=DEFAULT_SEG_SIZE,
@@ -218,17 +225,15 @@ if __name__ == '__main__':
                             help='Size of the last layer during training, should match the amount of classes/speakers given during training.')
 
     args = parser.parse_args()
-    #print(args)
 
     controller = Controller(
         setup=args.setup, network=args.network, train=args.train, test=args.test, 
         clear=args.clear, debug=args.debug, plot=args.plot, best=args.best, 
-        val_number=args.validation_number, out_layer=int(args.out_layer), 
+        out_layer=int(args.out_layer), output_size=int(args.output_size),
         seg_size=int(args.seg_size), vec_size=int(args.vec_size),
         active_learning_rounds=int(args.active_learning_rounds),
         epochs=int(args.epochs_total), epochs_before_active_learning=int(args.epochs_before_active_learning),
         dense_factor=int(args.dense_factor),
-        output_size=int(args.output_size)
     )
 
     controller.run()
