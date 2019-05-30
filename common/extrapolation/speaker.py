@@ -96,7 +96,7 @@ class Speaker:
         y: the filled testing data in a list of speaker_numbers
         """
 
-        x = np.zeros((self.max_speakers * 20, 20, self.max_audio_length))
+        x = np.zeros((self.max_speakers * 20, self.frequency_elements, self.max_audio_length))
         y = np.zeros(self.max_speakers * 20, dtype=np.int32)
 
         if self.dataset == "timit":
