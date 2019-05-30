@@ -13,4 +13,4 @@ def mfcc(wav_file):
     mfcc = librosa.feature.mfcc(y=audio_range, sr=sample_rate, n_mfcc=20, hop_length=hop_length, n_fft=1024)
 
 
-    return mfcc.transpose() #return the features in the format expected by scikit-learn
+    return mfcc #return the features in the format expected by scikit-learn
