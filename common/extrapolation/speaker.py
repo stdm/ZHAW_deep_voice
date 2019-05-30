@@ -8,6 +8,7 @@ import numpy as np
 
 from common.spectrogram.speaker_train_splitter import SpeakerTrainSplit
 from common.spectrogram.spectrogram_extractor import SpectrogramExtractor
+from common.mfcc.mfcc_extractor import MfccExtractor
 from common.utils.paths import *
 
 
@@ -48,6 +49,7 @@ class Speaker:
 
         # Extract the spectrogram's, speaker numbers and speaker names
         X, y, speaker_names = self.extract_data_from_speaker()
+        X_mfcc, y_mfcc, speaker_names = self.extract_mfcc_from_speaker()
 
         # Safe Test-Data to disk
         if self.split_train_test:
@@ -62,6 +64,9 @@ class Speaker:
         else:
             with open(get_speaker_pickle(self.output_name + '_cluster'), 'wb') as f:
                 pickle.dump((X, y, speaker_names), f, -1)
+
+        with open(get_speaker_pickle(self.output_name + 'mfcc_cluster'), 'wb') as f:
+            pickle.dump((X_mfcc, y_mfcc, speaker_names), f, -1)
 
         print("Done Extracting {}".format(self.speaker_list))
         print("Safed to pickle.\n")
@@ -81,6 +86,24 @@ class Speaker:
             return self.extract_timit(x, y)
         else:
             raise ValueError("self.dataset can currently only be 'timit', was " + self.dataset + ".")
+
+    def extract_mfcc_from_speaker(self):
+        """
+        extracts the training and testing data from the speaker list as MFCC
+
+        :return:
+        x: the filled training data in a 3D array [speaker, MFCC, time]
+        y: the filled testing data in a list of speaker_numbers
+        """
+
+        x = np.zeros((self.max_speakers * 20, 20, self.max_audio_length))
+        y = np.zeros(self.max_speakers * 20, dtype=np.int32)
+
+        if self.dataset == "timit":
+            return self.extract_timit_as_MFCC(x, y)
+        else:
+            raise ValueError("self.dataset can currently only be 'timit', was " + self.dataset + ".")
+
 
     def extract_timit(self, x, y):
         """
@@ -102,6 +125,21 @@ class Speaker:
 
         # Extract the spectrogram's, speaker numbers and speaker names
         return extractor.extract_speaker_data(x, y)
+
+    def extract_timit_as_MFCC(self, x, y):
+
+        # Add all valid speakers
+        valid_speakers = []
+        with open(get_speaker_list(self.speaker_list), 'rb') as f:
+            for line in f:
+                # Added bytes.decode() because python 2.x ignored leading b' while python 3.x doesn't
+                valid_speakers.append(bytes.decode(line.rstrip()))
+
+        extractor = MfccExtractor(self.max_speakers, get_training("TIMIT"), valid_speakers)
+
+        # Extract the spectrogram's, speaker numbers and speaker names
+        return extractor.extract_speaker_data(x, y)
+
 
     def is_pickle_saved(self):
         """
