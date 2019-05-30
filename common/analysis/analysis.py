@@ -14,8 +14,8 @@ from common.utils.logger import *
 from common.utils.paths import *
 from common.utils.pickler import load, save
 
-metric_names = ["MR", "ACP", "ARI", "DER", "completeness_score", "homogeneity_score"]
-metric_min_values = [1,0,0,1,0,0]
+metric_names = ["MR", "ACP", "ARI", "DER"]
+metric_min_values = [1,0,0,1]
 
 def plot_files(plot_file_name, files):
     """
@@ -90,22 +90,24 @@ def _plot_curves(plot_file_name, curve_names, metric_sets, number_of_embeddings)
     color_map = plt.get_cmap('gist_rainbow')
     colors = [color_map(i) for i in np.linspace(0, 1, number_of_lines)]
 
+    #Set fontsize for all plots
+    plt.rcParams.update({'font.size': 12})
+
     # Define number of figures
-    fig1 = plt.figure(1)
-    fig1.set_size_inches(16, 20)
+    fig1 = plt.figure(figsize=(18, 12))
 
     # Define Plots
-    plot_grid = (len(metric_names)-1,3)
+    plot_grid = (3, 2)
 
     plots = [None] * len(metric_names)
 
-    plots[0] = _add_cluster_subplot(plot_grid, (0, 0), metric_names[0], 2)
-    plots[1] = _add_cluster_subplot(plot_grid, (1, 0), metric_names[1], 2)
-    plots[2] = _add_cluster_subplot(plot_grid, (2, 0), metric_names[2], 2)
-    plots[3] = _add_cluster_subplot(plot_grid, (3, 0), metric_names[3], 2)
-    plots[4] = _add_cluster_subplot(plot_grid, (4, 0), metric_names[4])
-    plots[4].set_ylim([0.8, 1.02])
-    plots[5] = _add_cluster_subplot(plot_grid, (4, 1), metric_names[5])
+    plots[0] = _add_cluster_subplot(plot_grid, (0, 0), metric_names[0], 1)
+    plots[1] = _add_cluster_subplot(plot_grid, (0, 1), metric_names[1], 1)
+    plots[2] = _add_cluster_subplot(plot_grid, (1, 0), metric_names[2], 1)
+    plots[3] = _add_cluster_subplot(plot_grid, (1, 1), metric_names[3], 1)
+
+    #Set the horizontal space between subplots
+    plt.subplots_adjust(hspace = 0.3)
 
     # Define curves and their values
     curves = [[] for _ in metric_names]
@@ -126,8 +128,8 @@ def _plot_curves(plot_file_name, curve_names, metric_sets, number_of_embeddings)
             plot.plot(number_of_clusters, value[index], color=color, label=label)
 
     # Add legend and save the plot
-    fig1.legend()
-    # fig1.show()
+    fig1.legend(loc='upper center', bbox_to_anchor=(0.5, 0.33), ncol=4)
+    #fig1.show()
     fig1.savefig(get_result_png(plot_file_name))
     fig1.savefig(get_result_png(plot_file_name + '.svg'), format='svg')
 
@@ -145,6 +147,8 @@ def _add_cluster_subplot(grid, position, y_label, colspan=1):
     subplot = plt.subplot2grid(grid, position, colspan=colspan)
     subplot.set_ylabel(y_label)
     subplot.set_xlabel('number of clusters')
+    subplot.set_xlim([-3, 83])
+    subplot.set_ylim([-0.05, 1.05])
     return subplot
 
 
@@ -206,8 +210,6 @@ def _calculate_analysis_values(predicted_clusters, true_cluster, times):
         metric_results[1][i] = average_cluster_purity(true_cluster, predicted_cluster)
         metric_results[2][i] = adjusted_rand_index(true_cluster, predicted_cluster)
         metric_results[3][i] = diarization_error_rate(true_cluster, predicted_cluster, times)
-        metric_results[4][i] = completeness_score(true_cluster, predicted_cluster)
-        metric_results[5][i] = homogeneity_score(true_cluster, predicted_cluster)
 
     return metric_results
 

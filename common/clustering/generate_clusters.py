@@ -27,7 +27,7 @@ def cluster_embeddings(set_of_embeddings, set_of_true_clusters, dominant_sets=Fa
             dos = ds.DominantSetClustering(feature_vectors=np.array(embeddings),
                                            speaker_ids=np.array(true_clusters),
                                            metric='cosine', dominant_search=False,
-                                           epsilon=1e-6, cutoff=-0.1)
+                                           epsilon=1e-6, cutoff=0.125)
             dos.apply_clustering()
             predicted_clusters.append(dos.ds_result)
         else:
