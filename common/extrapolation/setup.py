@@ -26,8 +26,4 @@ def is_suite_setup():
     for speaker in create_all_speakers():
         if not speaker.is_pickle_saved():
             return False
-        if not speaker.is_safed_to_hdf():
-            return False
-
-
     return True
