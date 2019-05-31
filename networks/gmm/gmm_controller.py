@@ -43,7 +43,7 @@ class GMMController(NetworkController):
 
         set_of_times = [np.zeros((len(y_test) + len(y_train)), dtype=int)]
 
-        outputs, y_list = create_data_lists(False, train_outputs,test_outputs,y_train,y_test)
+        outputs, y_list, s_list = create_data_lists(False, train_outputs,test_outputs,y_train,y_test)
 
         embeddings, speakers, number_embeddings = generate_embeddings(outputs, y_list, outputs[0].shape[1])
 
