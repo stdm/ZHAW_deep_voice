@@ -45,7 +45,7 @@ class GMMController(NetworkController):
 
         outputs, y_list, s_list = create_data_lists(False, train_outputs,test_outputs,y_train,y_test)
 
-        embeddings, speakers, number_embeddings = generate_embeddings(outputs, y_list, outputs[0].shape[1])
+        embeddings, speakers, number_embeddings = generate_embeddings(outputs, y_list, len(model))
 
         set_of_embeddings.append(embeddings)
         set_of_speakers.append(speakers)
