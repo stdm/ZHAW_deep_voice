@@ -4,6 +4,7 @@ from sklearn import mixture
 from common.utils.pickler import load, save
 from common.utils.paths import get_experiment_nets, get_speaker_pickle
 from common.clustering.generate_embeddings import generate_embeddings
+from common.utils.ShortUtteranceConverter import create_data_lists
 import numpy as np
 
 
@@ -42,7 +43,9 @@ class GMMController(NetworkController):
 
         set_of_times = [np.zeros((len(y_test) + len(y_train)), dtype=int)]
 
-        embeddings, speakers, number_embeddings = generate_embeddings(train_outputs, test_outputs, y_train, y_test, len(model))
+        outputs, y_list = create_data_lists(False, train_outputs,test_outputs,y_train,y_test)
+
+        embeddings, speakers, number_embeddings = generate_embeddings(outputs, y_list, outputs[0].shape[1])
 
         set_of_embeddings.append(embeddings)
         set_of_speakers.append(speakers)
