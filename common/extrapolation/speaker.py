@@ -55,18 +55,25 @@ class Speaker:
         if self.split_train_test:
             speaker_train_split = SpeakerTrainSplit(0.2, self.sentences)
             X_train_valid, X_test, y_train_valid, y_test = speaker_train_split(X, y, None)
+            X_mfcc_train, X_mfcc_test, y_mfcc_train, y_mfcc_test = speaker_train_split(X_mfcc,y_mfcc, None)
 
             with open(get_speaker_pickle(self.output_name + '_train'), 'wb') as f:
                 pickle.dump((X_train_valid, y_train_valid, speaker_names), f, -1)
 
             with open(get_speaker_pickle(self.output_name + '_test'), 'wb') as f:
                 pickle.dump((X_test, y_test, speaker_names), f, -1)
+
+            with open(get_speaker_pickle(self.output_name + '_train_mfcc'), 'wb') as f:
+                pickle.dump((X_mfcc_train, y_mfcc_train, speaker_names), f, -1)
+
+            with open(get_speaker_pickle(self.output_name + '_test_mfcc'), 'wb') as f:
+                pickle.dump((X_mfcc_test, y_mfcc_test, speaker_names), f, -1)
         else:
             with open(get_speaker_pickle(self.output_name + '_cluster'), 'wb') as f:
                 pickle.dump((X, y, speaker_names), f, -1)
 
-        with open(get_speaker_pickle(self.output_name + 'mfcc_cluster'), 'wb') as f:
-            pickle.dump((X_mfcc, y_mfcc, speaker_names), f, -1)
+            with open(get_speaker_pickle(self.output_name + '_cluster_mfcc'), 'wb') as f:
+                pickle.dump((X_mfcc, y_mfcc, speaker_names), f, -1)
 
         print("Done Extracting {}".format(self.speaker_list))
         print("Safed to pickle.\n")

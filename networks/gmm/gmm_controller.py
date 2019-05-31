@@ -15,7 +15,7 @@ class GMMController(NetworkController):
     def train_network(self):
         '''build a 16 component diagonal covariance GMM from the given features (usually 13 MFCCs)'''
         mixture_count = self.config.getint('gmm', 'mixturecount')
-        X, y, speaker_names = load(get_speaker_pickle(self.config.get('train', 'mfcc_pickle')))
+        X, y, speaker_names = load(get_speaker_pickle(self.config.get('train', 'pickle')+'_mfcc'))
         model = []
 
         for i in range(len(X)):
@@ -28,8 +28,8 @@ class GMMController(NetworkController):
         save(model, get_experiment_nets(self.name))
 
     def get_embeddings(self):
-        X_train, y_train, speaker_train_names = load(self.get_validation_train_data())
-        X_test, y_test, speaker_test_names = load(self.get_validation_test_data())
+        X_train, y_train, speaker_train_names = load(self.get_validation_train_data()+'_mfcc')
+        X_test, y_test, speaker_test_names = load(self.get_validation_test_data()+'_mfcc')
 
         model = load(get_experiment_nets(self.name))
 
