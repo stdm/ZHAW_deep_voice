@@ -28,8 +28,8 @@ class GMMController(NetworkController):
         save(model, get_experiment_nets(self.name))
 
     def get_embeddings(self):
-        X_train, y_train, speaker_train_names = load(self.get_validation_data_name()+'_train_mfcc')
-        X_test, y_test, speaker_test_names = load(self.get_validation_data_name()+'_test_mfcc')
+        X_train, y_train, speaker_train_names = load(self.get_validation_data_name()+'_train_mfcc.pickle')
+        X_test, y_test, speaker_test_names = load(self.get_validation_data_name()+'_test_mfcc.pickle')
 
         model = load(get_experiment_nets(self.name))
 
