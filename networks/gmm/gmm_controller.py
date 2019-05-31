@@ -54,7 +54,7 @@ class GMMController(NetworkController):
     def generate_outputs(self, X, model):
         embeddings = []
         for sample in X:
-            reshape_sample = sample.reshape(sample.shape[1:]).transpose()
+            reshape_sample = sample.transpose()
             score_vector = []
 
             for speaker in model:  # find the most similar known speaker for the given test sample of a voice
