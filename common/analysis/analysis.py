@@ -205,6 +205,7 @@ def _calculate_analysis_values(predicted_clusters, true_cluster, times):
 
     # Loop over all possible clustering
     for i, predicted_cluster in enumerate(predicted_clusters):
+        logger.info('Calculated Scores for {}/{} predicted clusters'.format(i, len(predicted_clusters)))
         # Calculate different analysis's
         metric_results[0][i] = misclassification_rate(true_cluster, predicted_cluster)
         metric_results[1][i] = average_cluster_purity(true_cluster, predicted_cluster)
