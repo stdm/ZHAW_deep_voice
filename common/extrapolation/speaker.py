@@ -56,7 +56,7 @@ class Speaker:
             speaker_train_split = SpeakerTrainSplit(0.2, self.sentences)
             spaker_train_mfcc_split = SpeakerTrainMFCCSplit(0.2, self.sentences)
             X_train_valid, X_test, y_train_valid, y_test = speaker_train_split(X, y, None)
-            X_mfcc_train, X_mfcc_test, y_mfcc_train, y_mfcc_test = speaker_train_split(X_mfcc,y_mfcc, None)
+            X_mfcc_train, X_mfcc_test, y_mfcc_train, y_mfcc_test = spaker_train_mfcc_split(X_mfcc,y_mfcc, None)
 
             with open(get_speaker_pickle(self.output_name + '_train'), 'wb') as f:
                 pickle.dump((X_train_valid, y_train_valid, speaker_names), f, -1)
