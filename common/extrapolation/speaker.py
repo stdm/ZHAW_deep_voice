@@ -6,7 +6,7 @@ Based on previous work of Gerber, Lukic and Vogt, adapted by Heusser
 import pickle
 import numpy as np
 
-from common.spectrogram.speaker_train_splitter import SpeakerTrainSplit
+from common.spectrogram.speaker_train_splitter import SpeakerTrainSplit, SpeakerTrainMFCCSplit
 from common.spectrogram.spectrogram_extractor import SpectrogramExtractor
 from common.mfcc.mfcc_extractor import MfccExtractor
 from common.utils.paths import *
@@ -54,6 +54,7 @@ class Speaker:
         # Safe Test-Data to disk
         if self.split_train_test:
             speaker_train_split = SpeakerTrainSplit(0.2, self.sentences)
+            spaker_train_mfcc_split = SpeakerTrainMFCCSplit(0.2, self.sentences)
             X_train_valid, X_test, y_train_valid, y_test = speaker_train_split(X, y, None)
             X_mfcc_train, X_mfcc_test, y_mfcc_train, y_mfcc_test = speaker_train_split(X_mfcc,y_mfcc, None)
 
