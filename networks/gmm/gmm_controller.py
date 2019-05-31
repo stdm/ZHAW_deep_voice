@@ -54,11 +54,11 @@ class GMMController(NetworkController):
     def generate_outputs(self, X, model):
         embeddings = []
         for sample in X:
-            sample = sample.reshape(sample.shape[1:]).transpose()
+            reshape_sample = sample.reshape(sample.shape[1:]).transpose()
             score_vector = []
 
             for speaker in model:  # find the most similar known speaker for the given test sample of a voice
-                score_per_featurevector = speaker['gmm'].score(sample)  # yields log-likelihoods per feature vector
+                score_per_featurevector = speaker['gmm'].score(reshape_sample)  # yields log-likelihoods per feature vector
                 score_vector.append(score_per_featurevector)
 
             embeddings.append(score_vector)
