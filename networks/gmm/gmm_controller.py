@@ -14,7 +14,6 @@ class GMMController(NetworkController):
         self.network_file = self.name + "_100"
 
     def train_network(self):
-        '''build a 16 component diagonal covariance GMM from the given features (usually 13 MFCCs)'''
         mixture_count = self.config.getint('gmm', 'mixturecount')
         X, y, speaker_names = load(get_speaker_pickle(self.config.get('train', 'pickle')+'_mfcc'))
         model = []
