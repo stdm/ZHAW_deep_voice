@@ -67,6 +67,11 @@ def _plot_curves(plot_file_name, curve_names, metric_sets, number_of_embeddings)
     logger = get_logger('analysis', logging.INFO)
     logger.info('Plot results')
 
+    #Slice results to only 1-80 clusters
+    for i in range(0,len(metric_sets)):
+        for j in range(0, len(metric_sets[i])):
+            metric_sets[i][j] = metric_sets[i][j][-80:]
+
     best_results = [[] for _ in metric_names]
     for m, min_value in enumerate(metric_min_values):
         for results in metric_sets[m]:
@@ -122,7 +127,7 @@ def _plot_curves(plot_file_name, curve_names, metric_sets, number_of_embeddings)
             label = label + '\n {} {}: {}'.format('Max' if metric_min_values[m]==0 else 'Min', metric_name,
                                                   str(best_results[m][index]))
         color = colors[index]
-        number_of_clusters = np.arange(number_of_embeddings[index], 0, -1)
+        number_of_clusters = np.arange(80, 0, -1)
 
         for plot, value in curves:
             plot.plot(number_of_clusters, value[index], color=color, label=label)
@@ -205,6 +210,7 @@ def _calculate_analysis_values(predicted_clusters, true_cluster, times):
 
     # Loop over all possible clustering
     for i, predicted_cluster in enumerate(predicted_clusters):
+        logger.info('Calculated Scores for {}/{} predicted clusters'.format(i, len(predicted_clusters)))
         # Calculate different analysis's
         metric_results[0][i] = misclassification_rate(true_cluster, predicted_cluster)
         metric_results[1][i] = average_cluster_purity(true_cluster, predicted_cluster)
