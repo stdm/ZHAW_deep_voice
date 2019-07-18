@@ -70,7 +70,7 @@ def batch_generator(X, y, batch_size=100, segment_size=100):
                 spect = extract(X[speaker_idx, 0], segment_size)
                 seg_idx = randint(0, spect.shape[1] - segment_size)
                 Xb[j, 0] = spect[:, seg_idx:seg_idx + segment_size]
-            yield Xb, transformy(yb, bs, speakers)
+            yield Xb.reshape(bs,X.shape[1], segment_size, spectrogram_height), transformy(yb, bs, speakers)
 
 
 '''creates the a batch for CNN networks, with Pariwise Labels, 

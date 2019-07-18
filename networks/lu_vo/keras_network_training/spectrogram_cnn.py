@@ -2,7 +2,7 @@ import keras
 import numpy as np
 import pickle
 from keras.models import Sequential, Model, load_model
-from keras.layers import Dense, Dropout, Conv2D, BatchNormalization, MaxPooling2D
+from keras.layers import Dense, Dropout, Conv2D, Flatten, BatchNormalization, MaxPooling2D
 
 from common.clustering.generate_embeddings import generate_embeddings
 from common.utils.load_config import *
@@ -22,12 +22,11 @@ class SpectrogramCnn:
         self.net_path = net_path
         self.config = load_config(None, join(get_common(), 'config.cfg'))
 
-    def create_net(self, shape, num_speakers):
+    def create_net(self, channel, num_speakers):
         model = Sequential()
 
         #convolution layer 1
-        model.add(Conv2D(32, kernel_size=(4,4), activation='relu', input_shape=(None, shape, self.config.getint('luvo', 'spectrogram_height'),
-                                           self.config.getint('luvo', 'seg_size'))))
+        model.add(Conv2D(32, kernel_size=(4,4), activation='relu', input_shape=(channel, self.config.getint('luvo', 'seg_size'),self.config.getint('luvo', 'spectrogram_height')), data_format='channels_first'))
         model.add(BatchNormalization())
         model.add(MaxPooling2D(pool_size=4,strides=2))
 
@@ -37,35 +36,39 @@ class SpectrogramCnn:
         model.add(MaxPooling2D(pool_size=4, strides=2))
 
         #dense layer
-        model.add(Dense(units=num_speakers*10))
+        model.add(Flatten())
+        model.add(Dense((num_speakers*10)))
         model.add(BatchNormalization())
-        model.add(Dropout())
-        model.add(Dense(units=num_speakers*5))
+        model.add(Dropout(rate=0.5))
+        model.add(Dense((num_speakers*5)))
 
         #output layer
-        model.add(Dense(units=num_speakers, activation='softmax'))
+        model.add(Dense((num_speakers), activation='softmax'))
 
         sgd = keras.optimizers.SGD(lr=self.config.getfloat('luvo', 'update_learning_rate'), momentum=self.config.getfloat('luvo', 'update_momentum'), decay=0.0, nesterov=False)
         model.compile(loss='categorical_crossentropy',
                       optimizer=sgd,
                       metrics=['accuracy'])
 
+        print( model.summary())
+
         return model
 
     def create_and_train(self, training_data):
         # Load training data
         X_t, y_t, X_v, y_v = self.create_train_data(training_data)
+        print(X_t.shape)
 
         # Create network
-        model = self.create_net(X_t.shape[1], y_t.size)
+        model = self.create_net(X_t.shape[1], self.config.getint('luvo','n_classes'))
 
         # Set new batch iterator
-        train_gen = dg.batch_generator(X_t, y_t, 128, segment_size=self.segment_size)
-        val_gen = dg.batch_generator(X_v, y_v, 128, segment_size=self.segment_size)
+        train_gen = dg.batch_generator(X_t, y_t, 128, segment_size=self.config.getint('luvo', 'seg_size'))
+        val_gen = dg.batch_generator(X_v, y_v, 128, segment_size=self.config.getint('luvo', 'seg_size'))
 
         # Train the network
         self.logger.info("Fitting...")
-        history = model.fit_generator(train_gen, steps_per_epoch=10, epochs=self.n_10_batches,
+        history = model.fit_generator(train_gen, steps_per_epoch=10, epochs=self.config.getint('luvo', 'num_epochs'),
                                       verbose=2, callbacks=None, validation_data=val_gen,
                                       validation_steps=2, class_weight=None, max_q_size=10,
                                       nb_worker=1, pickle_safe=False)
