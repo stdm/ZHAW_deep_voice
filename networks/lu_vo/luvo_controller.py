@@ -6,7 +6,7 @@ from common.network_controller import NetworkController
 from common.utils.logger import *
 from common.utils.paths import *
 from common.spectrogram.speaker_dev_selector import load_test_data
-from networks.lu_vo.network_training.spectrogram_cnn_470 import SpectrogramCnn470
+from networks.lu_vo.keras_network_training.spectrogram_cnn import SpectrogramCnn
 from networks.lu_vo.network_training.spectrogram_cnn_590 import SpectrogramCnn590
 
 
@@ -15,10 +15,11 @@ class LuvoController(NetworkController):
         super().__init__("luvo", config)
         self.checkpoint = self.name + ".pickle"
         self.logger = get_logger(self.name, logging.INFO)
-        self.cnn = SpectrogramCnn470(get_experiment_nets(self.checkpoint), self.config)
+        self.cnn = SpectrogramCnn(get_experiment_nets(self.checkpoint))
 
     def train_network(self):
-        train_file = get_speaker_pickle(self.config.get('train', 'pickle'))
+        #train_file = get_speaker_pickle(self.config.get('train', 'pickle'))
+        train_file = self.config.get('train', 'pickle')
         self.cnn.create_and_train(train_file)
 
     def get_embeddings(self):
