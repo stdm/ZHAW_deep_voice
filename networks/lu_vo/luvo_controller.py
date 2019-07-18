@@ -15,7 +15,7 @@ class LuvoController(NetworkController):
         super().__init__("luvo", config)
         self.checkpoint = self.name + ".pickle"
         self.logger = get_logger(self.name, logging.INFO)
-        self.cnn = SpectrogramCnn(get_experiment_nets(self.checkpoint))
+        self.cnn = SpectrogramCnn(self.name, get_experiment_nets(self.checkpoint))
 
     def train_network(self):
         #train_file = get_speaker_pickle(self.config.get('train', 'pickle'))

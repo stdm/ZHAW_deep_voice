@@ -16,8 +16,9 @@ from common.utils import TimeCalculator
 
 class SpectrogramCnn:
 
-    def __init__(self, net_path):
+    def __init__(self, name, net_path):
         super().__init__()
+        self.network_name = name
         self.logger = get_logger("luvo", logging.INFO)
         self.net_path = net_path
         self.config = load_config(None, join(get_common(), 'config.cfg'))
@@ -87,9 +88,13 @@ class SpectrogramCnn:
         return X_t, y_t, X_v, y_v
 
     def create_embeddings(self, X_train, y_train, X_test, y_test):
+        seg_size = self.config.getint('luvo', 'seg_size')
         short_utterance = self.config.getboolean('validation', 'short_utterances')
 
-        x_list, y_list, _ = create_data_lists(short_utterance, X_train, X_test, y_train, y_test)
+        x_train, speakers_train = prepare_data(X_train, y_train, seg_size)
+        x_test, speakers_test = prepare_data(X_test, y_test, seg_size)
+
+        x_list, y_list, _ = create_data_lists(short_utterance, x_train, x_test, speakers_train, speakers_test)
 
         # Load the network and add Batchiterator
         network_file = get_experiment_nets(self.network_name + ".h5")
@@ -102,6 +107,7 @@ class SpectrogramCnn:
         x_cluster_list = []
         y_cluster_list = []
         for x_data, y_data in zip(x_list, y_list):
+            print(x_data.shape)
             x_cluster = np.asarray(model_partial.predict(x_data))
             x_cluster_list.append(x_cluster)
             y_cluster_list.append(y_data)
@@ -113,3 +119,9 @@ class SpectrogramCnn:
         time = TimeCalculator.calc_time_all_utterances(y_cluster_list, self.config.getint('luvo', 'seg_size'))
 
         return embeddings, speakers, num_embeddings, time
+
+def prepare_data(X,y, segment_size):
+    x, speakers = dg.generate_test_data(X, y, segment_size)
+
+    # Reshape test data because it is an lstm
+    return x.reshape(x.shape[0], 1, x.shape[3], x.shape[2]), speakers
