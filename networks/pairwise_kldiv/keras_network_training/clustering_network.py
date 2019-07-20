@@ -39,7 +39,7 @@ if __name__ == '__main__':
     epoch_batches = config.getint('pairwise_kldiv', 'epoch_batches')
     num_epochs = config.getint('pairwise_kldiv', 'num_epochs')
 
-    create_and_train(num_epochs=2, #num_epochs,
+    create_and_train(num_epochs=num_epochs,
                      batch_size=batch_size,
                      network_params_file_out=net_file,
                      train_file=train_file,
