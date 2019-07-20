@@ -33,7 +33,7 @@ def create_and_train(num_epochs=1000, batch_size=100, epoch_batches=10,
 
 if __name__ == '__main__':
     net_file = get_experiment_nets("pairwise_kldiv_100.h5")
-    train_file = get_speaker_pickle("speakers_470_stratified_cluster")
+    train_file = get_speaker_pickle("speakers_100_50w_50m_not_reynolds_cluster")
     network = create_network_n_speakers(100, config)
     batch_size = config.getint('pairwise_kldiv', 'batch_size')
     epoch_batches = config.getint('pairwise_kldiv', 'epoch_batches')
