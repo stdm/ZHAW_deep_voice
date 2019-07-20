@@ -4,8 +4,6 @@
 
     Work of Lukic and Vogt.
 """
-from keras import Input
-from tensorflow.python.keras import backend as K
 from keras.layers import Conv2D, BatchNormalization, MaxPooling2D, Dropout, Dense, Flatten
 from networks.pairwise_lstm.core import pairwise_kl_divergence as kld
 from keras.models import Sequential
