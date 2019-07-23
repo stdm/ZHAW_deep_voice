@@ -11,5 +11,5 @@ RUN pip install --upgrade https://github.com/Lasagne/Lasagne/archive/a61b76fd991
 RUN pip install https://github.com/dnouri/nolearn/archive/2ef346c869e80fc90247916e4aea5cfa7cf2edda.zip#egg=nolearn
 RUN pip install pandas==0.20.3
 RUN pip install munkres==1.0.7
-RUN pip install pyannote.metrics==1.8.1
+RUN pip install pyannote.metrics==2.1
 RUN pip install xarray==0.12.3
