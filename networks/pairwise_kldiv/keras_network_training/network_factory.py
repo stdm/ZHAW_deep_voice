@@ -46,7 +46,7 @@ def create_network_n_speakers(num_speakers, config):
     adadelta = Adadelta(lr=lr, rho=rho, epsilon=epsilon, decay=0.0)
 
     # Compile model
-    model.compile(loss=kld.pairwise_kl_divergence,
+    model.compile(loss=kld.orig_pairwise_kl_divergence,
                   optimizer=adadelta,
                   metrics=['accuracy'])
 

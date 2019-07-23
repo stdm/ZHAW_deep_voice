@@ -8,7 +8,7 @@ from networks.pairwise_lstm.core import data_gen as dg
 
 
 config = load_config(None, join(get_common(), 'config.cfg'))
-logger = get_logger("luvo", logging.INFO)
+logger = get_logger("kldiv", logging.INFO)
 
 
 def create_and_train(num_epochs=1000, batch_size=100, epoch_batches=10,
