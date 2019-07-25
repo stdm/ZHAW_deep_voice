@@ -80,7 +80,7 @@ def return_one():
 if __name__ == "__main__":
     #Initialize functions under test
     predictions = tf.placeholder('float', [None, None])
-    targets = tf.placeholder('float', [None, None])
+    targets = tf.placeholder('float', None)
     lstm_loss = pairwise_kl_divergence(targets, predictions)
     kldiv_loss = orig_pairwise_kl_divergence(targets, predictions)
 
@@ -93,11 +93,11 @@ if __name__ == "__main__":
     nr_of_elems = 100
     test_pred = [None] * nr_of_elems
     for i in range(nr_of_elems):
-        test_pred[i] = ([1, 2, 3])
+        test_pred[i] = [1, 2, 3]
     test_pred[50] = [2, 3, 4]
     test_targ = [None] * nr_of_elems
     for i in range(nr_of_elems):
-        test_targ[i] = ([1, 2, 3])
+        test_targ[i] = 1
 
     #Run tests
     res = sess.run(lstm_loss, feed_dict={targets: test_targ, predictions: test_pred})
