@@ -14,7 +14,7 @@ from networks.pairwise_kldiv.keras_network_training.clustering_network import cr
 #from .network_training.clustering_network import create_and_train
 from networks.pairwise_kldiv.keras_network_training.network_factory import create_network_n_speakers
 from networks.pairwise_lstm.core.data_gen import generate_test_data
-from networks.pairwise_lstm.core.pairwise_kl_divergence import pairwise_kl_divergence
+from networks.pairwise_lstm.core.pairwise_kl_divergence import pairwise_kl_divergence, orig_pairwise_kl_divergence
 from .analysis.run_analysis_network import run_analysis_network
 
 #from .network_training.network_factory import *
@@ -125,8 +125,8 @@ class KLDivController(NetworkController):
 
         # Values out of the loop
         metrics = ['accuracy']
-        loss = pairwise_kl_divergence
-        custom_objects = {'pairwise_kl_divergence': pairwise_kl_divergence}
+        loss = orig_pairwise_kl_divergence
+        custom_objects = {'orig_pairwise_kl_divergence': orig_pairwise_kl_divergence}
         optimizer = 'rmsprop'
 
         for checkpoint in checkpoints:
