@@ -78,24 +78,30 @@ def return_one():
 
 
 if __name__ == "__main__":
-    epsilon = 1e-16
-    test_pred = [[1., 2., 3.], [4., 2., 3.], [6., 3., 2.], [4., 1., 5.], [2., 5., 8.]]
-    # test_targ = [1, 1, 6]
-    test_targ = [[1., 0., 0.], [1., 0., 0.], [0., 0., 1.], [0., 1., 0.], [0., 1., 0.]]
-    test_margin = 2.
+    #Initialize functions under test
     predictions = tf.placeholder('float', [None, None])
     targets = tf.placeholder('float', [None, None])
-    margin = tf.placeholder('float', None)
-    margin = tf.stack(test_margin)
-    result = pairwise_kl_divergence(targets, predictions)
+    lstm_loss = pairwise_kl_divergence(targets, predictions)
+    kldiv_loss = orig_pairwise_kl_divergence(targets, predictions)
+
+    #Initialize test environment
     sess = tf.Session()
     init = tf.global_variables_initializer()
     sess.run(init)
-    summary = tf.summary.merge_all()
-    saver = tf.train.Saver()
-    train_writer = tf.summary.FileWriter('../../data/experiments/graph/loss_graph', sess.graph)
-    run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
-    run_metadata = tf.RunMetadata()
-    print('running stuff')
-    #res = sess.run(result, feed_dict={targets: y, predictions: X})
-    #print(res)
+
+    #Prepare test data
+    nr_of_elems = 100
+    test_pred = [None] * nr_of_elems
+    for i in range(nr_of_elems):
+        test_pred[i] = ([1, 2, 3])
+    test_pred[50] = [2, 3, 4]
+    test_targ = [None] * nr_of_elems
+    for i in range(nr_of_elems):
+        test_targ[i] = ([1, 2, 3])
+
+    #Run tests
+    res = sess.run(lstm_loss, feed_dict={targets: test_targ, predictions: test_pred})
+    print(res)
+
+    res = sess.run(kldiv_loss, feed_dict={targets: test_targ, predictions: test_pred})
+    print(res)
