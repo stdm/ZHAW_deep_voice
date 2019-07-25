@@ -8,12 +8,12 @@ import tensorflow as tf
 
 tf_l = tf.Variable(0., name='loss')
 x = tf.constant(0.)
-margin = tf.constant(3.)
 loss = tf.Variable(0.)
 sum_loss = tf.Variable(0.)
 
 
 def pairwise_kl_divergence(labels, predictions):
+    margin = tf.constant(3.)
     x = tf.constant(0)
     sum_loss = tf.while_loop(outerLoop_condition, outerLoop, [x, tf_l, predictions, labels, margin], swap_memory=True,
                              parallel_iterations=10, name='outerloop')
@@ -22,12 +22,14 @@ def pairwise_kl_divergence(labels, predictions):
     loss = tf.divide(sum_loss[1], pairs)
     return loss
 
+
 def orig_pairwise_kl_divergence(labels, predictions):
+    margin = tf.constant(2.)
     x = tf.constant(0)
     sum_loss = tf.while_loop(outerLoop_condition, outerLoop, [x, tf_l, predictions, labels, margin], swap_memory=True,
                              parallel_iterations=10, name='outerloop')
     n = tf.constant(100.)
-    pairs = tf.multiply(n, tf.subtract(n, tf.constant(1.)))
+    pairs = tf.multiply(n, tf.divide(tf.subtract(n, tf.constant(1.)), tf.constant(2.)))
     loss = tf.divide(sum_loss[1], pairs)
     return loss
 
