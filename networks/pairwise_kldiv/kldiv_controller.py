@@ -127,7 +127,7 @@ class KLDivController(NetworkController):
         metrics = ['accuracy']
         loss = orig_pairwise_kl_divergence
         custom_objects = {'orig_pairwise_kl_divergence': orig_pairwise_kl_divergence}
-        optimizer = 'rmsprop'
+        optimizer = 'adadelta'
 
         for checkpoint in checkpoints:
             logger.info('Run checkpoint: ' + checkpoint)
@@ -146,7 +146,7 @@ class KLDivController(NetworkController):
                 x_cluster_list.append(x_cluster)
                 y_cluster_list.append(y)
 
-            embeddings, speakers, num_embeddings = \
+            embeddings, speakers, num_embeddings =\
                 generate_embeddings(x_cluster_list, y_cluster_list, x_cluster_list[0].shape[1])
 
             # Fill return values
