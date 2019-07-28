@@ -83,6 +83,7 @@ def loss_with_kl_div(P, xp, Q, xq, margin):
 
 
 if __name__ == "__main__":
+    #Test 1
     #Prepare test data
     nr_of_elems = 100
     test_pred = [None] * nr_of_elems
@@ -104,3 +105,24 @@ if __name__ == "__main__":
     #Run test
     mean_err = loss_fun(test_pred, test_targ, test_margin)
     print(mean_err)
+
+    #Test2
+    # Prepare test data
+    t_P = [1, 2, 3]
+    t_xp = 1
+    t_Q = [2, 3, 4]
+    t_xq = 1
+    t_margin = 2
+
+    # Prepare function under test
+    P = T.vector('P')
+    xp = T.scalar('xp')
+    Q = T.vector('Q')
+    xq = T.scalar('xq')
+    margin = T.scalar('margin')
+    loss = loss_with_kl_div(P, xp, Q, xq, margin)
+    loss_fun = theano.function([P, xp, Q, xq, margin], loss)
+
+    #Run test
+    res = loss_fun(t_P, t_xp, t_Q, t_xq, t_margin)
+    print(res)

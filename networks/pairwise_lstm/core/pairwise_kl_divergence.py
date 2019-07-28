@@ -80,16 +80,18 @@ def return_one():
 
 
 if __name__ == "__main__":
-    #Initialize functions under test
-    predictions = tf.placeholder('float', [None, None])
-    targets = tf.placeholder('float', None)
-    lstm_loss = pairwise_kl_divergence(targets, predictions)
-    kldiv_loss = orig_pairwise_kl_divergence(targets, predictions)
 
     #Initialize test environment
     sess = tf.Session()
     init = tf.global_variables_initializer()
     sess.run(init)
+
+    #Test 1
+    #Initialize functions under test
+    predictions = tf.placeholder('float', [None, None])
+    targets = tf.placeholder('float', None)
+    lstm_loss = pairwise_kl_divergence(targets, predictions)
+    kldiv_loss = orig_pairwise_kl_divergence(targets, predictions)
 
     #Prepare test data
     nr_of_elems = 100
@@ -106,4 +108,24 @@ if __name__ == "__main__":
     print(res)
 
     res = sess.run(kldiv_loss, feed_dict={targets: test_targ, predictions: test_pred})
+    print(res)
+
+    #Test 2
+    # Initialize functions under test
+    P = tf.placeholder('float', None)
+    xp = tf.placeholder('float', None)
+    Q = tf.placeholder('float', None)
+    xq = tf.placeholder('float', None)
+    margin = tf.placeholder('float', None)
+    loss_kl_div = loss_with_kl_div(P, xp, Q, xq, margin)
+
+    #Prepare test data
+    t_P = [1,2,3]
+    t_xp = 1
+    t_Q = [2,3,4]
+    t_xq = 1
+    t_margin = 2
+
+    #Run tests
+    res = sess.run(loss_kl_div, feed_dict={P: t_P, xp: t_xp, Q: t_Q, xq: t_xq, margin: t_margin})
     print(res)
