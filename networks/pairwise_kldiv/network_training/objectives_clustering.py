@@ -115,9 +115,9 @@ if __name__ == "__main__":
     t_margin = 2
 
     # Prepare function under test
-    P = T.vector('P')
+    P = T.dvector('P')
     xp = T.scalar('xp')
-    Q = T.vector('Q')
+    Q = T.dvector('Q')
     xq = T.scalar('xq')
     margin = T.scalar('margin')
     loss = loss_with_kl_div(P, xp, Q, xq, margin)
