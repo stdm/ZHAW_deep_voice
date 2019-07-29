@@ -23,7 +23,7 @@ class SpectrogramCnn:
         self.net_path = net_path
         self.config = load_config(None, join(get_common(), 'config.cfg'))
 
-    def create_net(self, channel, num_speakers):
+    def create_net(self, channel, n_classes):
         model = Sequential()
 
         #convolution layer 1
@@ -38,13 +38,13 @@ class SpectrogramCnn:
 
         #dense layer
         model.add(Flatten())
-        model.add(Dense((num_speakers*10)))
+        model.add(Dense((n_classes*10)))
         model.add(BatchNormalization())
         model.add(Dropout(rate=0.5))
-        model.add(Dense((num_speakers*5)))
+        model.add(Dense((n_classes*5)))
 
         #output layer
-        model.add(Dense((num_speakers), activation='softmax'))
+        model.add(Dense((n_classes), activation='softmax'))
 
         sgd = keras.optimizers.SGD(lr=self.config.getfloat('luvo', 'update_learning_rate'), momentum=self.config.getfloat('luvo', 'update_momentum'), decay=0.0, nesterov=False)
         model.compile(loss='categorical_crossentropy',
