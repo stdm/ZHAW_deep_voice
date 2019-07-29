@@ -82,42 +82,47 @@ def loss_with_kl_div(P, xp, Q, xq, margin):
     return L
 
 
-# This code tests the functions of this file
 if __name__ == "__main__":
-    test_pred = [[1, 2, 3], [4, 2, 3], [6, 3, 2]]
-    test_targ = [1, 1, 6]
-    test_margin = 2
+    #Test 1
+    #Prepare test data
+    nr_of_elems = 100
+    test_pred = [None] * nr_of_elems
+    for i in range(nr_of_elems):
+        test_pred[i] = [1, 2, 3]
+    test_pred[50] = [2, 3, 4]
+    test_targ = [None] * nr_of_elems
+    for i in range(nr_of_elems):
+        test_targ[i] = 1
 
+    #Prepare function under test
+    test_margin = 2
     predictions = T.fmatrix('p')
     targets = T.dvector('t')
     margin = T.scalar('margin')
-
     loss = mean_loss_kl_div(predictions, targets, margin)
     loss_fun = theano.function([predictions, targets, margin], loss)
+
+    #Run test
     mean_err = loss_fun(test_pred, test_targ, test_margin)
+    print(mean_err)
 
-    foreach_prep = foreach(predictions, targets, margin)
-    foreach_fun = theano.function([predictions, targets, margin], foreach_prep)
-    err_mat = foreach_fun(test_pred, test_targ, test_margin)
-    err = err_mat.sum() / ((len(err_mat) - 1) * len(err_mat))
+    #Test2
+    # Prepare test data
+    t_P = [1, 2, 3]
+    t_xp = 1
+    t_Q = [2, 3, 4]
+    t_xq = 1
+    t_margin = 2
 
-
-    def loss(predictions, targets, margin, f):
-        assert len(predictions) == len(targets)
-        L_sum = 0
-        for i in range(len(predictions)):
-            for j in range(len(predictions)):
-                L_sum += f(predictions[i], targets[i], predictions[j], targets[j], margin)
-        return L_sum / (2 * len(predictions))
-
-
+    # Prepare function under test
+    P = T.dvector('P')
     xp = T.scalar('xp')
+    Q = T.dvector('Q')
     xq = T.scalar('xq')
-    p = T.fvector('P')
-    q = T.fvector('Q')
-    result = loss_with_kl_div(p, xp, q, xq, margin)
-    f = theano.function([p, xp, q, xq, margin], result)
-    mean_np = loss(test_pred, test_targ, test_margin, f)
+    margin = T.scalar('margin')
+    loss = loss_with_kl_div(P, xp, Q, xq, margin)
+    loss_fun = theano.function([P, xp, Q, xq, margin], loss)
 
-    assert (mean_err == err == mean_np)
-    print('Run without errors!')
+    #Run test
+    res = loss_fun(t_P, t_xp, t_Q, t_xq, t_margin)
+    print(res)
