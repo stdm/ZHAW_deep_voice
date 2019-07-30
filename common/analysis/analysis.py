@@ -7,7 +7,7 @@ from common.analysis.der import diarization_error_rate
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from sklearn.metrics import *
-from theano.gradient import np
+import numpy as np
 
 from common.analysis.mr import misclassification_rate
 from common.utils.logger import *
