@@ -10,8 +10,8 @@ from networks.lu_vo.keras_network_training.spectrogram_cnn import SpectrogramCnn
 
 
 class LuvoController(NetworkController):
-    def __init__(self, config):
-        super().__init__("luvo", config)
+    def __init__(self, config, dev):
+        super().__init__("luvo", config, dev)
         self.checkpoint = self.name + ".pickle"
         self.logger = get_logger(self.name, logging.INFO)
         self.cnn = SpectrogramCnn(self.name, get_experiment_nets(self.checkpoint))

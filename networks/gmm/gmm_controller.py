@@ -9,13 +9,13 @@ import numpy as np
 
 
 class GMMController(NetworkController):
-    def __init__(self, config):
-        super().__init__("gmm", config)
+    def __init__(self, config, dev):
+        super().__init__("gmm", config, dev)
         self.network_file = self.name + "_100"
 
     def train_network(self):
         mixture_count = self.config.getint('gmm', 'mixturecount')
-        X, y, speaker_names = load(get_speaker_pickle(self.config.get('train', 'pickle')+'_mfcc'))
+        X, y = load(get_speaker_pickle(self.config.get('train', 'pickle')+'_mfcc'))
         model = []
 
         for i in range(len(X)):

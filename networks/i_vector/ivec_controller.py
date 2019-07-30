@@ -9,8 +9,8 @@ from common.utils.ShortUtteranceConverter import create_data_lists
 
 
 class IVECController(NetworkController):
-    def __init__(self, config):
-        super().__init__("i_vector", config)
+    def __init__(self, config, dev):
+        super().__init__("i_vector", config, dev)
         self.network_file = self.name + "_100"
         self.logger = get_logger('lstm', logging.INFO)
 

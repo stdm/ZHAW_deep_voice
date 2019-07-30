@@ -13,12 +13,18 @@ from common.utils.paths import get_speaker_pickle
 class NetworkController:
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, name, config):
-        self.val_data = config.get('validation', 'test_pickle')
-        self.dev_val_data = config.get('validation', 'dev_pickle')
+
+    def __init__(self, name, config, dev):
+        self.val_data = config.get('test', 'test_pickle')
+        self.dev_val_data = config.get('test', 'dev_pickle')
         self.name = name
-        self.dev_mode = config.getboolean('validation', 'dev_mode')
+        self.dev_mode = dev
         self.config = config
+
+
+    def get_network_name(self):
+        return self.name + '_' + self.val_data
+
 
     def get_validation_train_data(self):
         if self.dev_mode:
@@ -38,6 +44,12 @@ class NetworkController:
         else:
             return self.val_data
 
+
+    def get_formatted_result_network_name(self):
+        out_layer = self.config.getint(self.name, 'out_layer')
+        seg_size = self.config.getint(self.name, 'seg_size')
+        vec_size = self.config.getint(self.name, 'vec_size')
+        return "{}_ol{}_s{}_vs{}".format(self.get_network_name(), out_layer, seg_size, vec_size)
 
     @abc.abstractmethod
     def train_network(self):
@@ -82,6 +94,6 @@ class NetworkController:
         """
         checkpoint_names, set_of_predicted_clusters, set_of_true_clusters, embeddings_numbers, set_of_times =\
             self.get_clusters();
-        network_name = self.name + '_' + self.val_data
+        network_name = self.get_formatted_result_network_name()
         analyse_results(network_name, checkpoint_names, set_of_predicted_clusters, set_of_true_clusters,
                         embeddings_numbers, set_of_times)

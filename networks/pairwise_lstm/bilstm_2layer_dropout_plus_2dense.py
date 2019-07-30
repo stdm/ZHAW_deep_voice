@@ -72,8 +72,9 @@ class bilstm_2layer_dropout(object):
         with open(get_speaker_pickle(self.training_data), 'rb') as f:
             (X, y, speaker_names) = pickle.load(f)
 
-            splitter = sts.SpeakerTrainSplit(0.2, 10)
-            X_t, X_v, y_t, y_v = splitter(X, y)
+
+        splitter = sts.SpeakerTrainSplit(0.2)
+        X_t, X_v, y_t, y_v = splitter(X, y)
 
         return X_t, y_t, X_v, y_v
 
@@ -83,7 +84,7 @@ class bilstm_2layer_dropout(object):
             get_experiment_nets(self.network_name + "_best.h5"),
             monitor='val_loss', verbose=1, save_best_only=True)
         net_checkpoint = keras.callbacks.ModelCheckpoint(
-            get_experiment_nets(self.network_name + "_{epoch:05d}.h5"), period=100)
+            get_experiment_nets(self.network_name + "_{epoch:05d}.h5"), period=self.n_10_batches / 10)
         return [csv_logger, net_saver, net_checkpoint]
 
     def run_network(self):
@@ -100,6 +101,9 @@ class bilstm_2layer_dropout(object):
                                       verbose=2, callbacks=calls, validation_data=val_gen,
                                       validation_steps=2, class_weight=None, max_q_size=10,
                                       nb_worker=1, pickle_safe=False)
+
+        
+
         ps.save_accuracy_plot(history, self.network_name)
         ps.save_loss_plot(history, self.network_name)
         print("saving model")
