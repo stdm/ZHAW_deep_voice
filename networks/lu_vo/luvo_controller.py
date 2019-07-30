@@ -7,7 +7,6 @@ from common.utils.logger import *
 from common.utils.paths import *
 from common.spectrogram.speaker_dev_selector import load_test_data
 from networks.lu_vo.keras_network_training.spectrogram_cnn import SpectrogramCnn
-from networks.lu_vo.network_training.spectrogram_cnn_590 import SpectrogramCnn590
 
 
 class LuvoController(NetworkController):
