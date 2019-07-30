@@ -30,11 +30,11 @@ from common.utils.load_config import *
 
 # Controllers
 # -------------------
-from networks.flow_me.me_controller import MEController
 from networks.lu_vo.luvo_controller import LuvoController
 from networks.pairwise_kldiv.kldiv_controller import KLDivController
 from networks.pairwise_lstm.lstm_controller import LSTMController
 from networks.gmm.gmm_controller import GMMController
+from networks.i_vector.ivec_controller import IVECController
 
 
 class Controller:
@@ -88,7 +88,7 @@ class Controller:
         controller_dict = {
             'pairwise_lstm': [LSTMController(self.config)],
             'pairwise_kldiv': [KLDivController(self.config)],
-            #'flow_me': [MEController(self.clear, self.debug, False)],
+            'i_vector': [IVECController(self.config)],
             'luvo': [LuvoController(self.config)],
             'gmm': [GMMController(self.config)],
             'all': [LSTMController(self.config), KLDivController(self.config), LuvoController(self.config)]
