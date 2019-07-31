@@ -45,7 +45,7 @@ class KLDivController(NetworkController):
 
     def get_embeddings(self):
         checkpoints = ["pairwise_kldiv_100.h5"]
-        short_utterance = self.config.getboolean('validation', 'short_utterances')
+        short_utterance = self.config.getboolean('test', 'short_utterances')
         out_layer = self.config.getint('pairwise_kldiv', 'out_layer')
         seg_size = self.config.getint('pairwise_kldiv', 'seg_size')
         logger = get_logger('kldiv', logging.INFO)

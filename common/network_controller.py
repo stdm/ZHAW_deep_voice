@@ -46,10 +46,13 @@ class NetworkController:
 
 
     def get_formatted_result_network_name(self):
-        out_layer = self.config.getint(self.name, 'out_layer')
-        seg_size = self.config.getint(self.name, 'seg_size')
-        vec_size = self.config.getint(self.name, 'vec_size')
-        return "{}_ol{}_s{}_vs{}".format(self.get_network_name(), out_layer, seg_size, vec_size)
+        if(self.get_network_name() == 'pairwise_lstm_vox2'):
+            out_layer = self.config.getint(self.name, 'out_layer')
+            seg_size = self.config.getint(self.name, 'seg_size')
+            vec_size = self.config.getint(self.name, 'vec_size')
+            return "{}_ol{}_s{}_vs{}".format(self.get_network_name(), out_layer, seg_size, vec_size)
+        else:
+            return self.get_network_name()
 
     @abc.abstractmethod
     def train_network(self):
@@ -83,7 +86,7 @@ class NetworkController:
         checkpoint_names, set_of_embeddings, set_of_true_clusters, embeddings_numbers, set_of_times =\
             self.get_embeddings()
         set_of_predicted_clusters = cluster_embeddings(set_of_embeddings, set_of_true_clusters,
-                                                       self.config.getboolean('validation', 'dominant_set'))
+                                                       self.config.getboolean('test', 'dominant_set'))
 
         return checkpoint_names, set_of_predicted_clusters, set_of_true_clusters, embeddings_numbers, set_of_times
 

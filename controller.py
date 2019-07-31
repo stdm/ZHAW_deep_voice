@@ -90,7 +90,7 @@ class Controller:
     def plot_results(self):
         for network_controller in self.network_controllers:
             nn = network_controller.get_formatted_result_network_name()
-            plot_files(nn, self._get_result_files())
+            plot_files(nn, self._get_result_files(nn))
 
 
 
