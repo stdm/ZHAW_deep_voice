@@ -10,4 +10,4 @@ RUN pip install pandas==0.20.3
 RUN pip install munkres==1.0.7
 RUN pip install pyannote.metrics==2.1
 RUN pip install SIDEKIT==1.3.2
-
+RUN pip install mxnet==1.5.0
