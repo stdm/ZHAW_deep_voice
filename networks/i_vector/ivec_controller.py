@@ -12,25 +12,25 @@ class IVECController(NetworkController):
     def __init__(self, config, dev):
         super().__init__("i_vector", config, dev)
         self.network_file = self.name + "_100"
-        self.logger = get_logger('lstm', logging.INFO)
+        self.logger = get_logger(self.name, logging.INFO)
 
     def train_network(self):
         self.logger.info('Runnin ivector system: training')
 
         ubm_list, train_idmap = self.load_data(self.config.get('train', 'pickle'),self.config.get('train', 'pickle'))
 
-        ubm, fs = self.train_ubm(get_training('i_vector'), self.config.get('train', 'pickle'), ubm_list, self.config.getint('ivector', 'distrib_nb'))
+        ubm, fs = self.train_ubm(get_training('i_vector'), self.config.get('train', 'pickle'), ubm_list, self.config.getint('i_vector', 'distrib_nb'))
 
-        self.train_total_variability(ubm, fs, self.config.getint('ivector', 'distrib_nb'), self.config.getint('ivector', 'rank_TV'), self.config.getint('ivector', 'tv_iteration'), train_idmap)
+        self.train_total_variability(ubm, fs, self.config.getint('i_vector', 'distrib_nb'), self.config.getint('i_vector', 'rank_TV'), self.config.getint('i_vector', 'tv_iteration'), train_idmap)
 
     def get_embeddings(self):
         '''
         finally, testing:
         '''
         speaker_list=self.get_validation_data_name()
-        distrib_nb=self.config.getint('ivector', 'distrib_nb')
-        nbThread = self.config.getint('ivector', 'nbThread')
-        vector_size=self.config.getint('ivector', 'vector_size')
+        distrib_nb=self.config.getint('i_vector', 'distrib_nb')
+        nbThread = self.config.getint('i_vector', 'nbThread')
+        vector_size=self.config.getint('i_vector', 'vector_size')
         feature_extension = 'h5'
 
         set_of_embeddings = []
