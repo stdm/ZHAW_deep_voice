@@ -44,7 +44,7 @@ class LSTMController(NetworkController):
         )
 
     def get_embeddings(self):
-        short_utterance = self.config.getboolean('validation', 'short_utterances')
+        short_utterance = self.config.getboolean('test', 'short_utterances')
         out_layer = self.config.getint('pairwise_lstm', 'out_layer')
         seg_size = self.config.getint('pairwise_lstm', 'seg_size')
         vec_size = self.config.getint('pairwise_lstm', 'vec_size')
@@ -71,9 +71,9 @@ class LSTMController(NetworkController):
         set_of_total_times = []
         
         if self.best:
-            file_regex = self.get_network_name() + "*_best.h5"
+            file_regex = self.get_network_name() + ".*_best\.h5"
         else:
-            file_regex = self.get_network_name() + "*.h5"
+            file_regex = self.get_network_name() + ".*\.h5"
 
         checkpoints = list_all_files(get_experiment_nets(), file_regex)
 
