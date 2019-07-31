@@ -91,8 +91,8 @@ class bilstm_2layer_dropout(object):
         calls = self.create_callbacks()
 
         X_t, y_t, X_v, y_v = self.create_train_data()
-        train_gen = dg.batch_generator_lstm(X_t, y_t, 100, segment_size=self.segment_size)
-        val_gen = dg.batch_generator_lstm(X_v, y_v, 100, segment_size=self.segment_size)
+        train_gen = dg.batch_generator_divergence_optimised(X_t, y_t, 100, segment_size=self.segment_size, sentences=8)
+        val_gen = dg.batch_generator_divergence_optimised(X_v, y_v, 100, segment_size=self.segment_size, sentences=2)
         # batches_t = ((X_t.shape[0] + 128 - 1) // 128)
         # batches_v = ((X_v.shape[0] + 128 - 1) // 128)
 
