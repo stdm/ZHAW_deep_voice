@@ -10,53 +10,35 @@ import common.mfcc.mfcc_converter as mfcc_converter
 
 
 class MfccExtractor:
-    def __init__(self, max_speakers, base_folder, valid_speakers):
-        self.max_speakers = max_speakers
-        self.base_folder = base_folder
-        self.valid_speakers = valid_speakers
 
-    def extract_speaker_data(self, X, y):
-
+    def extract_speaker_data(self, X, y, speaker_files):
         """
         Extract spectrogram and speaker names from given folder.
 
         :param X: return Array that saves the mel spectrogram's
         :param y: return Array that saves the speaker numbers
-        :return: the filled X, y and the speaker names
+        :param speaker_files: dict with speaker names as keys and audio files in an array as values
+        :return: the filled X, y
         """
 
-        speaker_names = []
         global_idx = 0
-        curr_speaker_num = -1
-        old_speaker = ''
+        curr_speaker_num = 0
+        max_speakers = len(speaker_files.keys())
 
         # Crawl the base and all sub folders
-        for root, directories, filenames in os.walk(self.base_folder):
+        for speaker in speaker_files.keys():
+            curr_speaker_num += 1
+            speaker_uid = curr_speaker_num
 
-            # Ignore crp and DOC folder
-            if root[-5:] not in self.valid_speakers:
-                continue
+            print('Extraction progress: %d/%d' % (curr_speaker_num, max_speakers))
 
-            # Check files
-            for filename in filenames:
+            # Extract files
+            for full_path in speaker_files[speaker]:
+                extract_mfcc(full_path, X, y, global_idx, speaker_uid)
+                global_idx += 1
 
-                # Can't read the other wav files
-                if '_RIFF.WAV' not in filename:
-                    continue
 
-                # Extract speaker
-                speaker = root[-5:]
-                if speaker != old_speaker:
-                    curr_speaker_num += 1
-                    old_speaker = speaker
-                    speaker_names.append(speaker)
-                    print('Extraction progress: %d/%d' % (curr_speaker_num + 1, self.max_speakers))
-
-                if curr_speaker_num < self.max_speakers:
-                    full_path = os.path.join(root, filename)
-                    global_idx += extract_mfcc(full_path, X, y, global_idx, curr_speaker_num)
-
-        return X[0:global_idx], y[0:global_idx], speaker_names
+        return X[0:global_idx], y[0:global_idx]
 
 
 def extract_mfcc(wav_path, X, y, index, curr_speaker_num):

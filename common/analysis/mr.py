@@ -46,7 +46,7 @@ def misclassification_rate_BV01(y_true, y_pred):
     # Prepare the data
     y_true = np.asarray(y_true)
     y_pred = np.asarray(y_pred)
-    assert y_true.shape == y_pred.shape
+    assert y_true.shape == y_pred.shape, "Shapes are not identical of y_true ({}) and y_pred ({})".format(y_true.shape, y_pred.shape)
 
     def build_cluster_dict(plain):
         indices = np.arange(plain.shape[0])

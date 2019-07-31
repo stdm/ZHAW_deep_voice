@@ -1,4 +1,5 @@
 import matplotlib
+import h5py
 
 from common.analysis.acp import average_cluster_purity
 from common.analysis.ari import adjusted_rand_index
@@ -24,9 +25,7 @@ def plot_files(plot_file_name, files):
     :param files: a set of full file paths that hold result data
     """
     curve_names, metric_sets, set_of_number_of_embeddings = _read_result_pickle(files)
-
     _plot_curves(plot_file_name, curve_names, metric_sets, set_of_number_of_embeddings)
-
 
 def _read_result_pickle(files):
     """
@@ -35,7 +34,7 @@ def _read_result_pickle(files):
     :return: curve names, thresholds, metric scores as a list and number of embeddings
     """
     logger = get_logger('analysis', logging.INFO)
-    logger.info('Read result pickle')
+    logger.info("Read result pickle")
     curve_names = []
 
     # Initialize result sets
@@ -45,6 +44,7 @@ def _read_result_pickle(files):
     # Fill result sets
     for file in files:
         curve_name, metric_sets, number_of_embeddings = load(file)
+
 
         for index, curve_name in enumerate(curve_name):
             for m, metric_set in enumerate(metric_sets):
@@ -67,6 +67,7 @@ def _plot_curves(plot_file_name, curve_names, metric_sets, number_of_embeddings)
     logger = get_logger('analysis', logging.INFO)
     logger.info('Plot results')
 
+
     #Slice results to only 1-80 clusters
     for i in range(0,len(metric_sets)):
         for j in range(0, len(metric_sets[i])):
@@ -80,13 +81,6 @@ def _plot_curves(plot_file_name, curve_names, metric_sets, number_of_embeddings)
             else:
                 best_results[m].append(np.min(results))
 
-    '''
-    This code is used to sort the lines by min mr. Because we now use mutliple metrics and dont sort by a single
-    metric, this code is not used anymore, but we keep it for now.
-    min_mrs, curve_names, mrs, acps, aris, homogeneity_scores, completeness_scores, number_of_embeddings = \
-        (list(t) for t in
-         zip(*sorted(zip(min_mrs, curve_names, mrs, acps, aris, homogeneity_scores, completeness_scores, number_of_embeddings))))
-    '''
 
     # How many lines to plot
     number_of_lines = len(curve_names)
@@ -127,7 +121,9 @@ def _plot_curves(plot_file_name, curve_names, metric_sets, number_of_embeddings)
             label = label + '\n {} {}: {}'.format('Max' if metric_min_values[m]==0 else 'Min', metric_name,
                                                   str(best_results[m][index]))
         color = colors[index]
+
         number_of_clusters = np.arange(80, 0, -1)
+
 
         for plot, value in curves:
             plot.plot(number_of_clusters, value[index], color=color, label=label)
@@ -137,6 +133,7 @@ def _plot_curves(plot_file_name, curve_names, metric_sets, number_of_embeddings)
     #fig1.show()
     fig1.savefig(get_result_png(plot_file_name))
     fig1.savefig(get_result_png(plot_file_name + '.svg'), format='svg')
+    return fig1
 
 
 def _add_cluster_subplot(grid, position, y_label, colspan=1):
@@ -163,7 +160,6 @@ def analyse_results(network_name, checkpoint_names, set_of_predicted_clusters,
     Analyses each checkpoint with the values of set_of_predicted_clusters and set_of_true_clusters.
     After the analysis the result are stored in the Pickle network_name.pickle and the best Result
     according to min MR is stored in network_name_best.pickle.
-
     :param network_name: The name for the result pickle.
     :param checkpoint_names: A list of names from the checkpoints. Later used as curvenames,
     :param set_of_predicted_clusters: A 2D array of the predicted Clusters from the Network. [checkpoint, clusters]
@@ -176,15 +172,38 @@ def analyse_results(network_name, checkpoint_names, set_of_predicted_clusters,
     metric_sets = [[None] * len(set_of_predicted_clusters) for _ in range(len(metric_names))]
 
     for index, predicted_clusters in enumerate(set_of_predicted_clusters):
-        logger.info('Analysing checkpoint:' + checkpoint_names[index])
+        checkpoint = checkpoint_names[index]
+        logger.info('Analysing checkpoint:' + checkpoint)
 
-        metric_results = _calculate_analysis_values(predicted_clusters, set_of_true_clusters[index], set_of_times[index])
+        # Check if checkpoint is already stored
+        analysis_pickle = get_results_intermediate_analysis(checkpoint)
+
+        if os.path.isfile(analysis_pickle):
+            metric_results = load(analysis_pickle)
+        else:
+            metric_results = _calculate_analysis_values(predicted_clusters, set_of_true_clusters[index], set_of_times[index])
+            save(metric_results, analysis_pickle)
+
 
         for m, metric_result in enumerate(metric_results):
             metric_sets[m][index] = metric_result
 
     _write_result_pickle(network_name, checkpoint_names, metric_sets, embedding_numbers)
     _save_best_results(network_name, checkpoint_names, metric_sets, embedding_numbers)
+
+    
+    logger.info('Clearing intermediate result checkpoints')
+    
+    for checkpoint in checkpoint_names:
+        analysis_pickle = get_results_intermediate_analysis(checkpoint)
+        test_pickle = get_results_intermediate_test(checkpoint)
+
+        if os.path.exists(analysis_pickle):
+            os.remove(analysis_pickle)
+
+        if os.path.exists(test_pickle):
+            os.remove(test_pickle)
+
     logger.info('Analysis done')
 
 
@@ -196,6 +215,7 @@ def _calculate_analysis_values(predicted_clusters, true_cluster, times):
     :param true_clusters: The validation clusters
     :return: the results of all metrics as a 2D array where i is the index of the metric and j is the index of a
         specific result
+
     """
     logger = get_logger('analysis', logging.INFO)
     logger.info('Calculate scores')
@@ -254,12 +274,3 @@ def _write_result_pickle(network_name, checkpoint_names, metric_sets, number_of_
     logger = get_logger('analysis', logging.INFO)
     logger.info('Write result pickle')
     save((checkpoint_names, metric_sets, number_of_embeddings), get_result_pickle(network_name))
-
-
-def read_and_safe_best_results():
-    checkpoint_names, metric_sets, speaker_numbers = _read_result_pickle([get_result_pickle('flow_me')])
-    _save_best_results('flow_me', checkpoint_names, metric_sets, speaker_numbers)
-
-
-if __name__ == '__main__':
-    read_and_safe_best_results()

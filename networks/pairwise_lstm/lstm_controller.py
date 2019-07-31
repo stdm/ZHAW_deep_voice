@@ -18,11 +18,21 @@ from .core.pairwise_kl_divergence import pairwise_kl_divergence
 from common.spectrogram.speaker_dev_selector import load_test_data
 
 class LSTMController(NetworkController):
-    def __init__(self, config):
-        super().__init__("pairwise_lstm", config)
+
+    def __init__(self, config, dev, best):
+        super().__init__("pairwise_lstm", config, dev)
         self.network_file = self.name + "_100"
+        self.best = best
+
+
+    def get_network_name(self):
+        return self.name + "_100"
+
 
     def train_network(self):
+
+        n_classes = 100
+
         bilstm_2layer_dropout(
             self.network_file,
             self.config.get('train', 'pickle'),
@@ -59,14 +69,20 @@ class LSTMController(NetworkController):
         set_of_speakers = []
         speaker_numbers = []
         set_of_total_times = []
-        checkpoints = list_all_files(get_experiment_nets(), "^pairwise_lstm.*\.h5")
+        
+        if self.best:
+            file_regex = self.get_network_name() + "*_best.h5"
+        else:
+            file_regex = self.get_network_name() + "*.h5"
+
+        checkpoints = list_all_files(get_experiment_nets(), file_regex)
 
         # Values out of the loop
         metrics = ['accuracy', 'categorical_accuracy', ]
         loss = pairwise_kl_divergence
         custom_objects = {'pairwise_kl_divergence': pairwise_kl_divergence}
         optimizer = 'rmsprop'
-        vector_size = vec_size #256 * 2
+        vector_size = vec_size
 
         # Fill return values
         for checkpoint in checkpoints:

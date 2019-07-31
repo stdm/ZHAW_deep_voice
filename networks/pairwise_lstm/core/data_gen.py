@@ -115,7 +115,9 @@ def batch_generator_lstm(X, y, batch_size=100, segment_size=15):
                 spect = extract(X[speaker_idx, 0], segment_size)
                 seg_idx = randint(0, spect.shape[1] - segment_size)
                 Xb[j, 0] = spect[:, seg_idx:seg_idx + segment_size]
+
             yield Xb.reshape(bs, segment_size, spectrogram_height), transformy(yb, bs, speakers)
+
 
 
 '''creates the a batch for LSTM networks, with Pairwise Laabels, 
@@ -173,7 +175,7 @@ def batch_generator_divergence_optimised(X, y, batch_size=100, segment_size=15, 
 
 
 def transformy(y, batch_size, nb_classes):
-    yn = np.zeros((batch_size, nb_classes))
+    yn = np.zeros((batch_size, int(nb_classes)))
     k = 0
     for v in y:
         # print v

@@ -22,9 +22,10 @@ import numpy as np
 
 
 class KLDivController(NetworkController):
-    def __init__(self, config):
-        super().__init__("pairwise_kldiv", config)
+    def __init__(self, config, dev):
+        super().__init__("pairwise_kldiv", config, dev)
         self.checkpoints = ["pairwise_kldiv_100.h5"]
+
 
     def train_network(self):
         net_file = get_experiment_nets(self.checkpoints[0])
