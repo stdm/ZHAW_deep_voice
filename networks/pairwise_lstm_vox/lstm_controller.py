@@ -14,7 +14,7 @@ from common.utils.paths import *
 from .bilstm_2layer_dropout_plus_2dense import bilstm_2layer_dropout
 from .core.data_gen import generate_test_data
 from .core.pairwise_kl_divergence import pairwise_kl_divergence
-from common.spectogram.speaker_train_splitter import SpeakerTrainSplit
+from common.spectrogram.speaker_train_splitter import SpeakerTrainSplit
 
 import common.utils.pickler as pickler
 

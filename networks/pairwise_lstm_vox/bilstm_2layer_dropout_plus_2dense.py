@@ -18,7 +18,7 @@ from .core import pairwise_kl_divergence as kld
 from .core import plot_saver as ps
 from .core.callbacks import PlotCallback, ActiveLearningModelCheckpoint, ActiveLearningEpochLogger
 
-import common.spectogram.speaker_train_splitter as sts
+import common.spectrogram.speaker_train_splitter as sts
 from common.utils.logger import *
 from common.utils.paths import *
 from common.utils.pickler import load_speaker_pickle_or_h5

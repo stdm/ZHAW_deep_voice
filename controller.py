@@ -62,10 +62,11 @@ DEFAULT_TEST = False
 DEFAULT_PLOT = False
 DEFAULT_BEST = False
 DEFAULT_DEV = False
+DEFAULT_CONFIG = load_config(None, join(get_common(), 'config.cfg'))
 
 
 class Controller:
-    def __init__(self, config,
+    def __init__(self, config=DEFAULT_CONFIG,
                  setup=DEFAULT_SETUP, network=DEFAULT_NETWORK, train=DEFAULT_TRAIN, test=DEFAULT_TEST,
                 plot=DEFAULT_PLOT, best=DEFAULT_BEST, dev=DEFAULT_DEV):
         self.setup = setup
