@@ -163,7 +163,7 @@ def batch_generator_divergence_optimised(X, y, batch_size=100, segment_size=15, 
                 #choose random sentence of one speaker out of the 100 sampled above (duplicates MUST be allowed here!)
                 #calculate the index of the sentence in X and y to access the data
                 speaker_id = randint(0, len(samples) - 1)
-                speaker_idx = sentences*speaker_id + randint(0,sentences-1)
+                speaker_idx = sentences*speaker_id - randint(0,sentences-1)
                 if y is not None:
                     yb[j] = y[speaker_idx]
                 spect = extract(X[speaker_idx, 0], segment_size)
