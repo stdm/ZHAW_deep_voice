@@ -82,7 +82,7 @@ class SpectrogramCnn:
         with open(get_speaker_pickle(training_data), 'rb') as f:
             (X, y, speaker_names) = pickle.load(f)
 
-            splitter = sts.SpeakerTrainSplit(0.2, 10)
+            splitter = sts.SpeakerTrainSplit(0.2)
             X_t, X_v, y_t, y_v = splitter(X, y)
 
         return X_t, y_t, X_v, y_v
