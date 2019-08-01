@@ -1,22 +1,17 @@
-"""
-The controller to train and test the pairwise_kldiv network
-"""
 from keras.models import Model, load_model
 
+from common.spectrogram.speaker_dev_selector import load_test_data
 from common.clustering.generate_embeddings import generate_embeddings
 from common.network_controller import NetworkController
 from common.utils import TimeCalculator
 from common.utils.ShortUtteranceConverter import create_data_lists
 from common.utils.logger import *
+
 from networks.pairwise_kldiv.keras_network_training.clustering_network import create_and_train, get_experiment_nets, \
     get_speaker_pickle
 from networks.pairwise_kldiv.keras_network_training.network_factory import create_network_n_speakers
 from networks.pairwise_lstm.core.data_gen import generate_test_data
 from networks.pairwise_lstm.core.pairwise_kl_divergence import orig_pairwise_kl_divergence
-
-
-#from .network_training.network_factory import *
-from common.spectrogram.speaker_dev_selector import load_test_data
 
 import numpy as np
 
@@ -25,7 +20,6 @@ class KLDivController(NetworkController):
     def __init__(self, config, dev):
         super().__init__("pairwise_kldiv", config, dev)
         self.checkpoints = ["pairwise_kldiv_100.h5"]
-
 
     def train_network(self):
         net_file = get_experiment_nets(self.checkpoints[0])
@@ -103,7 +97,6 @@ class KLDivController(NetworkController):
             set_of_total_times.append(time)
 
         return checkpoints, set_of_embeddings, set_of_speakers, set_of_num_embeddings, set_of_total_times
-
 
     def _prepare_data(self, X, y, segment_size):
         x, speakers = generate_test_data(X, y, segment_size)
