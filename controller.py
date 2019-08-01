@@ -32,12 +32,6 @@ optional arguments:
 import argparse
 import sys
 
-import matplotlib
-
-from networks.lstm_arc_face.arc_face_controller import ArcFaceController
-
-matplotlib.use('Agg')
-
 from common.analysis.analysis import *
 from common.extrapolation.setup import setup_suite, is_suite_setup
 from common.utils.paths import *
@@ -51,6 +45,7 @@ from networks.pairwise_lstm.lstm_controller import LSTMController
 from networks.pairwise_lstm_vox.lstm_controller import LSTMVOX2Controller
 from networks.gmm.gmm_controller import GMMController
 from networks.i_vector.ivec_controller import IVECController
+from networks.lstm_arc_face.arc_face_controller import ArcFaceController
 
 
 # Constants
