@@ -37,21 +37,10 @@ from common.extrapolation.setup import setup_suite, is_suite_setup
 from common.utils.paths import *
 from common.utils.load_config import *
 
-# Controllers
-# -------------------
-from networks.lu_vo.luvo_controller import LuvoController
-from networks.pairwise_kldiv.kldiv_controller import KLDivController
-from networks.pairwise_lstm.lstm_controller import LSTMController
-from networks.pairwise_lstm_vox.lstm_controller import LSTMVOX2Controller
-from networks.gmm.gmm_controller import GMMController
-from networks.i_vector.ivec_controller import IVECController
-from networks.lstm_arc_face.arc_face_controller import ArcFaceController
-
 
 # Constants
-# -------------------
 DEFAULT_SETUP = False
-DEFAULT_NETWORK = 'pairwise_lstm_vox2'
+DEFAULT_NETWORKS = ()
 DEFAULT_TRAIN = False
 DEFAULT_TEST = False
 DEFAULT_PLOT = False
@@ -62,17 +51,24 @@ DEFAULT_CONFIG = load_config(None, join(get_common(), 'config.cfg'))
 
 class Controller:
     def __init__(self, config=DEFAULT_CONFIG,
-                 setup=DEFAULT_SETUP, network=DEFAULT_NETWORK, train=DEFAULT_TRAIN, test=DEFAULT_TEST,
-                plot=DEFAULT_PLOT, best=DEFAULT_BEST, dev=DEFAULT_DEV):
+                 setup=DEFAULT_SETUP, networks=DEFAULT_NETWORKS, train=DEFAULT_TRAIN, test=DEFAULT_TEST,
+                 plot=DEFAULT_PLOT, best=DEFAULT_BEST, dev=DEFAULT_DEV):
+        self.config = config
         self.setup = setup
-        self.network = network
+        self.networks = networks
         self.train = train
         self.test = test
-        self.network_controllers = []
         self.plot = plot
         self.best = best
         self.dev = dev
-        self.config = config
+        self.network_controllers = []
+
+    def setup_networks(self):
+        if is_suite_setup():
+            print("Already fully setup.")
+        else:
+            print("Setting up the network suite.")
+            setup_suite()
 
     def train_network(self):
         for network_controller in self.network_controllers:
@@ -85,29 +81,12 @@ class Controller:
     def plot_results(self):
         for network_controller in self.network_controllers:
             nn = network_controller.get_formatted_result_network_name()
-            plot_files(nn, self._get_result_files(nn))
+            plot_files(nn, get_result_files(nn, self.best))
 
-
-
-    def _get_result_files(self, filename):
-        if self.network == "all":
-            regex = '^.*best\.pickle'
-        elif self.best:
-            regex = '^{}.*best.pickle'.format(filename)
-        else:
-            regex = '^{}.*(?<!best)\.pickle'.format(filename)
-
-        files = list_all_files(get_results(), regex)
-
-        for index, file in enumerate(files):
-            files[index] = get_results(file)
-        return files
-
-    def get_embeddings(self):
-        return None, None, None, None
+        if len(self.network_controllers) > 1:
+            plot_files('all', get_result_files('', self.best))
 
     def run(self):
-
         # Setup
         if self.setup:
             self.setup_networks()
@@ -123,46 +102,36 @@ class Controller:
         if self.test:
             self.test_network()
 
-
         # Plot results
         if self.plot:
             self.plot_results()
 
     def generate_controllers(self):
-
-        controller_dict = {
-            'pairwise_lstm': [LSTMController(self.config, self.dev, self.best)],
-            'pairwise_kldiv': [KLDivController(self.config, self.dev)],
-            'i_vector': [IVECController(self.config, self.dev)],
-            'luvo': [LuvoController(self.config, self.dev)],
-            'gmm': [GMMController(self.config, self.dev)],
-            'all': [LSTMController(self.config, self.dev, self.best), KLDivController(self.config, self.dev),
-                    LuvoController(self.config, self.dev)],
-            'pairwise_lstm_vox2': [LSTMVOX2Controller(self.config, self.dev)],
-            'arc_face': [ArcFaceController(self.config, self.dev)]
-        }
-
-        try:
-            self.network_controllers = controller_dict[self.network]
-        except KeyError:
-            print("Network " + self.network + " is not known:")
-            print("Valid Names: ", join([k for k in controller_dict.keys()]))
-            sys.exit(1)
-
-
-    def setup_networks(self):
-        if is_suite_setup():
-            print("Already fully setup.")
-        else:
-            print("Setting up the network suite.")
-            setup_suite()
-
-
-    def get_file_format(self):
-        if self.network == 'pairwise_lstm_vox2':
-            return '.h5'
-        else:
-            return '.pickle'
+        for network in self.networks:
+            if network == 'pairwise_lstm':
+                from networks.pairwise_lstm.lstm_controller import LSTMController
+                LSTMController(self.config, self.dev, self.best)
+            elif network == 'pairwise_kldiv':
+                from networks.pairwise_kldiv.kldiv_controller import KLDivController
+                KLDivController(self.config, self.dev)
+            elif network == 'i_vector':
+                from networks.i_vector.ivec_controller import IVECController
+                IVECController(self.config, self.dev)
+            elif network == 'luvo':
+                from networks.lu_vo.luvo_controller import LuvoController
+                LuvoController(self.config, self.dev)
+            elif network == 'gmm':
+                from networks.gmm.gmm_controller import GMMController
+                GMMController(self.config, self.dev)
+            elif network == 'pairwise_lstm_vox2':
+                from networks.pairwise_lstm_vox.lstm_controller import LSTMVOX2Controller
+                LSTMVOX2Controller(self.config, self.dev)
+            elif network == 'arc_face':
+                from networks.lstm_arc_face.arc_face_controller import ArcFaceController
+                ArcFaceController(self.config, self.dev)
+            else:
+                print("Network " + network + " is not known.")
+                sys.exit(1)
 
 
 if __name__ == '__main__':
@@ -171,8 +140,8 @@ if __name__ == '__main__':
     # add all arguments and provide descriptions for them
     parser.add_argument('-setup', dest='setup', action='store_true',
                         help='Run project setup.')
-    parser.add_argument('-n', dest='network', default=DEFAULT_NETWORK,
-                        help='The network to use for training or analysis.')
+    parser.add_argument('-n', nargs='+', dest='networks', default=DEFAULT_NETWORKS,
+                        help='The networks to use for training or analysis.')
     parser.add_argument('-train', dest='train', action='store_true',
                         help='Train the specified network.')
     parser.add_argument('-test', dest='test', action='store_true',
@@ -188,7 +157,8 @@ if __name__ == '__main__':
     config = load_config(None, join(get_common(), 'config.cfg'))
 
     controller = Controller(
-        setup=args.setup, network=args.network, train=args.train, test=args.test, plot=args.plot, best=args.best, dev=args.dev
+        setup=args.setup, networks=tuple(args.networks), train=args.train, test=args.test, plot=args.plot,
+        best=args.best, dev=args.dev
     )
 
     controller.run()
