@@ -110,25 +110,25 @@ class Controller:
         for network in self.networks:
             if network == 'pairwise_lstm':
                 from networks.pairwise_lstm.lstm_controller import LSTMController
-                LSTMController(self.config, self.dev, self.best)
+                self.network_controllers.append(LSTMController(self.config, self.dev, self.best))
             elif network == 'pairwise_kldiv':
                 from networks.pairwise_kldiv.kldiv_controller import KLDivController
-                KLDivController(self.config, self.dev)
+                self.network_controllers.append(KLDivController(self.config, self.dev))
             elif network == 'i_vector':
                 from networks.i_vector.ivec_controller import IVECController
-                IVECController(self.config, self.dev)
+                self.network_controllers.append(IVECController(self.config, self.dev))
             elif network == 'luvo':
                 from networks.lu_vo.luvo_controller import LuvoController
-                LuvoController(self.config, self.dev)
+                self.network_controllers.append(LuvoController(self.config, self.dev))
             elif network == 'gmm':
                 from networks.gmm.gmm_controller import GMMController
-                GMMController(self.config, self.dev)
+                self.network_controllers.append(GMMController(self.config, self.dev))
             elif network == 'pairwise_lstm_vox2':
                 from networks.pairwise_lstm_vox.lstm_controller import LSTMVOX2Controller
-                LSTMVOX2Controller(self.config, self.dev)
+                self.network_controllers.append(LSTMVOX2Controller(self.config, self.dev))
             elif network == 'arc_face':
                 from networks.lstm_arc_face.arc_face_controller import ArcFaceController
-                ArcFaceController(self.config, self.dev)
+                self.network_controllers.append(ArcFaceController(self.config, self.dev))
             else:
                 print("Network " + network + " is not known.")
                 sys.exit(1)
