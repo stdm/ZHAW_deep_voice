@@ -131,7 +131,7 @@ def _plot_curves(plot_file_name, curve_names, metric_sets, number_of_embeddings)
     # Add legend and save the plot
     fig1.legend(loc='upper center', bbox_to_anchor=(0.5, 0.33), ncol=4)
     #fig1.show()
-    fig1.savefig(get_result_png(plot_file_name))
+    fig1.savefig(get_result_png(plot_file_name + '.png'), format='png')
     fig1.savefig(get_result_png(plot_file_name + '.svg'), format='svg')
     return fig1
 
