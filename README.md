@@ -35,7 +35,7 @@ controller.py
   -test              Test the specified network.
   -best              Just the best results of the networks will be used in -train or -plot
   -plot              Plots the last results of the specified networks in one file.
-  -dev				 Enable dev mode so the dev set instead of the test set is used for testing.
+  -dev               Enable dev mode so the dev set instead of the test set is used for testing.
 ```
   
 As an example, you want to test and plot but not train the networks pairwise_kldiv and pairwise_lstm. You would call:
