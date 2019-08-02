@@ -1,16 +1,14 @@
 import matplotlib
-import h5py
 
-from common.analysis.acp import average_cluster_purity
-from common.analysis.ari import adjusted_rand_index
-from common.analysis.der import diarization_error_rate
+from common.analysis.metrics.acp import average_cluster_purity
+from common.analysis.metrics.ari import adjusted_rand_index
+from common.analysis.metrics.der import diarization_error_rate
 
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-from sklearn.metrics import *
 import numpy as np
 
-from common.analysis.mr import misclassification_rate
+from common.analysis.metrics.mr import misclassification_rate
 from common.utils.logger import *
 from common.utils.paths import *
 from common.utils.pickler import load, save
