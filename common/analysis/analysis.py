@@ -124,9 +124,12 @@ def _plot_curves(plot_file_name, curve_names, metric_sets, number_of_embeddings)
 
         number_of_clusters = np.arange(80, 0, -1)
 
-
+        line = None
         for plot, value in curves:
-            plot.plot(number_of_clusters, value[index], color=color, label=label)
+            line, = plot.plot(number_of_clusters, value[index], color=color)
+
+        if line:
+            line.set_label(label)
 
     # Add legend and save the plot
     fig1.legend(loc='upper center', bbox_to_anchor=(0.5, 0.33), ncol=4)
