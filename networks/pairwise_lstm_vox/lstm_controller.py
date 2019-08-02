@@ -5,7 +5,6 @@ The controller to train and test the pairwise_lstm network
 import numpy as np
 from keras.models import Model
 from keras.models import load_model
-from time import gmtime, strftime
 
 from common.clustering.generate_embeddings import generate_embeddings
 from common.network_controller import NetworkController
@@ -20,9 +19,8 @@ import common.utils.pickler as pickler
 
 
 class LSTMVOX2Controller(NetworkController):
-    def __init__(self, config, dev):
+    def __init__(self, config, dev, best):
         super().__init__("pairwise_lstm_vox2", config, dev) #"vox2_speakers_120_test_cluster"
-        self.config = config
         
         # Currently prepared speaker_lists have the following datasets:
         #
@@ -31,9 +29,16 @@ class LSTMVOX2Controller(NetworkController):
         # 'vox2_speakers_120_test_cluster', # _train suffix for train/test split, _cluster otherwise
         # 'vox2_speakers_10_test_cluster', # _train suffix for train/test split, _cluster otherwise
         #
-        self.train_data = "vox2_speakers_5994_dev_600_base"
-        # :val_data means TEST dataset
-        self.val_data = "vox2_speakers_120_test_cluster"
+        self.train_data = config.get('train', 'pickle')
+        self.dense_factor = config.getint('pairwise_lstm_vox2', 'dense_factor')
+        self.output_size = config.getint('pairwise_lstm_vox2', 'output_size')
+        self.epochs = config.getint('pairwise_lstm_vox2', 'num_epochs')
+        self.epochs_before_active_learning = config.getint('pairwise_lstm_vox2', 'epochs_before_al')
+        self.active_learning_rounds = config.getint('pairwise_lstm_vox2', 'al_rounds')
+        self.seg_size = config.getint('pairwise_lstm_vox2', 'seg_size')
+        self.out_layer = config.getint('pairwise_lstm_vox2', 'out_layer')
+        self.vec_size = config.getint('pairwise_lstm_vox2', 'vec_size')
+        self.best = best
     
     def get_validation_data(self):
         return get_speaker_pickle(self.val_data, ".h5")
@@ -74,15 +79,15 @@ class LSTMVOX2Controller(NetworkController):
 
         return X_train, y_train, X_test, y_test
 
-    def get_embeddings(self, out_layer, seg_size, vec_size, best):
+    def get_embeddings(self):
         # Passed seg_size parameter is ignored 
         # because it is already used during training and must stay equal
         
         logger = get_logger('lstm_vox', logging.INFO)
         logger.info('Run pairwise_lstm test')
-        logger.info('out_layer -> ' + str(out_layer))
+        logger.info('out_layer -> ' + str(self.out_layer))
         logger.info('seg_size -> ' + str(self.seg_size))
-        logger.info('vec_size -> ' + str(vec_size))
+        logger.info('vec_size -> ' + str(self.vec_size))
 
         # Load and prepare train/test data
         x_train, speakers_train, x_test, speakers_test = self.get_validation_datasets()
@@ -92,7 +97,7 @@ class LSTMVOX2Controller(NetworkController):
         set_of_speakers = []
         speaker_numbers = []
 
-        if best:
+        if self.best:
             file_regex = self.get_network_name() + "*_best.h5"
         else:
             file_regex = self.get_network_name() + "*.h5"
@@ -113,7 +118,7 @@ class LSTMVOX2Controller(NetworkController):
             checkpoint_result_pickle = get_results_intermediate_test(checkpoint)
             
             # Add out_layer to checkpoint name
-            checkpoint_result_pickle = checkpoint_result_pickle.split('.')[0] + '__ol' + str(out_layer) + '.' + checkpoint_result_pickle.split('.')[1]
+            checkpoint_result_pickle = checkpoint_result_pickle.split('.')[0] + '__ol' + str(self.out_layer) + '.' + checkpoint_result_pickle.split('.')[1]
 
             if os.path.isfile(checkpoint_result_pickle):
                 embeddings, speakers, num_embeddings = pickler.load(checkpoint_result_pickle)
@@ -123,7 +128,7 @@ class LSTMVOX2Controller(NetworkController):
                 model_full.compile(loss=loss, optimizer=optimizer, metrics=metrics)
 
                 # Get a Model with the embedding layer as output and predict
-                model_partial = Model(inputs=model_full.input, outputs=model_full.layers[out_layer].output)
+                model_partial = Model(inputs=model_full.input, outputs=model_full.layers[self.out_layer].output)
 
                 logger.info('running predict on test set')
                 test_output = np.asarray(model_partial.predict(x_test))
@@ -133,8 +138,8 @@ class LSTMVOX2Controller(NetworkController):
                 logger.info('train_output len -> ' + str(train_output.shape))
 
                 embeddings, speakers, num_embeddings = generate_embeddings(
-                    train_output, test_output, speakers_train,
-                    speakers_test, vec_size
+                    [train_output, test_output], [speakers_train,
+                    speakers_test], self.vec_size
                 )
 
                 pickler.save((embeddings, speakers, num_embeddings), checkpoint_result_pickle)
@@ -145,7 +150,7 @@ class LSTMVOX2Controller(NetworkController):
             speaker_numbers.append(num_embeddings)
 
         # Add out_layer to checkpoint names
-        checkpoints = list(map(lambda x: x.split('.')[0] + '__ol' + str(out_layer) + '.' + x.split('.')[1], checkpoints))
+        checkpoints = list(map(lambda x: x.split('.')[0] + '__ol' + str(self.out_layer) + '.' + x.split('.')[1], checkpoints))
         print("checkpoints: {}".format(checkpoints))
 
         logger.info('Pairwise_lstm test done.')

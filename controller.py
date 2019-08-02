@@ -125,7 +125,7 @@ class Controller:
                 self.network_controllers.append(GMMController(self.config, self.dev))
             elif network == 'pairwise_lstm_vox2':
                 from networks.pairwise_lstm_vox.lstm_controller import LSTMVOX2Controller
-                self.network_controllers.append(LSTMVOX2Controller(self.config, self.dev))
+                self.network_controllers.append(LSTMVOX2Controller(self.config, self.dev, self.best))
             elif network == 'arc_face':
                 from networks.lstm_arc_face.arc_face_controller import ArcFaceController
                 self.network_controllers.append(ArcFaceController(self.config, self.dev))
