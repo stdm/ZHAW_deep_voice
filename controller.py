@@ -3,29 +3,21 @@ The main entry point of the speaker clustering suite.
 You can use this file to setup, train and test any network provided in the suite.
 Note that not all networks use all of the available parameters. Check their implementation beforehand.
 
-Usage: controller.py [-h] [-setup] [-n NETWORK] [-train] [-test] [-clear]
+Usage: controller.py [-h] [-setup] [-n NETWORKS [NETWORKS ...]] [-train] [-test] [-clear]
 
 Controller suite for Speaker clustering
 
 optional arguments:
   -h, --help         show this help message and exit
   -setup             Run project setup.
-  -n NETWORK         The network to use for training or analysis.
+  -n                 The networks to use for training or analysis.
+                     Available: 'pairwise_lstm', 'pairwise_lstm_vox2', 'arc_face', 'pairwise_kldiv', 'luvo', 'gmm', 'i-vector'.
+                     All networks use different sets of parameters which can be configured in the file common/config.cfg
   -train             Train the specified network.
   -test              Test the specified network.
-  -clear             Clean directories before starting network.
-  -debug             Set loglevel for TensorFlow and Logger to debug.
   -best              Just the best results of the networks will be used in -train or -plot
   -plot              Plots the last results of the specified networks in one file.
-  -seg_size          The segment size used during training and testing
-  -vec_size          The vector size to be expected when choosing a certain out_layer
-  -out_layer         The layer index of the network to use for testing / creating the embeddings
-  -epoch_total       number of epochs to train the network
-  -epochs_pre_alr    number of epochs to train before active learning process starts
-  -alr               number of active learning rounds (can be 0)
-  -dense_factor      width of certain dense layers can be controlled via this parameter
-  -output_size       width of the last dense layer (should be >= dense_factor)
-
+  -dev               Enable dev mode so the dev set instead of the test set is used for testing
 """
 
 
@@ -147,14 +139,13 @@ if __name__ == '__main__':
     parser.add_argument('-test', dest='test', action='store_true',
                         help='Test the specified network.')
     parser.add_argument('-plot', dest='plot', action='store_true',
-                        help='Plots the last results of the specified networks in one file.')
+                        help='Plots the results of the specified networks.')
     parser.add_argument('-best', dest='best', action='store_true',
                         help='If a single Network is specified and plot was called, just the best curves will be plotted. If test was called only the best network will be tested')
     parser.add_argument('-dev', dest='dev', action='store_true',
-                        help='If this flag is true, the dev-set is used for testing the network')
+                        help='Enable dev mode so the dev set instead of the test set is used for testing')
 
     args = parser.parse_args()
-    config = load_config(None, join(get_common(), 'config.cfg'))
 
     controller = Controller(
         setup=args.setup, networks=tuple(args.networks), train=args.train, test=args.test, plot=args.plot,
