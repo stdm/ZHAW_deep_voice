@@ -24,7 +24,7 @@ optional arguments:
 import argparse
 import sys
 
-from common.analysis.analysis import *
+from common.analysis.plotting import plot_files
 from common.extrapolation.setup import setup_suite, is_suite_setup
 from common.utils.paths import *
 from common.utils.load_config import *

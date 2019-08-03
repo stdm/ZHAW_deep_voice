@@ -1,11 +1,7 @@
-import matplotlib
-
 from common.analysis.metrics.acp import average_cluster_purity
 from common.analysis.metrics.ari import adjusted_rand_index
 from common.analysis.metrics.der import diarization_error_rate
 
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
 import numpy as np
 
 from common.analysis.metrics.mr import misclassification_rate
@@ -14,145 +10,7 @@ from common.utils.paths import *
 from common.utils.pickler import load, save
 
 metric_names = ["MR", "ACP", "ARI", "DER"]
-metric_min_values = [1,0,0,1]
-
-def plot_files(plot_file_name, files):
-    """
-    Plots the results stored in the files given and stores them in a file with the given name
-    :param plot_file_name: the file name stored in common/data/results
-    :param files: a set of full file paths that hold result data
-    """
-    curve_names, metric_sets, set_of_number_of_embeddings = _read_result_pickle(files)
-    _plot_curves(plot_file_name, curve_names, metric_sets, set_of_number_of_embeddings)
-
-def _read_result_pickle(files):
-    """
-    Reads the results of a network from these files.
-    :param files: can be 1-n files that contain a result.
-    :return: curve names, thresholds, metric scores as a list and number of embeddings
-    """
-    logger = get_logger('analysis', logging.INFO)
-    logger.info("Read result pickle")
-    curve_names = []
-
-    # Initialize result sets
-    metric_sets_all_files = [[] for _ in metric_names]
-    set_of_number_of_embeddings = []
-
-    # Fill result sets
-    for file in files:
-        curve_name, metric_sets, number_of_embeddings = load(file)
-
-
-        for index, curve_name in enumerate(curve_name):
-            for m, metric_set in enumerate(metric_sets):
-                metric_sets_all_files[m].append(metric_set[index])
-
-            set_of_number_of_embeddings.append(number_of_embeddings[index])
-            curve_names.append(curve_name)
-
-    return curve_names, metric_sets_all_files, set_of_number_of_embeddings
-
-
-def _plot_curves(plot_file_name, curve_names, metric_sets, number_of_embeddings):
-    """
-    Plots all specified curves and saves the plot into a file.
-    :param plot_file_name: String value of save file name
-    :param curve_names: Set of names used in legend to describe this curve
-    :param metric_sets: A list of 2D matrices, each row of a metrics 2D matrix describes one dataset for a curve
-    :param number_of_embeddings: set of integers, each integer describes how many embeddings is in this curve
-    """
-    logger = get_logger('analysis', logging.INFO)
-    logger.info('Plot results')
-
-
-    #Slice results to only 1-80 clusters
-    for i in range(0,len(metric_sets)):
-        for j in range(0, len(metric_sets[i])):
-            metric_sets[i][j] = metric_sets[i][j][-80:]
-
-    best_results = [[] for _ in metric_names]
-    for m, min_value in enumerate(metric_min_values):
-        for results in metric_sets[m]:
-            if(metric_min_values[m] == 0):
-                best_results[m].append(np.max(results))
-            else:
-                best_results[m].append(np.min(results))
-
-
-    # How many lines to plot
-    number_of_lines = len(curve_names)
-
-    # Get various colors needed to plot
-    color_map = plt.get_cmap('gist_rainbow')
-    colors = [color_map(i) for i in np.linspace(0, 1, number_of_lines)]
-
-    #Set fontsize for all plots
-    plt.rcParams.update({'font.size': 12})
-
-    # Define number of figures
-    fig1 = plt.figure(figsize=(18, 12))
-
-    # Define Plots
-    plot_grid = (3, 2)
-
-    plots = [None] * len(metric_names)
-
-    plots[0] = _add_cluster_subplot(plot_grid, (0, 0), metric_names[0], 1)
-    plots[1] = _add_cluster_subplot(plot_grid, (0, 1), metric_names[1], 1)
-    plots[2] = _add_cluster_subplot(plot_grid, (1, 0), metric_names[2], 1)
-    plots[3] = _add_cluster_subplot(plot_grid, (1, 1), metric_names[3], 1)
-
-    #Set the horizontal space between subplots
-    plt.subplots_adjust(hspace = 0.3)
-
-    # Define curves and their values
-    curves = [[] for _ in metric_names]
-
-    for m, metric_set in enumerate(metric_sets):
-        curves[m] = [plots[m], metric_set]
-
-    # Plot all curves
-    for index in range(number_of_lines):
-        label = curve_names[index]
-        for m, metric_name in enumerate(metric_names):
-            label = label + '\n {} {}: {}'.format('Max' if metric_min_values[m]==0 else 'Min', metric_name,
-                                                  str(best_results[m][index]))
-        color = colors[index]
-
-        number_of_clusters = np.arange(80, 0, -1)
-
-        line = None
-        for plot, value in curves:
-            line, = plot.plot(number_of_clusters, value[index], color=color)
-
-        if line:
-            line.set_label(label)
-
-    # Add legend and save the plot
-    fig1.legend(loc='upper center', bbox_to_anchor=(0.5, 0.33), ncol=4)
-    #fig1.show()
-    fig1.savefig(get_result_png(plot_file_name + '.png'), format='png')
-    fig1.savefig(get_result_png(plot_file_name + '.svg'), format='svg')
-    return fig1
-
-
-def _add_cluster_subplot(grid, position, y_label, colspan=1):
-    """
-    Adds a cluster subplot to the current figure.
-
-    :param grid: a tuple that contains number of rows as the first entry and number of columns as the second entry
-    :param position: the position of this subplot
-    :param y_label: the label of the y axis
-    :param colspan: number of columns for the x axis, default is 1
-    :return: the subplot itself
-    """
-    subplot = plt.subplot2grid(grid, position, colspan=colspan)
-    subplot.set_ylabel(y_label)
-    subplot.set_xlabel('number of clusters')
-    subplot.set_xlim([-3, 83])
-    subplot.set_ylim([-0.05, 1.05])
-    return subplot
+metric_worst_values = [1,0,0,1]
 
 
 def analyse_results(network_name, checkpoint_names, set_of_predicted_clusters,
@@ -165,7 +23,7 @@ def analyse_results(network_name, checkpoint_names, set_of_predicted_clusters,
     :param checkpoint_names: A list of names from the checkpoints. Later used as curvenames,
     :param set_of_predicted_clusters: A 2D array of the predicted Clusters from the Network. [checkpoint, clusters]
     :param set_of_true_clusters: A 2d array of the validation clusters. [checkpoint, validation-clusters]
-    :param embeddings_numbers: A list which represent the number of embeddings in each checkpoint.
+    :param embedding_numbers: A list which represent the number of embeddings in each checkpoint.
     :param set_of_times: A 2d array of the time per utterance [checkpoint, times]
     """
     logger = get_logger('analysis', logging.INFO)
@@ -185,14 +43,12 @@ def analyse_results(network_name, checkpoint_names, set_of_predicted_clusters,
             metric_results = _calculate_analysis_values(predicted_clusters, set_of_true_clusters[index], set_of_times[index])
             save(metric_results, analysis_pickle)
 
-
         for m, metric_result in enumerate(metric_results):
             metric_sets[m][index] = metric_result
 
     _write_result_pickle(network_name, checkpoint_names, metric_sets, embedding_numbers)
     _save_best_results(network_name, checkpoint_names, metric_sets, embedding_numbers)
 
-    
     logger.info('Clearing intermediate result checkpoints')
     
     for checkpoint in checkpoint_names:
@@ -223,7 +79,7 @@ def _calculate_analysis_values(predicted_clusters, true_cluster, times):
 
     # Initialize output
     metric_results = [None] * len(metric_names)
-    for m, min_value in enumerate(metric_min_values):
+    for m, min_value in enumerate(metric_worst_values):
         if min_value == 1:
             metric_results[m] = np.ones(len(true_cluster))
         else:
@@ -246,7 +102,7 @@ def _save_best_results(network_name, checkpoint_names, metric_sets, speaker_numb
         _write_result_pickle(network_name + "_best", checkpoint_names, metric_sets, speaker_numbers)
     else:
         # Find best result (according to the first metric in metrics)
-        if(metric_min_values[0] == 1):
+        if metric_worst_values[0] == 1:
             best_results = []
             for results in metric_sets[0]:
                 best_results.append(np.min(results))
