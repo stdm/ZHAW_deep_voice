@@ -91,6 +91,12 @@ def get_result_pickle(network, format='.pickle'):
 
 
 def get_result_files(filename, best):
+    """
+    Gets the absolute path to all results files containing a specific name and ends with "best" if the best option is set.
+    :param filename: The name that the files should contain
+    :param best: A boolean. If set to False the files that are found do not end with "best". If True the files found end with "best"
+    :return: All absolute paths to a file that matches the criteria.
+    """
     if best:
         regex = '^{}.*best.pickle'.format(filename)
     else:
