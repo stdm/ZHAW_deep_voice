@@ -72,8 +72,8 @@ class Controller:
 
     def plot_results(self):
         for network_controller in self.network_controllers:
-            nn = network_controller.get_formatted_result_network_name()
-            plot_files(nn, get_result_files(nn, self.best))
+            name = network_controller.name
+            plot_files(name, get_result_files(name, self.best))
 
         if len(self.network_controllers) > 1:
             plot_files('all', get_result_files('', self.best))

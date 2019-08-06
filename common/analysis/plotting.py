@@ -28,24 +28,23 @@ def _read_result_pickle(files):
     """
     logger = get_logger('analysis', logging.INFO)
     logger.info("Read result pickle")
-    curve_names = []
 
     # Initialize result sets
+    curve_names_all_files = []
+    number_of_embeddings_all_files = []
     metric_sets_all_files = [[] for _ in metric_names]
-    set_of_number_of_embeddings = []
 
-    # Fill result sets
     for file in files:
-        curve_name, metric_sets, number_of_embeddings = load(file)
+        #Load results from file
+        curve_names, metric_sets, number_of_embeddings = load(file)
 
-        for index, curve_name in enumerate(curve_name):
-            for m, metric_set in enumerate(metric_sets):
-                metric_sets_all_files[m].append(metric_set[index])
+        #Add results from file to result sets
+        curve_names_all_files.extend(curve_names)
+        number_of_embeddings_all_files.extend(number_of_embeddings)
+        for m, metric_set in enumerate(metric_sets):
+            metric_sets_all_files[m].extend(metric_set)
 
-            set_of_number_of_embeddings.append(number_of_embeddings[index])
-            curve_names.append(curve_name)
-
-    return curve_names, metric_sets_all_files, set_of_number_of_embeddings
+    return curve_names_all_files, metric_sets_all_files, number_of_embeddings_all_files
 
 
 def _plot_curves(plot_file_name, curve_names, metric_sets, number_of_embeddings):
