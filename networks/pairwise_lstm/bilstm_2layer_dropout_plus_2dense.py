@@ -13,8 +13,7 @@ from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation
 from keras.layers import LSTM
 from keras.layers.wrappers import Bidirectional
-from .core import data_gen as dg
-from .core import pairwise_kl_divergence as kld
+from networks.pairwise_lstm.core import pairwise_kl_divergence as kld
 
 from common.utils.paths import *
 
@@ -34,10 +33,9 @@ from common.utils.paths import *
 
 
 class bilstm_2layer_dropout(object):
-    def __init__(self, name, config):
+    def __init__(self, name, config, data_generator):
         self.network_name = name
         self.training_data = config.get('train', 'pickle')
-        self.test_data = 'test' + self.training_data[5:]
         self.n_hidden1 = config.getint('pairwise_lstm', 'n_hidden1')
         self.n_hidden2 = config.getint('pairwise_lstm', 'n_hidden2')
         self.n_classes = config.getint('pairwise_lstm', 'n_classes')
@@ -50,6 +48,7 @@ class bilstm_2layer_dropout(object):
         self.segment_size = config.getint('pairwise_lstm', 'seg_size')
         self.frequency = config.getint('pairwise_lstm', 'spectrogram_height')
         self.input = (self.segment_size, self.frequency)
+        self.dg = data_generator
         print(self.network_name)
         self.run_network()
 
@@ -70,11 +69,9 @@ class bilstm_2layer_dropout(object):
                       metrics=['accuracy'])
         return model
 
-
     def create_train_data(self):
         with open(get_speaker_pickle(self.training_data), 'rb') as f:
             (X, y, speaker_names) = pickle.load(f)
-
 
         splitter = sts.SpeakerTrainSplit(0.2)
         X_t, X_v, y_t, y_v = splitter(X, y)
@@ -95,8 +92,8 @@ class bilstm_2layer_dropout(object):
         calls = self.create_callbacks()
 
         X_t, y_t, X_v, y_v = self.create_train_data()
-        train_gen = dg.batch_generator_divergence_optimised(X_t, y_t, 100, segment_size=self.segment_size, sentences=8)
-        val_gen = dg.batch_generator_divergence_optimised(X_v, y_v, 100, segment_size=self.segment_size, sentences=2)
+        train_gen = self.dg.batch_generator_divergence_optimised(X_t, y_t, 100, sentences=8)
+        val_gen = self.dg.batch_generator_divergence_optimised(X_v, y_v, 100, sentences=2)
         # batches_t = ((X_t.shape[0] + 128 - 1) // 128)
         # batches_v = ((X_v.shape[0] + 128 - 1) // 128)
 
@@ -105,11 +102,7 @@ class bilstm_2layer_dropout(object):
                                       validation_steps=2, class_weight=None, max_q_size=10,
                                       nb_worker=1, pickle_safe=False)
 
-        
-
         ps.save_accuracy_plot(history, self.network_name)
         ps.save_loss_plot(history, self.network_name)
         print("saving model")
         model.save(get_experiment_nets(self.network_name + ".h5"))
-        # print "evaluating model"
-        # da.calculate_test_acccuracies(self.network_name, self.test_data, True, True, True, segment_size=self.segment_size)
