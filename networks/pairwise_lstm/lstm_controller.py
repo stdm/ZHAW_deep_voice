@@ -30,17 +30,9 @@ class LSTMController(NetworkController):
 
 
     def train_network(self):
-
-        n_classes = 100
-
         bilstm_2layer_dropout(
             self.network_file,
-            self.config.get('train', 'pickle'),
-            self.config.getint('pairwise_lstm', 'n_hidden1'),
-            self.config.getint('pairwise_lstm', 'n_hidden2'),
-            self.config.getint('pairwise_lstm', 'n_classes'),
-            self.config.getint('pairwise_lstm', 'n_10_batches'),
-            segment_size=self.config.getint('pairwise_lstm', 'seg_size')
+            self.config
         )
 
     def get_embeddings(self):
@@ -71,9 +63,9 @@ class LSTMController(NetworkController):
         set_of_total_times = []
         
         if self.best:
-            file_regex = self.get_network_name() + "*_best.h5"
+            file_regex = self.get_network_name() + ".*_best\.h5"
         else:
-            file_regex = self.get_network_name() + "*.h5"
+            file_regex = self.get_network_name() + ".*\.h5"
 
         checkpoints = list_all_files(get_experiment_nets(), file_regex)
 

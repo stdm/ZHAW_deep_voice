@@ -7,7 +7,7 @@ from scipy.stats import entropy
 # - Unfolding Speaker Clustering Potential: A Biomimetic Approach
 # - http://users.uoi.gr/cs01702/MargaritaKotti/MypublicationsPDFs/J3.pdf
 
-def misclassification_rate_BV01(y_true, y_pred):
+def misclassification_rate(y_true, y_pred):
     """
     This MR is just an approximation (the real MR is always smaller or equal to the returned number, which means
     this implementation is in general pessimistic). The score is exact for relatively good clusterings and less
@@ -168,39 +168,3 @@ def misclassification_rate_BV01(y_true, y_pred):
         sum_e_j += e_j
     MR = sum_e_j / y_true.shape[0]
     return MR
-
-
-misclassification_rate = misclassification_rate_BV01
-
-if __name__ == '__main__':
-    def flt_eq(x, y):
-        return abs(x - y) < 1e-5
-
-
-    y_true = [0, 0, 1, 1]
-    y_pred = [1, 1, 2, 2]
-    assert flt_eq(misclassification_rate(y_true, y_pred), 0.0)
-
-    y_true = [1, 1, 1, 1]
-    y_pred = [2, 2, 1, 1]
-    assert flt_eq(misclassification_rate(y_true, y_pred), 0.5)
-
-    y_true = [1, 1, 1, 1]
-    y_pred = [1, 2, 3, 4]
-    assert flt_eq(misclassification_rate(y_true, y_pred), 0.75)
-
-    y_true = [1, 2, 3, 4]
-    y_pred = [1, 1, 1, 1]
-    assert flt_eq(misclassification_rate(y_true, y_pred), 0.75)
-
-    y_true = [1, 2, 2, 4]
-    y_pred = [1, 1, 1, 1]
-    assert flt_eq(misclassification_rate(y_true, y_pred), 0.5)
-
-    y_true = [0, 0, 0, 1, 1, 1, 1, 2, 2]
-    y_pred = [7, 7, 3, 3, 2, 2, 1, 0, 0]
-    assert flt_eq(misclassification_rate_BV01(y_true, y_pred), 1 / 3)
-
-    y_true = [0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1]
-    y_pred = [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1]
-    assert flt_eq(misclassification_rate_BV01(y_true, y_pred), 5 / 13)

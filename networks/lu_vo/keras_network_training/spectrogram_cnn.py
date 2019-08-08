@@ -5,7 +5,6 @@ from keras.models import Sequential, Model, load_model
 from keras.layers import Dense, Dropout, Conv2D, Flatten, BatchNormalization, MaxPooling2D
 
 from common.clustering.generate_embeddings import generate_embeddings
-from common.utils.load_config import *
 from common.utils.paths import *
 from common.utils.logger import *
 from networks.pairwise_lstm.core import data_gen as dg
@@ -14,14 +13,15 @@ import common.spectrogram.speaker_train_splitter as sts
 from common.utils.ShortUtteranceConverter import create_data_lists
 from common.utils import TimeCalculator
 
+
 class SpectrogramCnn:
 
-    def __init__(self, name, net_path):
+    def __init__(self, name, net_path, config):
         super().__init__()
         self.network_name = name
         self.logger = get_logger("luvo", logging.INFO)
         self.net_path = net_path
-        self.config = load_config(None, join(get_common(), 'config.cfg'))
+        self.config = config
 
     def create_net(self, channel, n_classes):
         model = Sequential()

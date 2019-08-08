@@ -1,9 +1,3 @@
-"""
-    This file can create various networks. They are forwarded to
-    the clustering_network as a network function.
-
-    Work of Lukic and Vogt.
-"""
 from keras.layers import Conv2D, BatchNormalization, MaxPooling2D, Dropout, Dense, Flatten
 from networks.pairwise_lstm.core import pairwise_kl_divergence as kld
 from keras.models import Sequential
@@ -16,7 +10,7 @@ def create_network_n_speakers(num_speakers, config):
     spectrogram_height = config.getint('pairwise_kldiv', 'spectrogram_height')
     lr = config.getfloat('pairwise_kldiv', 'adadelta_learning_rate')
     rho = config.getfloat('pairwise_kldiv', 'adadelta_rho')
-    epsilon =  config.getfloat('pairwise_kldiv', 'adadelta_epsilon')
+    epsilon = config.getfloat('pairwise_kldiv', 'adadelta_epsilon')
 
     # Initialize model
     model = Sequential()

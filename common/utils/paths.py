@@ -89,6 +89,24 @@ def get_result_pickle(network, format='.pickle'):
     """
     return get_results(network + format)
 
+
+def get_result_files(filename, best):
+    """
+    Gets the absolute path to all results files containing a specific name and ends with "best" if the best option is set.
+    :param filename: The name that the files should contain
+    :param best: A boolean. If set to False the files that are found do not end with "best". If True the files found end with "best"
+    :return: All absolute paths to a file that matches the criteria.
+    """
+    if best:
+        regex = '^{}.*best.pickle'.format(filename)
+    else:
+        regex = '^{}.*(?<!best)\.pickle'.format(filename)
+
+    files = list_all_files(get_results(), regex)
+    for index, file in enumerate(files):
+        files[index] = get_results(file)
+    return files
+
 def get_result_png(network):
     """
     Gets the absolute path to the result pickle of that network.
@@ -96,7 +114,6 @@ def get_result_png(network):
     :return: the absolute path of the resut pickle
     """
     return get_experiment_plots(network)
-
 
 def list_all_files(directory, file_regex):
     """
