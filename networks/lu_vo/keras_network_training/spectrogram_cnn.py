@@ -89,7 +89,7 @@ class SpectrogramCnn:
 
     def create_embeddings(self, X_train, y_train, X_test, y_test):
         seg_size = self.config.getint('luvo', 'seg_size')
-        short_utterance = self.config.getboolean('validation', 'short_utterances')
+        short_utterance = self.config.getboolean('test', 'short_utterances')
 
         x_train, speakers_train = prepare_data(X_train, y_train, seg_size)
         x_test, speakers_test = prepare_data(X_test, y_test, seg_size)

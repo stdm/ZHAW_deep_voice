@@ -44,7 +44,7 @@ class LSTMController(NetworkController):
         )
 
     def get_embeddings(self):
-        short_utterance = self.config.getboolean('validation', 'short_utterances')
+        short_utterance = self.config.getboolean('test', 'short_utterances')
         out_layer = self.config.getint('pairwise_lstm', 'out_layer')
         seg_size = self.config.getint('pairwise_lstm', 'seg_size')
         vec_size = self.config.getint('pairwise_lstm', 'vec_size')
