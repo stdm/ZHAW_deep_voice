@@ -15,9 +15,9 @@ class IVECController(NetworkController):
         self.logger = get_logger(self.name, logging.INFO)
 
     def train_network(self):
-        self.logger.info('Runnin ivector system: training')
+        self.logger.info('Running ivector system: training')
 
-        ubm_list, train_idmap = self.load_data(self.config.get('train', 'pickle'),self.config.get('train', 'pickle'))
+        ubm_list, train_idmap = self.load_data(self.config.get('train', 'pickle'),self.config.get('train', 'pickle')+ "_cluster")
 
         ubm, fs = self.train_ubm(get_training('i_vector'), self.config.get('train', 'pickle'), ubm_list, self.config.getint('i_vector', 'distrib_nb'))
 

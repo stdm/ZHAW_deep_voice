@@ -13,6 +13,7 @@ import numpy as np
 from common.spectrogram.speaker_train_splitter import SpeakerTrainSplit, SpeakerTrainMFCCSplit
 from common.spectrogram.spectrogram_extractor import SpectrogramExtractor
 from common.mfcc.mfcc_extractor import MfccExtractor
+from common.mfcc.Ivec_feature_extractor import IvecFeatureExtractor
 from common.utils.paths import *
 
 
@@ -75,8 +76,7 @@ class Speaker:
         print("Extracting {}".format(self.speaker_list))
 
         if self.dataset == "timit":
-            self.extract(self.extract_timit_callback, get_training("TIMIT"), '_RIFF.WAV')
-            #TODO: MFCC
+            self.extract(self.extract_timit_callback, get_training("TIMIT"), '_RIFF.WAV', timit=True)
         elif self.dataset == "voxceleb2":
             self.extract(self.extract_voxceleb2_callback, get_training("VOXCELEB2"), '.wav')
         else:
@@ -84,7 +84,7 @@ class Speaker:
 
         print("Done Extracting {}".format(self.speaker_list))
 
-    def extract(self, save_callback, base_folder, file_ending):
+    def extract(self, save_callback, base_folder, file_ending, timit=False):
         """
         Extracts the training and testing data from the speaker list of the dataset
         """
@@ -131,50 +131,41 @@ class Speaker:
 
             # extract and process spectrograms
             x, y = self.build_array_and_extract_speaker_data(partition_speaker_files)
-            x_mfcc, y_mfcc = self.build_array_and_extract_speaker_data_MFCC(partition_speaker_files)
-
             save_callback(x, y, valid_speakers, partition_number)
-            save_callback(x_mfcc, x_mfcc, valid_speakers, partition_number, MFCC=True)
+
+            if timit:
+                file_names, speaker_ids = self.build_array_and_extract_speaker_data_MFCC(partition_speaker_files)
+                self.save_mfcc_files(file_names,speaker_ids)
+
 
             partition_number += 1
             has_files_left = self.flattened_sum(speaker_files)
 
-    def extract_timit_callback(self, x, y, valid_speakers, partition_number, MFCC=False):
-        if MFCC:
-            output_name = self.output_name_MFCC
-        else:
-            output_name = self.output_name
+    def extract_timit_callback(self, x, y, valid_speakers, partition_number):
         # Safe Test-Data to disk
         if self.split_train_test:
             speaker_train_split = SpeakerTrainSplit(0.2)
             X_train, X_test, y_train, y_test = speaker_train_split(x, y)
 
-            with open(get_speaker_pickle(output_name + '_train'), 'wb') as f:
-                pickle.dump((X_train, y_train, valid_speakers), f, -1)
+            self.save_to_pickle(X_train, y_train, valid_speakers, self.output_name + '_train')
+            self.save_to_pickle(X_test, y_test, valid_speakers, self.output_name + '_test')
 
-            with open(get_speaker_pickle(output_name + '_test'), 'wb') as f:
-                pickle.dump((X_test, y_test, valid_speakers), f, -1)
         else:
             if partition_number == -1:
                 suffix = "_cluster"
             else:
                 suffix = "_cluster_" + str(partition_number)
 
-            with open(get_speaker_pickle(self.output_name + suffix), 'wb') as f:
-                pickle.dump((x, y, valid_speakers), f, -1)
+            self.save_to_pickle(x,y,valid_speakers, self.output_name_MFCC + suffix)
 
-    def extract_voxceleb2_callback(self, x, y, valid_speakers, partition_number, MFCC=False):
-        if MFCC:
-            output_name = self.output_name_MFCC
-        else:
-            output_name = self.output_name
+    def extract_voxceleb2_callback(self, x, y, valid_speakers, partition_number):
         if partition_number == -1:
             suffix = "_cluster"
         else:
             suffix = "_cluster_" + str(partition_number)
                 
         # store dataset
-        with h5py.File(get_speaker_pickle(output_name + suffix, format=self.partition_format), 'w') as f:
+        with h5py.File(get_speaker_pickle(self.output_name + suffix, format=self.partition_format), 'w') as f:
             f.create_dataset('X', data=x)
             f.create_dataset('y', data=y)
             ds = f.create_dataset('speaker_names', (len(valid_speakers),), dtype=h5py.special_dtype(vlen=str))
@@ -182,6 +173,24 @@ class Speaker:
             f.close()
 
         print("Done Extracting Voxceleb2 partition {}".format(partition_number))
+
+    def save_mfcc_files(self, file_names, speaker_ids):
+        if self.split_train_test:
+            speaker_train_split = SpeakerTrainSplit(0.2)
+            file_names_train, file_names_test, ids_train, ids_test = speaker_train_split(np.array(file_names), np.array(speaker_ids))
+
+            self.save_list_as_txt(file_names_train, self.speaker_list+"_train_files")
+            self.save_list_as_txt(file_names_test, self.speaker_list + "_test_files")
+            self.save_list_as_txt(ids_train, self.speaker_list + "_train_ids")
+            self.save_list_as_txt(ids_test, self.speaker_list + "_test_ids")
+
+        else:
+
+            self.save_list_as_txt(file_names, self.speaker_list + "_cluster_files")
+            self.save_list_as_txt(speaker_ids, self.speaker_list + "_cluster_ids")
+
+
+
 
     def get_valid_speakers(self):
         """
@@ -264,7 +273,24 @@ class Speaker:
         print('build_array_and_extract_speaker_data_MFCC', x.shape)
 
         # Extract the spectrogram's, speaker numbers and speaker names
-        return MfccExtractor().extract_speaker_data(x, y, speaker_files)
+        return IvecFeatureExtractor(self.speaker_list).extract_speaker_data(speaker_files)
+
+    def save_to_pickle( self, X, y, valid_speakers, filename):
+        with open(get_speaker_pickle(filename), 'wb') as f:
+            pickle.dump((X, y, valid_speakers), f, -1)
+
+    def save_to_h5(self, X, y, valid_speakers, filename):
+        with h5py.File(get_speaker_pickle(filename, format='.h5'), 'w') as f:
+            f.create_dataset('X', data=X)
+            f.create_dataset('y', data=y)
+            ds = f.create_dataset('speaker_names', (len(valid_speakers),), dtype=h5py.special_dtype(vlen=str))
+            ds[:] = valid_speakers
+            f.close()
+
+    def save_list_as_txt(self, list, filename):
+        with open(get_ivec_feature_path(self.speaker_list) + "/"+ filename + ".txt", 'w') as f:
+            for item in list:
+                f.write("%s\n" % item)
 
     def is_pickle_saved(self):
         """

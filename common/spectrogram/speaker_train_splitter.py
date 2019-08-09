@@ -52,8 +52,8 @@ class SpeakerTrainSplit(object):
         valid_size = int(len(y) * self.eval_size)  # 0.2y - len(y) is amount of total audio files
         train_size = int(len(y) - valid_size)  # 0.8y - len(y) is amount of total audio files
 
-        X_new = np.zeros(X.shape, dtype=np.float32)
-        y_new = np.zeros(y.shape, dtype=np.float32)
+        X_new = np.zeros(X.shape, dtype=X.dtype)
+        y_new = np.zeros(y.shape, dtype=y.dtype)
 
         # To avoid unnecessary resizes for the X_train/X_valid and y_train/y_valid Arrays,
         # we instead reorder X and y by filling them into X_new and y_new with the same shapes
