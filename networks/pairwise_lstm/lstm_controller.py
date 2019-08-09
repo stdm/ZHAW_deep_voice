@@ -12,10 +12,11 @@ from common.utils import TimeCalculator
 from common.utils.ShortUtteranceConverter import create_data_lists
 from common.utils.logger import *
 from common.utils.paths import *
+from common.training.data_gen import DataGenerator
 from .bilstm_2layer_dropout_plus_2dense import bilstm_2layer_dropout
-from .core.data_gen import generate_test_data
 from .core.pairwise_kl_divergence import pairwise_kl_divergence
 from common.spectrogram.speaker_dev_selector import load_test_data
+
 
 class LSTMController(NetworkController):
 
@@ -23,16 +24,17 @@ class LSTMController(NetworkController):
         super().__init__("pairwise_lstm", config, dev)
         self.network_file = self.name + "_100"
         self.best = best
-
+        self.dg = DataGenerator(config.getint('pairwise_lstm', 'seg_size'),
+                                config.getint('pairwise_lstm', 'spectrogram_height'))
 
     def get_network_name(self):
         return self.name + "_100"
 
-
     def train_network(self):
         bilstm_2layer_dropout(
             self.network_file,
-            self.config
+            self.config,
+            self.dg
         )
 
     def get_embeddings(self):
@@ -50,8 +52,8 @@ class LSTMController(NetworkController):
         # Load and prepare train/test data
         x_train, speakers_train, s_list_train = load_test_data(self.get_validation_train_data())
         x_test, speakers_test, s_list_test = load_test_data(self.get_validation_test_data())
-        x_train, speakers_train, = prepare_data(x_train, speakers_train, seg_size)
-        x_test, speakers_test = prepare_data(x_test, speakers_test, seg_size)
+        x_train, speakers_train, = self.prepare_data(x_train, speakers_train)
+        x_test, speakers_test = self.prepare_data(x_test, speakers_test)
 
         x_list, y_list, s_list = create_data_lists(short_utterance, x_train, x_test,
                                                    speakers_train, speakers_test, s_list_train, s_list_test)
@@ -108,9 +110,8 @@ class LSTMController(NetworkController):
         logger.info('Pairwise_lstm test done.')
         return checkpoints, set_of_embeddings, set_of_speakers, speaker_numbers, set_of_total_times
 
+    def prepare_data(self, X, y):
+        x, speakers = self.dg.generate_test_data(X, y)
 
-def prepare_data(X,y, segment_size):
-    x, speakers = generate_test_data(X, y, segment_size)
-
-    # Reshape test data because it is an lstm
-    return x.reshape(x.shape[0], x.shape[3], x.shape[2]), speakers
+        # Reshape test data because it is an lstm
+        return x.reshape(x.shape[0], x.shape[3], x.shape[2]), speakers

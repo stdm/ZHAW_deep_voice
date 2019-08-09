@@ -7,11 +7,11 @@ from keras.layers import Dense, Dropout, Conv2D, Flatten, BatchNormalization, Ma
 from common.clustering.generate_embeddings import generate_embeddings
 from common.utils.paths import *
 from common.utils.logger import *
-from networks.pairwise_lstm.core import data_gen as dg
 from networks.pairwise_lstm.core import plot_saver as ps
 import common.spectrogram.speaker_train_splitter as sts
 from common.utils.ShortUtteranceConverter import create_data_lists
 from common.utils import TimeCalculator
+from common.training.data_gen import DataGenerator
 
 
 class SpectrogramCnn:
@@ -22,6 +22,8 @@ class SpectrogramCnn:
         self.logger = get_logger("luvo", logging.INFO)
         self.net_path = net_path
         self.config = config
+        self.dg = DataGenerator(config.getint('luvo', 'seg_size'),
+                                config.getint('luvo', 'spectrogram_height'))
 
     def create_net(self, channel, n_classes):
         model = Sequential()
@@ -64,8 +66,9 @@ class SpectrogramCnn:
         model = self.create_net(X_t.shape[1], self.config.getint('luvo','n_classes'))
 
         # Set new batch iterator
-        train_gen = dg.batch_generator(X_t, y_t, 128, segment_size=self.config.getint('luvo', 'seg_size'))
-        val_gen = dg.batch_generator(X_v, y_v, 128, segment_size=self.config.getint('luvo', 'seg_size'))
+        batch_size = self.config.getint('luvo', 'batch_size')
+        train_gen = self.dg.batch_generator_cnn(X_t, y_t, batch_size)
+        val_gen = self.dg.batch_generator_cnn(X_v, y_v, batch_size)
 
         # Train the network
         self.logger.info("Fitting...")
@@ -88,11 +91,10 @@ class SpectrogramCnn:
         return X_t, y_t, X_v, y_v
 
     def create_embeddings(self, X_train, y_train, X_test, y_test):
-        seg_size = self.config.getint('luvo', 'seg_size')
         short_utterance = self.config.getboolean('test', 'short_utterances')
 
-        x_train, speakers_train = prepare_data(X_train, y_train, seg_size)
-        x_test, speakers_test = prepare_data(X_test, y_test, seg_size)
+        x_train, speakers_train = self.prepare_data(X_train, y_train)
+        x_test, speakers_test = self.prepare_data(X_test, y_test)
 
         x_list, y_list, _ = create_data_lists(short_utterance, x_train, x_test, speakers_train, speakers_test)
 
@@ -112,7 +114,6 @@ class SpectrogramCnn:
             x_cluster_list.append(x_cluster)
             y_cluster_list.append(y_data)
 
-
         embeddings, speakers, num_embeddings = generate_embeddings(x_cluster_list, y_cluster_list, x_cluster_list[0].shape[1])
 
         # Calculate the time per utterance
@@ -120,8 +121,8 @@ class SpectrogramCnn:
 
         return embeddings, speakers, num_embeddings, time
 
-def prepare_data(X,y, segment_size):
-    x, speakers = dg.generate_test_data(X, y, segment_size)
+    def prepare_data(self, X, y):
+        x, speakers = self.dg.generate_test_data(X, y)
 
-    # Reshape test data because it is an lstm
-    return x.reshape(x.shape[0], 1, x.shape[3], x.shape[2]), speakers
+        # Reshape test data because it is an lstm
+        return x.reshape(x.shape[0], 1, x.shape[3], x.shape[2]), speakers
