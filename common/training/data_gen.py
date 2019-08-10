@@ -101,6 +101,31 @@ class DataGenerator:
                     Xb[j, 0] = spect[:, seg_idx:seg_idx + self.segment_size]
                 yield Xb.reshape(bs, self.segment_size, self.spectrogram_height), self._transformy(yb, bs, speakers)
 
+    def batch_generator_divergence_optimised_cnn(self, X, y, batch_size=100, sentences=8):
+        segments = X.shape[0]
+        bs = batch_size
+        speakers = np.amax(y) + 1
+        # build as much batches as fit into the training set
+        while 1:
+            for i in range((segments + bs - 1) // bs):
+                Xb = np.zeros((bs, 1, self.spectrogram_height, self.segment_size), dtype=np.float32)
+                yb = np.zeros(bs, dtype=np.int32)
+                # choose max. 100 speakers from all speakers contained in X (no duplicates!)
+                population = set(y)
+                n_speakers = min(len(population), 100)
+                samples = sample(population, n_speakers)
+                # here one batch is generated
+                for j in range(0, bs):
+                    speaker_id = randint(0, len(samples) - 1)
+                    speaker_idx = sentences * speaker_id - randint(0, sentences - 1)
+                    if y is not None:
+                        yb[j] = y[speaker_idx]
+                    spect = self._extract(X[speaker_idx, 0])
+                    seg_idx = randint(0, spect.shape[1] - self.segment_size)
+                    Xb[j, 0] = spect[:, seg_idx:seg_idx + self.segment_size]
+                yield Xb.reshape(bs,X.shape[1], self.segment_size, self.spectrogram_height), self._transformy(yb, bs, speakers)
+
+
     # Extracts the Spectorgram and discards all padded Data
     def _extract(self, spectrogram):
         return extract_spectrogram(spectrogram, self.segment_size, self.spectrogram_height)

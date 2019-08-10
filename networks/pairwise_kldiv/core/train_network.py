@@ -13,7 +13,7 @@ def train_network(network, train_file, network_file_out, data_generator,
         X, y, speaker_names = pickle.load(f)
 
     # Train network
-    train_gen = data_generator.batch_generator_cnn(X, y, batch_size=batch_size)
+    train_gen = data_generator.batch_generator_divergence_optimised_cnn(X, y, batch_size=batch_size)
     logger.info("Fitting...")
     network.fit_generator(train_gen, steps_per_epoch=epoch_batches, epochs=num_epochs, verbose=2)
 
