@@ -5,7 +5,7 @@ from common.clustering.generate_embeddings import generate_embeddings
 from common.utils import TimeCalculator
 from common.utils.logger import *
 from common.utils.paths import get_experiment_nets
-from networks.pairwise_lstm.core.pairwise_kl_divergence import orig_pairwise_kl_divergence
+from networks.losses import AngularLossDense, angular_loss, pairwise_kl_divergence, orig_pairwise_kl_divergence, get_loss
 
 import numpy as np
 
@@ -22,8 +22,12 @@ def create_embeddings(checkpoints, x_list, y_list, out_layer=7, seg_size=100):
 
     # Values out of the loop
     metrics = ['accuracy']
-    loss = orig_pairwise_kl_divergence
-    custom_objects = {'orig_pairwise_kl_divergence': orig_pairwise_kl_divergence}
+    loss = get_loss()
+    custom_objects = {'orig_pairwise_kl_divergence': orig_pairwise_kl_divergence,
+                      'AngularLossDense': AngularLossDense,
+                      'angular_loss': angular_loss,
+                      'pairwise_kl_divergence':pairwise_kl_divergence,
+                      'orig_pairwise_kl_divergence':orig_pairwise_kl_divergence}
     optimizer = 'adadelta'
 
     for checkpoint in checkpoints:

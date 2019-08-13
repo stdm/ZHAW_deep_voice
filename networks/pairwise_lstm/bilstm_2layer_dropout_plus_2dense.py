@@ -13,7 +13,7 @@ from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation
 from keras.layers import LSTM
 from keras.layers.wrappers import Bidirectional
-from networks.pairwise_lstm.core import pairwise_kl_divergence as kld
+from networks.losses import get_loss, add_final_layers
 
 from common.utils.paths import *
 
@@ -38,7 +38,7 @@ class bilstm_2layer_dropout(object):
         self.training_data = config.get('train', 'pickle')
         self.n_hidden1 = config.getint('pairwise_lstm', 'n_hidden1')
         self.n_hidden2 = config.getint('pairwise_lstm', 'n_hidden2')
-        self.n_classes = config.getint('pairwise_lstm', 'n_classes')
+        self.n_speakers = config.getint('train', 'n_speakers')
         self.n_10_batches = config.getint('pairwise_lstm', 'n_10_batches')
         self.adam_lr = config.getfloat('pairwise_lstm', 'adam_lr')
         self.adam_beta_1 = config.getfloat('pairwise_lstm', 'adam_beta_1')
@@ -57,14 +57,15 @@ class bilstm_2layer_dropout(object):
         model.add(Bidirectional(LSTM(self.n_hidden1, return_sequences=True), input_shape=self.input))
         model.add(Dropout(0.50))
         model.add(Bidirectional(LSTM(self.n_hidden2)))
-        model.add(Dense(self.n_classes * 10))
+        model.add(Dense(self.n_speakers * 10))
         model.add(Dropout(0.25))
-        model.add(Dense(self.n_classes * 5))
-        model.add(Dense(self.n_classes))
-        model.add(Activation('softmax'))
+        model.add(Dense(self.n_speakers * 5))
+        add_final_layers(model)
+
+        loss_function = get_loss()
         adam = keras.optimizers.Adam(self.adam_lr, self.adam_beta_1, self.adam_beta_2,
                                      self.adam_epsilon, self.adam_decay)
-        model.compile(loss=kld.pairwise_kl_divergence,
+        model.compile(loss=loss_function,
                       optimizer=adam,
                       metrics=['accuracy'])
         return model
