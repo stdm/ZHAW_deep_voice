@@ -9,7 +9,7 @@ import keras
 
 
 # Constants
-config = load_config(None, join(get_common(), 'config.cfg'))
+config = load_config(None, join(get_configs(), 'config.cfg'))
 loss_name = config.get('train', 'loss')
 n_speakers = config.getint('train', 'n_speakers')
 
@@ -62,7 +62,7 @@ def angular_loss(y_true, y_pred):
 class AngularLossDense(Layer):
     def __init__(self, **kwargs):
         super(AngularLossDense, self).__init__(**kwargs)
-        config = load_config(None, join(get_common(), 'config.cfg'))
+        config = load_config(None, join(get_configs(), 'config.cfg'))
         self.n_speakers = config.getint('train', 'n_speakers')
 
     def build(self, input_shape):
