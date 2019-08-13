@@ -49,6 +49,7 @@ class bilstm_2layer_dropout(object):
         self.frequency = config.getint('pairwise_lstm', 'spectrogram_height')
         self.input = (self.segment_size, self.frequency)
         self.dg = data_generator
+        self.config = config
         print(self.network_name)
         self.run_network()
 
@@ -60,9 +61,9 @@ class bilstm_2layer_dropout(object):
         model.add(Dense(self.n_speakers * 10))
         model.add(Dropout(0.25))
         model.add(Dense(self.n_speakers * 5))
-        add_final_layers(model)
+        add_final_layers(model, self.config)
 
-        loss_function = get_loss()
+        loss_function = get_loss(self.config)
         adam = keras.optimizers.Adam(self.adam_lr, self.adam_beta_1, self.adam_beta_2,
                                      self.adam_epsilon, self.adam_decay)
         model.compile(loss=loss_function,

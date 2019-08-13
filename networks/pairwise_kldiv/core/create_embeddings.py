@@ -5,7 +5,7 @@ from common.clustering.generate_embeddings import generate_embeddings
 from common.utils import TimeCalculator
 from common.utils.logger import *
 from common.utils.paths import get_experiment_nets
-from networks.losses import AngularLossDense, angular_loss, pairwise_kl_divergence, orig_pairwise_kl_divergence, get_loss
+from networks.losses import get_custom_objects, get_loss
 
 import numpy as np
 
@@ -13,7 +13,7 @@ import numpy as np
 logger = get_logger('kldiv', logging.INFO)
 
 
-def create_embeddings(checkpoints, x_list, y_list, out_layer=7, seg_size=100):
+def create_embeddings(config, checkpoints, x_list, y_list, out_layer=7, seg_size=100):
     # Prepare return value
     set_of_embeddings = []
     set_of_speakers = []
@@ -22,12 +22,8 @@ def create_embeddings(checkpoints, x_list, y_list, out_layer=7, seg_size=100):
 
     # Values out of the loop
     metrics = ['accuracy']
-    loss = get_loss()
-    custom_objects = {'orig_pairwise_kl_divergence': orig_pairwise_kl_divergence,
-                      'AngularLossDense': AngularLossDense,
-                      'angular_loss': angular_loss,
-                      'pairwise_kl_divergence':pairwise_kl_divergence,
-                      'orig_pairwise_kl_divergence':orig_pairwise_kl_divergence}
+    loss = get_loss(config)
+    custom_objects = get_custom_objects(config)
     optimizer = 'adadelta'
 
     for checkpoint in checkpoints:

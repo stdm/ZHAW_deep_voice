@@ -32,9 +32,9 @@ def create_network_n_speakers(num_speakers, config):
     model.add(BatchNormalization())
     model.add(Dropout(rate=0.5))
     model.add(Dense(units=(num_speakers * 5), activation='relu'))
-    add_final_layers(model)
+    add_final_layers(model, config)
 
-    loss_function = get_loss()
+    loss_function = get_loss(config)
 
     # Create Optimizer
     adadelta = Adadelta(lr=lr, rho=rho, epsilon=epsilon, decay=0.0)

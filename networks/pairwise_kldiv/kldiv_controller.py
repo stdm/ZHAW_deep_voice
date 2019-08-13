@@ -55,7 +55,7 @@ class KLDivController(NetworkController):
         x_list, y_list, _ = create_data_lists(short_utterance, X_long, X_short,
                                               y_long, y_short, s_list_long, s_list_short)
 
-        embeddings_data =  create_embeddings(self.checkpoints, x_list, y_list, out_layer, seg_size)
+        embeddings_data =  create_embeddings(self.config, self.checkpoints, x_list, y_list, out_layer, seg_size)
         return embeddings_data
 
     def _prepare_data(self, X, y):

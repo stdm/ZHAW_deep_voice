@@ -23,65 +23,81 @@ x = tf.constant(0.)
 loss = tf.Variable(0.)
 sum_loss = tf.Variable(0.)
 
-def get_loss():
+def get_custom_objects(config):
+    inst = AngularLoss(config)
+    custom_objects = {'AngularLossDense': inst.get_dense(),
+                      'angular_loss': inst.angular_loss,
+                      'pairwise_kl_divergence':pairwise_kl_divergence,
+                      'orig_pairwise_kl_divergence':orig_pairwise_kl_divergence}
+    return custom_objects
+
+def get_loss(config):
     if loss_name == 'angular_margin':
-        return angular_loss
+        return AngularLoss(config).angular_loss
     elif loss_name == 'kldiv_orig':
         return orig_pairwise_kl_divergence
     return pairwise_kl_divergence
 
-def add_final_layers(model):
+def add_final_layers(model, config):
     if loss == 'angular_margin':
-        model.add(AngularLossDense())
+        inst = AngularLoss(config)
+        model.add(inst.get_dense()())
     else:
         model.add(Dense(units=n_speakers, activation='softmax'))
 
 # angular loss function
-def angular_loss(y_true, y_pred):
-    logits = y_pred
-    if margin_sphereface != 1.0 or margin_arcface != 0.0:
-        y_pred = K.clip(y_pred, -1.0 + K.epsilon(), 1.0 - K.epsilon())
-        theta = tf.acos(y_pred)
-        if margin_sphereface != 1.0:
-            theta = theta * margin_sphereface
-        if margin_arcface != 0.0:
-            theta = theta + margin_arcface
-        y_pred = tf.cos(theta)
-    target_logits = y_pred
-    if margin_cosface != 0:
-        target_logits = target_logits - margin_cosface
-
-    logits = logits * (1 - y_true) + target_logits * y_true
-    logits *= scale
-
-    out = tf.nn.softmax(logits)
-    loss = keras.losses.categorical_crossentropy(y_true, out)
-    return loss
-
-
-class AngularLossDense(Layer):
-    def __init__(self, **kwargs):
-        super(AngularLossDense, self).__init__(**kwargs)
-        config = load_config(None, join(get_common(), 'config.cfg'))
+class AngularLoss:
+    def __init__(self, config):
         self.n_speakers = config.getint('train', 'n_speakers')
+        self.margin_cosface = config.getfloat('angular_loss', 'margin_cosface')
+        self.margin_arcface = config.getfloat('angular_loss', 'margin_arcface')
+        self.margin_sphereface = config.getfloat('angular_loss', 'margin_sphereface')
+        self.scale = config.getfloat('angular_loss', 'scale')
 
-    def build(self, input_shape):
-        super(AngularLossDense, self).build(input_shape[0])
-        self.W = self.add_weight(name='W',
-                                 shape=(input_shape[-1], self.n_speakers),
-                                 initializer='glorot_uniform',
-                                 trainable=True)
+    def get_dense(self):
+        n_speakers = self.n_speakers
+        class AngularLossDense(Layer):
+            def __init__(self, **kwargs):
+                super(AngularLossDense, self).__init__(**kwargs)
 
-    def call(self, inputs):
-        x = tf.nn.l2_normalize(inputs, axis=1)
-        W = tf.nn.l2_normalize(self.W, axis=0)
+            def build(self, input_shape):
+                super(AngularLossDense, self).build(input_shape[0])
+                self.W = self.add_weight(name='W',
+                                         shape=(input_shape[-1], n_speakers),
+                                         initializer='glorot_uniform',
+                                         trainable=True)
 
-        logits = x @ W
-        return logits
+            def call(self, inputs):
+                x = tf.nn.l2_normalize(inputs, axis=1)
+                W = tf.nn.l2_normalize(self.W, axis=0)
 
-    def compute_output_shape(self, input_shape):
-        return (None, self.n_speakers)
+                logits = x @ W
+                return logits
 
+            def compute_output_shape(self, input_shape):
+                return (None, n_speakers)
+        return AngularLossDense
+
+    def angular_loss(self, y_true, y_pred):
+        logits = y_pred
+        if self.margin_sphereface != 1.0 or self.margin_arcface != 0.0:
+            y_pred = K.clip(y_pred, -1.0 + K.epsilon(), 1.0 - K.epsilon())
+            theta = tf.acos(y_pred)
+            if self.margin_sphereface != 1.0:
+                theta = theta * self.margin_sphereface
+            if self.margin_arcface != 0.0:
+                theta = theta + self.margin_arcface
+            y_pred = tf.cos(theta)
+        target_logits = y_pred
+        if self.margin_cosface != 0:
+            target_logits = target_logits - self.margin_cosface
+
+        logits = logits * (1 - y_true) + target_logits * y_true
+        logits *= scale
+
+        out = tf.nn.softmax(logits)
+        loss = keras.losses.categorical_crossentropy(y_true, out)
+        return loss
 
 # pairwise kldiv loss function
 def pairwise_kl_divergence(labels, predictions):

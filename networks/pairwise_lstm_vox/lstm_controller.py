@@ -13,7 +13,7 @@ from common.utils.paths import *
 from .bilstm_2layer_dropout_plus_2dense import bilstm_2layer_dropout
 from .core.data_gen import generate_test_data
 from common.spectrogram.speaker_train_splitter import SpeakerTrainSplit
-from networks.losses import AngularLossDense, angular_loss, pairwise_kl_divergence, orig_pairwise_kl_divergence, get_loss
+from networks.losses import get_custom_objects, get_loss
 
 import common.utils.pickler as pickler
 
@@ -66,7 +66,8 @@ class LSTMVOX2Controller(NetworkController):
             epochs=self.epochs,
             epochs_before_active_learning=self.epochs_before_active_learning,
             active_learning_rounds=self.active_learning_rounds,
-            segment_size=self.seg_size
+            segment_size=self.seg_size,
+            config=self.config
         )
 
     # Loads the validation dataset as '_cluster' and splits it for further use
@@ -106,12 +107,8 @@ class LSTMVOX2Controller(NetworkController):
 
         # Values out of the loop
         metrics = ['accuracy', 'categorical_accuracy', ]
-        loss = get_loss()
-        custom_objects = { 'pairwise_kl_divergence': pairwise_kl_divergence,
-                           'AngularLossDense': AngularLossDense,
-                           'angular_loss': angular_loss,
-                           'pairwise_kl_divergence':pairwise_kl_divergence,
-                           'orig_pairwise_kl_divergence':orig_pairwise_kl_divergence}
+        loss = get_loss(self.config)
+        custom_objects = get_custom_objects(self.config)
         optimizer = 'rmsprop'
 
         # Fill return values

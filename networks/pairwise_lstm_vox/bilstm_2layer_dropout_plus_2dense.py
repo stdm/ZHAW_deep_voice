@@ -43,7 +43,7 @@ from networks.losses import get_loss, add_final_layers
 class bilstm_2layer_dropout(object):
     def __init__(self, name, training_data, n_hidden1, n_hidden2, dense_factor, n_speakers,
                  epochs, epochs_before_active_learning, active_learning_rounds,
-                 segment_size, frequency=128):
+                 segment_size, config, frequency=128):
 
 
         self.network_name = name
@@ -68,6 +68,7 @@ class bilstm_2layer_dropout(object):
         self.input = (segment_size, frequency)
         self.logger = get_logger('lstm_vox', logging.INFO)
         self.logger.info(self.network_name)
+        self.config = config
         self.run_network()
 
     def create_net(self):
@@ -88,9 +89,9 @@ class bilstm_2layer_dropout(object):
         model.add(Dense(self.dense_factor * 10))
         model.add(Dropout(0.25))
         model.add(Dense(self.dense_factor * 5))
-        add_final_layers(model)
+        add_final_layers(model, self.config)
 
-        loss_function = get_loss()
+        loss_function = get_loss(self.config)
         adam = keras.optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
 
         model.compile(loss=loss_function, optimizer=adam, metrics=['accuracy'])

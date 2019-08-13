@@ -15,7 +15,7 @@ from common.utils.paths import *
 from common.training.data_gen import DataGenerator
 from .bilstm_2layer_dropout_plus_2dense import bilstm_2layer_dropout
 from common.spectrogram.speaker_dev_selector import load_test_data
-from networks.losses import AngularLossDense, angular_loss, pairwise_kl_divergence, orig_pairwise_kl_divergence, get_loss
+from networks.losses import get_custom_objects, get_loss
 
 
 class LSTMController(NetworkController):
@@ -73,12 +73,8 @@ class LSTMController(NetworkController):
 
         # Values out of the loop
         metrics = ['accuracy', 'categorical_accuracy', ]
-        loss = get_loss()
-        custom_objects = {'pairwise_kl_divergence': pairwise_kl_divergence,
-                          'AngularLossDense': AngularLossDense,
-                          'angular_loss': angular_loss,
-                          'pairwise_kl_divergence':pairwise_kl_divergence,
-                          'orig_pairwise_kl_divergence':orig_pairwise_kl_divergence}
+        loss = get_loss(self.config)
+        custom_objects = get_custom_objects(self.config)
         optimizer = 'rmsprop'
         vector_size = vec_size
 
