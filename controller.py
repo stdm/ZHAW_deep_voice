@@ -38,7 +38,7 @@ DEFAULT_TEST = False
 DEFAULT_PLOT = False
 DEFAULT_BEST = False
 DEFAULT_DEV = False
-DEFAULT_CONFIG = load_config(None, join(get_common(), 'config.cfg'))
+DEFAULT_CONFIG = load_config(None, join(get_configs(), 'config.cfg'))
 
 
 class Controller:

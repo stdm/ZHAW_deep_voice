@@ -17,13 +17,3 @@ def load_config(path_master_config, path_config):
         config.read_file(open(path_config))
 
     return config
-
-
-def check_config(config):
-    # create config checker
-    # config_checker = ConfigChecker.ConfigChecker(config)
-
-    # check config file
-    # return config_checker.check_config_file()
-
-    return True

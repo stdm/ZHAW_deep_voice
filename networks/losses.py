@@ -9,7 +9,7 @@ import keras
 
 
 # Constants
-config = load_config(None, join(get_common(), 'config.cfg'))
+config = load_config(None, join(get_configs(), 'config.cfg'))
 loss_name = config.get('train', 'loss')
 n_speakers = config.getint('train', 'n_speakers')
 
