@@ -8,6 +8,7 @@ import os.path as path
 
 import common.path_helper as common_helper
 import networks.path_helper as networks_helper
+import configs.path_helper as configs_helper
 
 
 def join(base, *args):
@@ -22,13 +23,8 @@ def get_common(*args):
 def get_networks(*args):
     return join(networks_helper.get_networks_path(), *args)
 
-def get_configs(config):
-    """
-    Gets the absolute path to the config file of that name.
-    :param config: the name (without .cfg) of the file
-    :return: the absolute path of the config file
-    """
-    return get_networks('flow_me', 'config', config + '.cfg')
+def get_configs(*args):
+    return join(configs_helper.get_configs_path(), *args)
 
 def get_data(*args):
     return join(get_common('data'), *args)

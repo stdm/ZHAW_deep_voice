@@ -12,8 +12,8 @@ from common.utils.logger import *
 from common.utils.paths import *
 from .bilstm_2layer_dropout_plus_2dense import bilstm_2layer_dropout
 from .core.data_gen import generate_test_data
-from .core.pairwise_kl_divergence import pairwise_kl_divergence
 from common.spectrogram.speaker_train_splitter import SpeakerTrainSplit
+from networks.losses import get_custom_objects, get_loss
 
 import common.utils.pickler as pickler
 
@@ -21,7 +21,7 @@ import common.utils.pickler as pickler
 class LSTMVOX2Controller(NetworkController):
     def __init__(self, config, dev, best):
         super().__init__("pairwise_lstm_vox2", config, dev) #"vox2_speakers_120_test_cluster"
-        
+
         # Currently prepared speaker_lists have the following datasets:
         #
         # 'vox2_speakers_5994_dev_cluster', # _train suffix for train/test split, _cluster otherwise
@@ -31,7 +31,7 @@ class LSTMVOX2Controller(NetworkController):
         #
         self.train_data = config.get('train', 'pickle')
         self.dense_factor = config.getint('pairwise_lstm_vox2', 'dense_factor')
-        self.output_size = config.getint('pairwise_lstm_vox2', 'output_size')
+        self.n_speakers = config.getint('train', 'n_speakers')
         self.epochs = config.getint('pairwise_lstm_vox2', 'num_epochs')
         self.epochs_before_active_learning = config.getint('pairwise_lstm_vox2', 'epochs_before_al')
         self.active_learning_rounds = config.getint('pairwise_lstm_vox2', 'al_rounds')
@@ -39,38 +39,39 @@ class LSTMVOX2Controller(NetworkController):
         self.out_layer = config.getint('pairwise_lstm_vox2', 'out_layer')
         self.vec_size = config.getint('pairwise_lstm_vox2', 'vec_size')
         self.best = best
-    
+
     def get_validation_data(self):
         return get_speaker_pickle(self.val_data, ".h5")
 
     def get_network_name(self):
         return "{}__{}__d{}__o{}__e{}__p{}__a{}__s{}".format(
-            'lstm_vox2', 
-            self.train_data, 
+            'lstm_vox2',
+            self.train_data,
             self.dense_factor,
-            self.output_size, 
-            self.epochs, 
-            self.epochs_before_active_learning, 
+            self.n_speakers,
+            self.epochs,
+            self.epochs_before_active_learning,
             self.active_learning_rounds,
             self.seg_size
         )
 
     def train_network(self):
         bilstm_2layer_dropout(
-            self.get_network_name(), 
+            self.get_network_name(),
             self.train_data,
-            n_hidden1=256, 
-            n_hidden2=256, 
+            n_hidden1=256,
+            n_hidden2=256,
             dense_factor=self.dense_factor,
-            output_size=self.output_size,
+            n_speakers=self.n_speakers,
             epochs=self.epochs,
             epochs_before_active_learning=self.epochs_before_active_learning,
             active_learning_rounds=self.active_learning_rounds,
-            segment_size=self.seg_size
+            segment_size=self.seg_size,
+            config=self.config
         )
 
     # Loads the validation dataset as '_cluster' and splits it for further use
-    # 
+    #
     def get_validation_datasets(self):
         train_test_splitter = SpeakerTrainSplit(0.2)
         X, speakers = load_and_prepare_data(self.get_validation_data(), self.seg_size)
@@ -80,9 +81,9 @@ class LSTMVOX2Controller(NetworkController):
         return X_train, y_train, X_test, y_test
 
     def get_embeddings(self):
-        # Passed seg_size parameter is ignored 
+        # Passed seg_size parameter is ignored
         # because it is already used during training and must stay equal
-        
+
         logger = get_logger('lstm_vox', logging.INFO)
         logger.info('Run pairwise_lstm test')
         logger.info('out_layer -> ' + str(self.out_layer))
@@ -91,7 +92,7 @@ class LSTMVOX2Controller(NetworkController):
 
         # Load and prepare train/test data
         x_train, speakers_train, x_test, speakers_test = self.get_validation_datasets()
-        
+
         # Prepare return values
         set_of_embeddings = []
         set_of_speakers = []
@@ -106,8 +107,8 @@ class LSTMVOX2Controller(NetworkController):
 
         # Values out of the loop
         metrics = ['accuracy', 'categorical_accuracy', ]
-        loss = pairwise_kl_divergence
-        custom_objects = { 'pairwise_kl_divergence': pairwise_kl_divergence }
+        loss = get_loss(self.config)
+        custom_objects = get_custom_objects(self.config)
         optimizer = 'rmsprop'
 
         # Fill return values
@@ -116,7 +117,7 @@ class LSTMVOX2Controller(NetworkController):
 
             # Check if checkpoint is already processed and stored in intermediate results
             checkpoint_result_pickle = get_results_intermediate_test(checkpoint)
-            
+
             # Add out_layer to checkpoint name
             checkpoint_result_pickle = checkpoint_result_pickle.split('.')[0] + '__ol' + str(self.out_layer) + '.' + checkpoint_result_pickle.split('.')[1]
 

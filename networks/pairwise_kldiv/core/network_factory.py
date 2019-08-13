@@ -1,7 +1,7 @@
 from keras.layers import Conv2D, BatchNormalization, MaxPooling2D, Dropout, Dense, Flatten
-from networks.pairwise_lstm.core import pairwise_kl_divergence as kld
 from keras.models import Sequential
 from keras.optimizers import Adadelta
+from networks.losses import get_loss, add_final_layers
 
 
 def create_network_n_speakers(num_speakers, config):
@@ -32,15 +32,15 @@ def create_network_n_speakers(num_speakers, config):
     model.add(BatchNormalization())
     model.add(Dropout(rate=0.5))
     model.add(Dense(units=(num_speakers * 5), activation='relu'))
+    add_final_layers(model, config)
 
-    # output layer
-    model.add(Dense(units=num_speakers, activation='softmax'))
+    loss_function = get_loss(config)
 
     # Create Optimizer
     adadelta = Adadelta(lr=lr, rho=rho, epsilon=epsilon, decay=0.0)
 
     # Compile model
-    model.compile(loss=kld.orig_pairwise_kl_divergence,
+    model.compile(loss=loss_function,
                   optimizer=adadelta,
                   metrics=['accuracy'])
 

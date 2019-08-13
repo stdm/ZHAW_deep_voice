@@ -20,13 +20,14 @@ class KLDivController(NetworkController):
 
     def train_network(self):
         # Get settings
-        num_epochs = self.config.getint('pairwise_kldiv', 'num_epochs')
+        n_epochs = self.config.getint('pairwise_kldiv', 'n_epochs')
         batch_size = self.config.getint('pairwise_kldiv', 'batch_size')
         epoch_batches = self.config.getint('pairwise_kldiv', 'epoch_batches')
         train_filename = self.config.get('train', 'pickle')
+        n_speakers = self.config.getint('train', 'n_speakers')
 
         # Create network, load path to input and output file
-        network = create_network_n_speakers(100, self.config)
+        network = create_network_n_speakers(n_speakers, self.config)
         train_file = get_speaker_pickle(train_filename)
         net_file = get_experiment_nets(self.checkpoints[0])
 
@@ -34,7 +35,7 @@ class KLDivController(NetworkController):
                       train_file=train_file,
                       network_file_out=net_file,
                       data_generator=self.dg,
-                      num_epochs=num_epochs,
+                      num_epochs=n_epochs,
                       batch_size=batch_size,
                       epoch_batches=epoch_batches)
 
@@ -54,7 +55,7 @@ class KLDivController(NetworkController):
         x_list, y_list, _ = create_data_lists(short_utterance, X_long, X_short,
                                               y_long, y_short, s_list_long, s_list_short)
 
-        embeddings_data =  create_embeddings(self.checkpoints, x_list, y_list, out_layer, seg_size)
+        embeddings_data =  create_embeddings(self.config, self.checkpoints, x_list, y_list, out_layer, seg_size)
         return embeddings_data
 
     def _prepare_data(self, X, y):

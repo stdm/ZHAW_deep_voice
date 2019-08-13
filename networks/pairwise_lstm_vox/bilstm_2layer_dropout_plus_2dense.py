@@ -14,7 +14,6 @@ from keras.wrappers.scikit_learn import KerasClassifier
 from math import ceil
 
 from .core import data_gen as dg
-from .core import pairwise_kl_divergence as kld
 from .core import plot_saver as ps
 from .core.callbacks import PlotCallback, ActiveLearningModelCheckpoint, ActiveLearningEpochLogger
 
@@ -22,6 +21,8 @@ import common.spectrogram.speaker_train_splitter as sts
 from common.utils.logger import *
 from common.utils.paths import *
 from common.utils.pickler import load_speaker_pickle_or_h5
+
+from networks.losses import get_loss, add_final_layers
 
 '''This Class Trains a Bidirectional LSTM with 2 Layers, and 2 Denselayer and a Dropout Layers
     Parameters:
@@ -40,16 +41,17 @@ from common.utils.pickler import load_speaker_pickle_or_h5
 
 
 class bilstm_2layer_dropout(object):
-    def __init__(self, name, training_data, n_hidden1, n_hidden2, dense_factor, output_size, 
+    def __init__(self, name, training_data, n_hidden1, n_hidden2, dense_factor, n_speakers,
                  epochs, epochs_before_active_learning, active_learning_rounds,
-                 segment_size, frequency=128):
+                 segment_size, config, frequency=128):
+
 
         self.network_name = name
         self.training_data = training_data
         self.n_hidden1 = n_hidden1
         self.n_hidden2 = n_hidden2
         self.dense_factor = dense_factor
-        self.output_size = output_size
+        self.n_speakers = n_speakers
         self.epochs = epochs
 
         if active_learning_rounds == 0:
@@ -58,20 +60,20 @@ class bilstm_2layer_dropout(object):
         else:
             self.epochs_before_active_learning = epochs_before_active_learning
             self.epochs_per_round = ceil((epochs - epochs_before_active_learning) / active_learning_rounds)
-        
+
         self.active_learning_rounds = active_learning_rounds
         self.active_learning_pools = 0
         self.active_learning_pools_increment_active = True
         self.segment_size = segment_size
         self.input = (segment_size, frequency)
         self.logger = get_logger('lstm_vox', logging.INFO)
-        
         self.logger.info(self.network_name)
+        self.config = config
         self.run_network()
 
     def create_net(self):
         # tensorflow_gpus_available = len(backend.tensorflow_backend._get_available_gpus()) > 0
-        
+
         model = Sequential()
 
         # LSTM
@@ -87,11 +89,12 @@ class bilstm_2layer_dropout(object):
         model.add(Dense(self.dense_factor * 10))
         model.add(Dropout(0.25))
         model.add(Dense(self.dense_factor * 5))
-        model.add(Dense(self.output_size))
-        model.add(Activation('softmax'))
+        add_final_layers(model, self.config)
+
+        loss_function = get_loss(self.config)
         adam = keras.optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
 
-        model.compile(loss=kld.pairwise_kl_divergence, optimizer=adam, metrics=['accuracy'])
+        model.compile(loss=loss_function, optimizer=adam, metrics=['accuracy'])
         model.summary()
         return model
 
@@ -113,7 +116,7 @@ class bilstm_2layer_dropout(object):
         else:
             if self.active_learning_pools_increment_active:
                 self.active_learning_pools += 1
-            
+
             self.logger.info('create_train_data ' + self.training_data + ' pool ' + training_data_round)
             return self.read_speaker_data(speaker_pickle)
 
@@ -130,7 +133,7 @@ class bilstm_2layer_dropout(object):
             get_experiment_nets(self.network_name + "_best.h5"),
             monitor='val_loss', verbose=1, save_best_only=True)
         net_checkpoint = ActiveLearningModelCheckpoint(
-            get_experiment_nets(self.network_name + "_{epoch:05d}.h5"), 
+            get_experiment_nets(self.network_name + "_{epoch:05d}.h5"),
             period=int(self.epochs / 10)
         )
         plot_callback_instance = PlotCallback(self.network_name)
@@ -150,15 +153,15 @@ class bilstm_2layer_dropout(object):
         # arguments have changed. Update your method calls accordingly.
 
         history = model.fit_generator(
-            train_gen, 
-            steps_per_epoch=10, 
+            train_gen,
+            steps_per_epoch=10,
             epochs=epochs_to_run,
-            callbacks=callbacks, 
+            callbacks=callbacks,
             validation_data=val_gen,
-            validation_steps=2, 
-            class_weight=None, 
+            validation_steps=2,
+            class_weight=None,
             max_queue_size=10,
-            nb_worker=1, 
+            nb_worker=1,
             pickle_safe=False,
             verbose=2
         )
@@ -174,7 +177,7 @@ class bilstm_2layer_dropout(object):
         speaker_pickle = get_speaker_pickle(self.training_data, format='.h5')
         X_pool, y_pool, _ = self.read_speaker_data(speaker_pickle)
         X_t, y_t, X_v, y_v = self.split_train_val_data(X_pool, y_pool)
-        
+
         X_t_shapes = [ X_t.shape[0] ]
         X_v_shapes = [ X_v.shape[0] ]
         X_pool = None
@@ -183,12 +186,12 @@ class bilstm_2layer_dropout(object):
         # initial train
         if self.epochs_before_active_learning != 0:
             self.fit(model, callbacks, X_t, X_v, y_t, y_v, self.epochs_before_active_learning)
-        
+
         # update state
         epochs_trained += self.epochs_before_active_learning
 
         # active learning
-        for i in range(self.active_learning_rounds): 
+        for i in range(self.active_learning_rounds):
             self.logger.info("Active learning round " + str(i) + "/" + str(self.active_learning_rounds))
 
             if self.epochs >= (epochs_trained + self.epochs_per_round):
@@ -220,13 +223,13 @@ class bilstm_2layer_dropout(object):
 
         # query for uncertainty
         query_idx = self.uncertainty_sampling(model, X_pool, n_instances=128)
-        
+
         # Converts np.ndarray to dytpe int, default is float
         query_idx = query_idx.astype('int')
 
         x_us = X_pool[query_idx]
         y_us = y_pool[query_idx]
-        
+
         if not pool_ident in known_pool_data.keys():
             known_pool_data[pool_ident] = []
 
@@ -238,16 +241,16 @@ class bilstm_2layer_dropout(object):
         numpArray = np.array(known_pool_data[pool_ident])
         x_us = np.delete(x_us, numpArray, axis=0)
         y_us = np.delete(y_us, numpArray, axis=0)
-        
+
         # split the new records into test and val
         r_x_t, r_y_t, r_x_v, r_y_v = self.split_train_val_data(x_us, y_us)
-        
+
         # append to used / passed sets
         new_X_t = np.append(X_t, r_x_t, axis=0)
         new_X_v = np.append(X_v, r_x_v, axis=0)
         new_y_t = np.append(y_t, r_y_t, axis=0)
         new_y_v = np.append(y_v, r_y_v, axis=0)
-        
+
         return new_X_t, new_X_v, new_y_t, new_y_v
 
     def uncertainty_sampling(self, model, X, n_instances: int = 1):
