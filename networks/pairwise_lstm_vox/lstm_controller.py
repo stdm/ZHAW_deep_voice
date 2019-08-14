@@ -152,7 +152,7 @@ class LSTMVOX2Controller(NetworkController):
             speaker_numbers.append(num_embeddings)
 
             # Calculate the time per utterance
-            time = TimeCalculator.calc_time_all_utterances([speakers_train, speakers_test], seg_size)
+            time = TimeCalculator.calc_time_all_utterances([speakers_train, speakers_test], self.seg_size)
             set_of_total_times.append(time)
 
         # Add out_layer to checkpoint names
