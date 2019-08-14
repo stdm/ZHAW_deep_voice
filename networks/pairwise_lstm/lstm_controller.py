@@ -20,19 +20,15 @@ from networks.losses import get_custom_objects, get_loss
 
 class LSTMController(NetworkController):
 
-    def __init__(self, config, dev, best):
-        super().__init__("pairwise_lstm", config, dev)
-        self.network_file = self.name + "_100"
+    def __init__(self, name, config, dev, best):
+        super().__init__(name, config, dev)
         self.best = best
         self.dg = DataGenerator(config.getint('pairwise_lstm', 'seg_size'),
                                 config.getint('pairwise_lstm', 'spectrogram_height'))
 
-    def get_network_name(self):
-        return self.name + "_100"
-
     def train_network(self):
         bilstm_2layer_dropout(
-            self.network_file,
+            self.name,
             self.config,
             self.dg
         )
@@ -65,9 +61,9 @@ class LSTMController(NetworkController):
         set_of_total_times = []
 
         if self.best:
-            file_regex = self.get_network_name() + ".*_best\.h5"
+            file_regex = self.name + ".*_best\.h5"
         else:
-            file_regex = self.get_network_name() + ".*\.h5"
+            file_regex = self.name + ".*\.h5"
 
         checkpoints = list_all_files(get_experiment_nets(), file_regex)
 

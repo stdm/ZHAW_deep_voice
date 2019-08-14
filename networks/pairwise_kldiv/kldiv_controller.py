@@ -11,9 +11,9 @@ from common.training.data_gen import DataGenerator
 
 
 class KLDivController(NetworkController):
-    def __init__(self, config, dev):
-        super().__init__("pairwise_kldiv", config, dev)
-        self.checkpoints = ["pairwise_kldiv_100.h5"]
+    def __init__(self, name, config, dev):
+        super().__init__(name, config, dev)
+        self.checkpoints = [name + ".h5"]
         self.logger = get_logger('kldiv', logging.INFO)
         self.dg = DataGenerator(config.getint('pairwise_kldiv', 'seg_size'),
                                 config.getint('pairwise_kldiv', 'spectrogram_height'))

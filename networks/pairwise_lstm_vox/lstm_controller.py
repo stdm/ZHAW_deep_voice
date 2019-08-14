@@ -19,8 +19,8 @@ import common.utils.pickler as pickler
 
 
 class LSTMVOX2Controller(NetworkController):
-    def __init__(self, config, dev, best):
-        super().__init__("pairwise_lstm_vox2", config, dev) #"vox2_speakers_120_test_cluster"
+    def __init__(self, name, config, dev, best):
+        super().__init__(name, config, dev) #"vox2_speakers_120_test_cluster"
 
         # Currently prepared speaker_lists have the following datasets:
         #
@@ -43,21 +43,9 @@ class LSTMVOX2Controller(NetworkController):
     def get_validation_data(self):
         return get_speaker_pickle(self.val_data, ".h5")
 
-    def get_network_name(self):
-        return "{}__{}__d{}__o{}__e{}__p{}__a{}__s{}".format(
-            'lstm_vox2',
-            self.train_data,
-            self.dense_factor,
-            self.n_speakers,
-            self.epochs,
-            self.epochs_before_active_learning,
-            self.active_learning_rounds,
-            self.seg_size
-        )
-
     def train_network(self):
         bilstm_2layer_dropout(
-            self.get_network_name(),
+            self.name,
             self.train_data,
             n_hidden1=256,
             n_hidden2=256,
@@ -99,9 +87,9 @@ class LSTMVOX2Controller(NetworkController):
         speaker_numbers = []
 
         if self.best:
-            file_regex = self.get_network_name() + "*_best.h5"
+            file_regex = self.name + "*_best.h5"
         else:
-            file_regex = self.get_network_name() + "*.h5"
+            file_regex = self.name + "*.h5"
 
         checkpoints = list_all_files(get_experiment_nets(), file_regex)
 

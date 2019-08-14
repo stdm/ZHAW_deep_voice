@@ -18,6 +18,7 @@ optional arguments:
   -best              Just the best results of the networks will be used in -train or -plot
   -plot              Plots the last results of the specified networks in one file.
   -dev               Enable dev mode so the dev set instead of the test set is used for testing
+  -config            The config file to use for training or analysis
 """
 
 
@@ -38,14 +39,15 @@ DEFAULT_TEST = False
 DEFAULT_PLOT = False
 DEFAULT_BEST = False
 DEFAULT_DEV = False
-DEFAULT_CONFIG = load_config(None, join(get_configs(), 'config.cfg'))
+DEFAULT_CONFIG = 'config'
 
 
 class Controller:
-    def __init__(self, config=DEFAULT_CONFIG,
+    def __init__(self, config_name=DEFAULT_CONFIG,
                  setup=DEFAULT_SETUP, networks=DEFAULT_NETWORKS, train=DEFAULT_TRAIN, test=DEFAULT_TEST,
                  plot=DEFAULT_PLOT, best=DEFAULT_BEST, dev=DEFAULT_DEV):
-        self.config = config
+        self.config_name = config_name
+        self.config = load_config(None, join(get_configs(), config_name + '.cfg'))
         self.setup = setup
         self.networks = networks
         self.train = train
@@ -75,9 +77,6 @@ class Controller:
             name = network_controller.name
             plot_files(name, get_result_files(name, self.best))
 
-        if len(self.network_controllers) > 1:
-            plot_files('all', get_result_files('', self.best))
-
     def run(self):
         # Setup
         if self.setup:
@@ -100,24 +99,25 @@ class Controller:
 
     def generate_controllers(self):
         for network in self.networks:
+            network_name = "{}_{}".format(network, self.config_name)
             if network == 'pairwise_lstm':
                 from networks.pairwise_lstm.lstm_controller import LSTMController
-                self.network_controllers.append(LSTMController(self.config, self.dev, self.best))
+                self.network_controllers.append(LSTMController(network_name, self.config, self.dev, self.best))
             elif network == 'pairwise_kldiv':
                 from networks.pairwise_kldiv.kldiv_controller import KLDivController
-                self.network_controllers.append(KLDivController(self.config, self.dev))
+                self.network_controllers.append(KLDivController(network_name, self.config, self.dev))
             elif network == 'i_vector':
                 from networks.i_vector.ivec_controller import IVECController
                 self.network_controllers.append(IVECController(self.config, self.dev))
             elif network == 'luvo':
                 from networks.lu_vo.luvo_controller import LuvoController
-                self.network_controllers.append(LuvoController(self.config, self.dev))
+                self.network_controllers.append(LuvoController(network_name, self.config, self.dev))
             elif network == 'gmm':
                 from networks.gmm.gmm_controller import GMMController
                 self.network_controllers.append(GMMController(self.config, self.dev))
             elif network == 'pairwise_lstm_vox2':
                 from networks.pairwise_lstm_vox.lstm_controller import LSTMVOX2Controller
-                self.network_controllers.append(LSTMVOX2Controller(self.config, self.dev, self.best))
+                self.network_controllers.append(LSTMVOX2Controller(network_name, self.config, self.dev, self.best))
             else:
                 print("Network " + network + " is not known.")
                 sys.exit(1)
@@ -141,12 +141,14 @@ if __name__ == '__main__':
                         help='If a single Network is specified and plot was called, just the best curves will be plotted. If test was called only the best network will be tested')
     parser.add_argument('-dev', dest='dev', action='store_true',
                         help='Enable dev mode so the dev set instead of the test set is used for testing')
+    parser.add_argument('-config', dest='config_name', default=DEFAULT_CONFIG,
+                        help='The config to use for training or analysis.')
 
     args = parser.parse_args()
 
     controller = Controller(
-        setup=args.setup, networks=tuple(args.networks), train=args.train, test=args.test, plot=args.plot,
-        best=args.best, dev=args.dev
+        config_name=args.config_name, setup=args.setup, networks=tuple(args.networks), train=args.train, test=args.test,
+        plot=args.plot, best=args.best, dev=args.dev
     )
 
     controller.run()

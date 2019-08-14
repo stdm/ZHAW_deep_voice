@@ -22,7 +22,7 @@ In any way, whether you fork and pull the source code or let docker handle it fo
 
  To view all available parametrs call
  ```
- controller.py -help
+ controller.py --help
  ```
 
 Arguments are also listed here: 
@@ -36,6 +36,7 @@ controller.py
   -best              Just the best results of the networks will be used in -train or -plot
   -plot              Plots the last results of the specified networks in one file.
   -dev               Enable dev mode so the dev set instead of the test set is used for testing.
+  -config            The config file to use for training or analysis
 ```
   
 As an example, you want to test and plot but not train the networks pairwise_kldiv and pairwise_lstm. You would call:
@@ -48,9 +49,7 @@ This can take a while, as it extracts the speaker spectrograms from your audio f
 
 ### Folder structure, plots, results
 * Trained network models will be stored in `common/data/experiments/nets`.
-* Testresults will be stored in `common/data/experiments/results`. There are intermediate checkpoint files in respective subfolders allowing the process to abort and resume at the last possible checkpoint. These intermediate checkpoints are cleared once the process is completed entirely.
+* Test results will be stored in `common/data/experiments/results`. There are intermediate checkpoint files in respective subfolders allowing the process to abort and resume at the last possible checkpoint. These intermediate checkpoints are cleared once the process is completed entirely.
 * Plots are stored in `common/data/experiments/plots`.
+* The name of the trained models, results and plots contains the name of the net and the config file used.
 * For each network the implementation code is located below `networks/<name of net>`
-
-### Network identification
-To support running various experiments of the same network, files (e.g. models and plots) contain additional identification information. This identifier may consist of parameters you used to start the experiment. Check the `get_network_name()` and `get_formatted_result_network_name()` functions if derived or the base implementation in network_controller.py.
