@@ -9,15 +9,6 @@ import keras
 
 
 # Constants
-config = load_config(None, join(get_configs(), 'config.cfg'))
-loss_name = config.get('train', 'loss')
-n_speakers = config.getint('train', 'n_speakers')
-
-margin_cosface = config.getfloat('angular_loss', 'margin_cosface')
-margin_arcface = config.getfloat('angular_loss', 'margin_arcface')
-margin_sphereface = config.getfloat('angular_loss', 'margin_sphereface')
-scale = config.getfloat('angular_loss', 'scale')
-
 tf_l = tf.Variable(0., name='loss')
 x = tf.constant(0.)
 loss = tf.Variable(0.)
@@ -32,18 +23,18 @@ def get_custom_objects(config):
     return custom_objects
 
 def get_loss(config):
-    if loss_name == 'angular_margin':
+    if config.get('train', 'loss') == 'angular_margin':
         return AngularLoss(config).angular_loss
-    elif loss_name == 'kldiv_orig':
+    elif config.get('train', 'loss') == 'kldiv_orig':
         return orig_pairwise_kl_divergence
     return pairwise_kl_divergence
 
 def add_final_layers(model, config):
-    if loss == 'angular_margin':
+    if config.get('train', 'loss') == 'angular_margin':
         inst = AngularLoss(config)
         model.add(inst.get_dense()())
     else:
-        model.add(Dense(units=n_speakers, activation='softmax'))
+        model.add(Dense(units=config.getint('train', 'n_speakers'), activation='softmax'))
 
 # angular loss function
 class AngularLoss:
@@ -93,7 +84,7 @@ class AngularLoss:
             target_logits = target_logits - self.margin_cosface
 
         logits = logits * (1 - y_true) + target_logits * y_true
-        logits *= scale
+        logits *= self.scale
 
         out = tf.nn.softmax(logits)
         loss = keras.losses.categorical_crossentropy(y_true, out)
