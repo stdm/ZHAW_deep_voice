@@ -8,6 +8,7 @@ from keras.models import load_model
 
 from common.clustering.generate_embeddings import generate_embeddings
 from common.network_controller import NetworkController
+from common.utils import TimeCalculator
 from common.utils.logger import *
 from common.utils.paths import *
 from .bilstm_2layer_dropout_plus_2dense import bilstm_2layer_dropout
@@ -98,6 +99,7 @@ class LSTMVOX2Controller(NetworkController):
         loss = get_loss(self.config)
         custom_objects = get_custom_objects(self.config)
         optimizer = 'rmsprop'
+        set_of_total_times = []
 
         # Fill return values
         for checkpoint in checkpoints:
@@ -138,12 +140,16 @@ class LSTMVOX2Controller(NetworkController):
             set_of_speakers.append(speakers)
             speaker_numbers.append(num_embeddings)
 
+            # Calculate the time per utterance
+            time = TimeCalculator.calc_time_all_utterances([speakers_train, speakers_test], self.seg_size)
+            set_of_total_times.append(time)
+
         # Add out_layer to checkpoint names
         checkpoints = list(map(lambda x: x.split('.')[0] + '__ol' + str(self.out_layer) + '.' + x.split('.')[1], checkpoints))
         print("checkpoints: {}".format(checkpoints))
 
         logger.info('Pairwise_lstm test done.')
-        return checkpoints, set_of_embeddings, set_of_speakers, speaker_numbers
+        return checkpoints, set_of_embeddings, set_of_speakers, speaker_numbers, set_of_total_times
 
 
 def load_and_prepare_data(data_path, segment_size):

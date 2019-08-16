@@ -5,7 +5,6 @@ from common.utils.logger import *
 import matplotlib.pyplot as plt
 import numpy as np
 
-
 metric_names = ["MR", "ACP", "ARI", "DER"]
 metric_worst_values = [1,0,0,1]
 
@@ -103,6 +102,8 @@ def _plot_curves(plot_file_name, curve_names, metric_sets, number_of_embeddings)
     for m, metric_set in enumerate(metric_sets):
         curves[m] = [plots[m], metric_set]
 
+    has_legend = False
+
     # Plot all curves
     for index in range(number_of_lines):
         label = curve_names[index]
@@ -118,12 +119,18 @@ def _plot_curves(plot_file_name, curve_names, metric_sets, number_of_embeddings)
             line, = plot.plot(number_of_clusters, value[index], color=color)
 
         if line:
+            has_legend = True
             line.set_label(label)
 
     # Add legend and save the plot
-    fig1.legend(loc='upper center', bbox_to_anchor=(0.5, 0.33), ncol=4)
+    # lehl@2019-08-14: Fehler, wenn keine Legende effektiv vorhaden ist.
+    # ==> Nur anpassen der Legende, wenn nötig.
+    if has_legend:
+        fig1.legend(loc='upper center', bbox_to_anchor=(0.5, 0.33), ncol=4)
+
     fig1.savefig(get_result_png(plot_file_name + '.png'), format='png')
     fig1.savefig(get_result_png(plot_file_name + '.svg'), format='svg')
+
     return fig1
 
 
