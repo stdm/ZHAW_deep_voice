@@ -54,13 +54,22 @@ def _plot_curves(plot_file_name, curve_names, metric_sets, number_of_embeddings)
     :param metric_sets: A list of 2D matrices, each row of a metrics 2D matrix describes one dataset for a curve
     :param number_of_embeddings: set of integers, each integer describes how many embeddings is in this curve
     """
+    maximum_clusters_to_display = number_of_embeddings[0]
+
+    # TODO: Grab config and check if :short_utterances is set
+    # ==> If so, only go up to 20% of the maximum clusters
+    # ==> Is it always 20%?
+    # 
+    # if short_utterances?:
+    #     maximum_clusters_to_display *= 0.2
+
     logger = get_logger('analysis', logging.INFO)
     logger.info('Plot results')
 
-    # Slice results to only 1-80 clusters
+    # Slice results to only 1-maximum_clusters_to_display clusters
     for i in range(0,len(metric_sets)):
         for j in range(0, len(metric_sets[i])):
-            metric_sets[i][j] = metric_sets[i][j][-80:]
+            metric_sets[i][j] = metric_sets[i][j][-maximum_clusters_to_display:]
 
     best_results = [[] for _ in metric_names]
     for m, min_value in enumerate(metric_worst_values):
@@ -88,10 +97,10 @@ def _plot_curves(plot_file_name, curve_names, metric_sets, number_of_embeddings)
 
     plots = [None] * len(metric_names)
 
-    plots[0] = _add_cluster_subplot(plot_grid, (0, 0), metric_names[0], 1)
-    plots[1] = _add_cluster_subplot(plot_grid, (0, 1), metric_names[1], 1)
-    plots[2] = _add_cluster_subplot(plot_grid, (1, 0), metric_names[2], 1)
-    plots[3] = _add_cluster_subplot(plot_grid, (1, 1), metric_names[3], 1)
+    plots[0] = _add_cluster_subplot(plot_grid, (0, 0), metric_names[0], 1, maximum_clusters_to_display)
+    plots[1] = _add_cluster_subplot(plot_grid, (0, 1), metric_names[1], 1, maximum_clusters_to_display)
+    plots[2] = _add_cluster_subplot(plot_grid, (1, 0), metric_names[2], 1, maximum_clusters_to_display)
+    plots[3] = _add_cluster_subplot(plot_grid, (1, 1), metric_names[3], 1, maximum_clusters_to_display)
 
     # Set the horizontal space between subplots
     plt.subplots_adjust(hspace = 0.3)
@@ -102,8 +111,6 @@ def _plot_curves(plot_file_name, curve_names, metric_sets, number_of_embeddings)
     for m, metric_set in enumerate(metric_sets):
         curves[m] = [plots[m], metric_set]
 
-    has_legend = False
-
     # Plot all curves
     for index in range(number_of_lines):
         label = curve_names[index]
@@ -112,29 +119,22 @@ def _plot_curves(plot_file_name, curve_names, metric_sets, number_of_embeddings)
                                                   str(best_results[m][index]))
         color = colors[index]
 
-        number_of_clusters = np.arange(80, 0, -1)
+        number_of_clusters = np.arange(maximum_clusters_to_display, 0, -1)
 
         line = None
         for plot, value in curves:
             line, = plot.plot(number_of_clusters, value[index], color=color)
+            
+        line.set_label(label)
 
-        if line:
-            has_legend = True
-            line.set_label(label)
-
-    # Add legend and save the plot
-    # lehl@2019-08-14: Fehler, wenn keine Legende effektiv vorhaden ist.
-    # ==> Nur anpassen der Legende, wenn nötig.
-    if has_legend:
-        fig1.legend(loc='upper center', bbox_to_anchor=(0.5, 0.33), ncol=4)
-
+    fig1.legend(loc='upper center', bbox_to_anchor=(0.5, 0.33), ncol=4)
     fig1.savefig(get_result_png(plot_file_name + '.png'), format='png')
     fig1.savefig(get_result_png(plot_file_name + '.svg'), format='svg')
 
     return fig1
 
 
-def _add_cluster_subplot(grid, position, y_label, colspan=1):
+def _add_cluster_subplot(grid, position, y_label, colspan=1, x_maximum=80):
     """
     Adds a cluster subplot to the current figure.
 
@@ -147,6 +147,6 @@ def _add_cluster_subplot(grid, position, y_label, colspan=1):
     subplot = plt.subplot2grid(grid, position, colspan=colspan)
     subplot.set_ylabel(y_label)
     subplot.set_xlabel('number of clusters')
-    subplot.set_xlim([-3, 83])
+    subplot.set_xlim([-3, x_maximum + 3])
     subplot.set_ylim([-0.05, 1.05])
     return subplot
