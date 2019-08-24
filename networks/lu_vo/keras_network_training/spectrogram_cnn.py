@@ -63,7 +63,7 @@ class SpectrogramCnn:
         print(X_t.shape)
 
         # Create network
-        model = self.create_net(X_t.shape[1], self.config.getint('luvo','n_classes'))
+        model = self.create_net(X_t.shape[1], self.config.getint('train','n_speakers'))
 
         # Set new batch iterator
         batch_size = self.config.getint('luvo', 'batch_size')
