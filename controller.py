@@ -9,7 +9,7 @@ Controller suite for Speaker clustering
 
 optional arguments:
   -h, --help         show this help message and exit
-  -setup             Run project setup.
+  -setup             Specify a dataset to run project setup. Available: 'timit', 'vox2'
   -n                 The networks to use for training or analysis.
                      Available: 'pairwise_lstm', 'pairwise_lstm_vox2', 'arc_face', 'pairwise_kldiv', 'luvo', 'gmm', 'i-vector'.
                      All networks use different sets of parameters which can be configured in the file common/config.cfg
@@ -26,13 +26,13 @@ import argparse
 import sys
 
 from common.analysis.plotting import plot_files
-from common.extrapolation.setup import setup_suite, is_suite_setup
+from common.extrapolation.setup import setup_suite
 from common.utils.paths import *
 from common.utils.load_config import *
 
 
 # Constants
-DEFAULT_SETUP = False
+DEFAULT_SETUP = ''
 DEFAULT_NETWORKS = ()
 DEFAULT_TRAIN = False
 DEFAULT_TEST = False
@@ -57,12 +57,9 @@ class Controller:
         self.dev = dev
         self.network_controllers = []
 
-    def setup_networks(self):
-        if is_suite_setup():
-            print("Already fully setup.")
-        else:
-            print("Setting up the network suite.")
-            setup_suite()
+    def setup_networks(self, dataset):
+        print("Setting up the network suite.")
+        setup_suite(dataset)
 
     def train_network(self):
         for network_controller in self.network_controllers:
@@ -80,7 +77,7 @@ class Controller:
     def run(self):
         # Setup
         if self.setup:
-            self.setup_networks()
+            self.setup_networks(self.setup)
 
         # Validate network
         self.generate_controllers()
@@ -127,8 +124,8 @@ if __name__ == '__main__':
     # Parse console Args
     parser = argparse.ArgumentParser(description='Controller suite for Speaker clustering')
     # add all arguments and provide descriptions for them
-    parser.add_argument('-setup', dest='setup', action='store_true',
-                        help='Run project setup.')
+    parser.add_argument('-setup', dest='setup', default=DEFAULT_SETUP,
+                        help='Specify a dataset to run project setup.')
     parser.add_argument('-n', nargs='+', dest='networks', default=DEFAULT_NETWORKS,
                         help='The networks to use for training or analysis.')
     parser.add_argument('-train', dest='train', action='store_true',
