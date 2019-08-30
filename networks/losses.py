@@ -90,7 +90,7 @@ class AngularLoss:
         loss = keras.losses.categorical_crossentropy(y_true, out)
         return loss
 
-# pairwise kldiv loss function
+# pairwise kldiv loss function for pairwise_lstm
 def pairwise_kl_divergence(labels, predictions):
     margin = tf.constant(3.)
     x = tf.constant(0)
@@ -101,7 +101,7 @@ def pairwise_kl_divergence(labels, predictions):
     loss = tf.divide(sum_loss[1], pairs)
     return loss
 
-
+# pairwise kldiv loss function for pairwise_kldiv
 def orig_pairwise_kl_divergence(labels, predictions):
     margin = tf.constant(2.)
     x = tf.constant(0)
