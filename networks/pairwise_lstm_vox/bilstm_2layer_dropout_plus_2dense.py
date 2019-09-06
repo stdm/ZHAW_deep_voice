@@ -121,8 +121,12 @@ class bilstm_2layer_dropout(object):
         return [csv_logger, info_logger, net_saver, net_checkpoint, plot_callback_instance]
 
     def fit(self, model, callbacks, X_t, X_v, y_t, y_v, epochs_to_run):
-        train_gen = dg.batch_generator_lstm(X_t, y_t, 100, segment_size=self.segment_size)
-        val_gen = dg.batch_generator_lstm(X_v, y_v, 100, segment_size=self.segment_size)
+        # train_gen = dg.batch_generator_lstm(X_t, y_t, 100, segment_size=self.segment_size)
+        # val_gen = dg.batch_generator_lstm(X_v, y_v, 100, segment_size=self.segment_size)
+
+        # Alternative Batch Generator
+        train_gen = dg.batch_generator_divergence_optimised(X_t, y_t, 100, segment_size=self.segment_size)
+        val_gen = dg.batch_generator_divergence_optimised(X_v, y_v, 100, segment_size=self.segment_size)
 
         history = model.fit_generator(
             train_gen,
