@@ -29,7 +29,7 @@ Arguments are also listed here:
 ```
 controller.py
   -h, --help         show this help message and exit
-  -setup             Run project setup.
+  -setup             Specify a dataset to run project setup. Available: 'timit', 'vox2'
   -n NETWORKS        The networks to use for training or analysis. Available: 'pairwise_lstm', 'pairwise_lstm_vox2', 'arc_face', 'pairwise_kldiv', 'luvo', 'gmm', 'i-vector'. All networks use different sets of parameters which can be configured in the file common/config.cfg
   -train             Train the specified network.
   -test              Test the specified network.

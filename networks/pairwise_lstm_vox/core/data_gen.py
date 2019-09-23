@@ -3,7 +3,7 @@
 
     Work of Gerber and Glinski.
 """
-from random import randint
+from random import randint, sample, choice
 
 import numpy as np
 
@@ -111,6 +111,40 @@ def batch_generator_lstm(X, y, batch_size=100, segment_size=15):
                 Xb[j, 0] = spect[:, seg_idx:seg_idx + segment_size]
 
             yield Xb.reshape(batch_size, segment_size, settings.FREQ_ELEMENTS), transformy(yb, batch_size, speakers)
+
+# Optimized version of :batch_generator_lstm to adress matching issues when used with
+# high number of classes (>100) to find reasonable comparisons
+#
+def batch_generator_divergence_optimised(X, y, batch_size=100, segment_size=15, spectrogram_height=128):
+    segments = X.shape[0]
+    bs = batch_size
+    speakers = np.amax(y) + 1
+    
+    # build as much batches as fit into the training set
+    while 1:
+        for i in range((segments + bs - 1) // bs):
+            # prepare arrays
+            Xb = np.zeros((bs, 1, spectrogram_height, segment_size), dtype=np.float32)
+            yb = np.zeros(bs, dtype=np.int32)
+            #choose max. 100 speakers from all speakers contained in X (no duplicates!)
+            population = set(y)
+            n_speakers = min(len(population), 100)
+            samples = sample(population, n_speakers)
+            # here one batch is generated
+            for j in range(0, bs):
+                #choose random sentence of one speaker out of the 100 sampled above (duplicates MUST be allowed here!)
+                #calculate the index of the sentence in X and y to access the data
+                speaker_id = randint(0, len(samples) - 1)
+
+                indices_of_speaker = np.where(y == speaker_id)[0]
+                speaker_idx = choice(indices_of_speaker)                
+
+                if y is not None:
+                    yb[j] = y[speaker_idx]
+                spect = extract(X[speaker_idx, 0], segment_size)
+                seg_idx = randint(0, spect.shape[1] - segment_size)
+                Xb[j, 0] = spect[:, seg_idx:seg_idx + segment_size]
+            yield Xb.reshape(bs, segment_size, spectrogram_height), transformy(yb, bs, speakers)
 
 
 '''creates the a batch for LSTM networks, with Pairwise Labels, 

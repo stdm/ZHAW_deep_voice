@@ -155,7 +155,7 @@ class Speaker:
             else:
                 suffix = "_cluster_" + str(partition_number)
 
-            self.save_to_pickle(x,y,valid_speakers, self.output_name_MFCC + suffix)
+            self.save_to_pickle(x,y,valid_speakers, self.output_name + suffix)
 
     def extract_voxceleb2_callback(self, x, y, valid_speakers, partition_number):
         if partition_number == -1:
