@@ -45,10 +45,10 @@ def _create_utterances(num_speakers, vector_size, vectors, y):
     speakers = set(y)
 
     # Fill embeddings with utterances
-    for i in range(num_speakers):
+    for i in range(1, num_speakers+1):
 
         # Fetch correct utterance
-        utterance = embeddings[i]
+        utterance = embeddings[i-1]
 
         # Fetch values where same speaker and add to utterance
         indices = np.where(y == i)[0]
@@ -58,6 +58,6 @@ def _create_utterances(num_speakers, vector_size, vectors, y):
             utterance = np.add(utterance, value)
 
         # Add filled utterance to embeddings
-        embeddings[i] = np.divide(utterance, len(outputs))
+        embeddings[i-1] = np.divide(utterance, len(outputs))
 
     return embeddings, speakers
