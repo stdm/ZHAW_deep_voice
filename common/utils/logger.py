@@ -24,3 +24,4 @@ def add_file_handler(logger, log_file_path):
     fh = logging.FileHandler(log_file_path)
     fh.setFormatter(formatter)
     logger.addHandler(fh)
+

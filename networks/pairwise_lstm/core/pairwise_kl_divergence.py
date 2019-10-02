@@ -8,12 +8,23 @@ import tensorflow as tf
 
 tf_l = tf.Variable(0., name='loss')
 x = tf.constant(0.)
-margin = tf.constant(3.)
 loss = tf.Variable(0.)
 sum_loss = tf.Variable(0.)
 
 
 def pairwise_kl_divergence(labels, predictions):
+    margin = tf.constant(3.)
+    x = tf.constant(0)
+    sum_loss = tf.while_loop(outerLoop_condition, outerLoop, [x, tf_l, predictions, labels, margin], swap_memory=True,
+                             parallel_iterations=10, name='outerloop')
+    n = tf.constant(100.)
+    pairs = tf.multiply(n, tf.divide(tf.subtract(n, tf.constant(1.)), tf.constant(2.)))
+    loss = tf.divide(sum_loss[1], pairs)
+    return loss
+
+
+def orig_pairwise_kl_divergence(labels, predictions):
+    margin = tf.constant(2.)
     x = tf.constant(0)
     sum_loss = tf.while_loop(outerLoop_condition, outerLoop, [x, tf_l, predictions, labels, margin], swap_memory=True,
                              parallel_iterations=10, name='outerloop')
@@ -69,24 +80,52 @@ def return_one():
 
 
 if __name__ == "__main__":
-    epsilon = 1e-16
-    test_pred = [[1., 2., 3.], [4., 2., 3.], [6., 3., 2.], [4., 1., 5.], [2., 5., 8.]]
-    # test_targ = [1, 1, 6]
-    test_targ = [[1., 0., 0.], [1., 0., 0.], [0., 0., 1.], [0., 1., 0.], [0., 1., 0.]]
-    test_margin = 2.
-    predictions = tf.placeholder('float', [None, None])
-    targets = tf.placeholder('float', [None, None])
-    margin = tf.placeholder('float', None)
-    margin = tf.stack(test_margin)
-    result = pairwise_kl_divergence(targets, predictions)
+
+    #Initialize test environment
     sess = tf.Session()
     init = tf.global_variables_initializer()
     sess.run(init)
-    summary = tf.summary.merge_all()
-    saver = tf.train.Saver()
-    train_writer = tf.summary.FileWriter('../../data/experiments/graph/loss_graph', sess.graph)
-    run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
-    run_metadata = tf.RunMetadata()
-    print('running stuff')
-    res = sess.run(result, feed_dict={targets: y, predictions: X})
+
+    #Test 1
+    #Initialize functions under test
+    predictions = tf.placeholder('float', [None, None])
+    targets = tf.placeholder('float', None)
+    lstm_loss = pairwise_kl_divergence(targets, predictions)
+    kldiv_loss = orig_pairwise_kl_divergence(targets, predictions)
+
+    #Prepare test data
+    nr_of_elems = 100
+    test_pred = [None] * nr_of_elems
+    for i in range(nr_of_elems):
+        test_pred[i] = [1, 2, 3]
+    test_pred[50] = [2, 3, 4]
+    test_targ = [None] * nr_of_elems
+    for i in range(nr_of_elems):
+        test_targ[i] = 1
+
+    #Run tests
+    res = sess.run(lstm_loss, feed_dict={targets: test_targ, predictions: test_pred})
+    print(res)
+
+    res = sess.run(kldiv_loss, feed_dict={targets: test_targ, predictions: test_pred})
+    print(res)
+
+    #Test 2
+    # Initialize functions under test
+    P = tf.placeholder('float', None)
+    xp = tf.placeholder('float', None)
+    Q = tf.placeholder('float', None)
+    xq = tf.placeholder('float', None)
+    margin = tf.placeholder('float', None)
+    loss_kl_div = loss_with_kl_div(P, xp, Q, xq, margin)
+
+    #Prepare test data
+    t_P = [1,2,3]
+    t_xp = 1
+    t_Q = [2,3,4]
+    t_xq = 1
+    t_margin = 2
+
+    #Run tests
+    res = sess.run(loss_kl_div, feed_dict={P: t_P, xp: t_xp, Q: t_Q, xq: t_xq, margin: t_margin})
     print(res)

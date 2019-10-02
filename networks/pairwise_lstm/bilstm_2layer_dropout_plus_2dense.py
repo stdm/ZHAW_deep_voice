@@ -2,7 +2,8 @@ import pickle
 
 import numpy as np
 
-import common.spectogram.speaker_train_splitter as sts
+
+import common.spectrogram.speaker_train_splitter as sts
 from .core import plot_saver as ps
 
 np.random.seed(1337)  # for reproducibility
@@ -12,8 +13,7 @@ from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation
 from keras.layers import LSTM
 from keras.layers.wrappers import Bidirectional
-from .core import data_gen as dg
-from .core import pairwise_kl_divergence as kld
+from networks.losses import get_loss, add_final_layers
 
 from common.utils.paths import *
 
@@ -33,17 +33,23 @@ from common.utils.paths import *
 
 
 class bilstm_2layer_dropout(object):
-    def __init__(self, name, training_data, n_hidden1=128, n_hidden2=128, n_classes=630, n_10_batches=1000,
-                 segment_size=15, frequency=128):
+    def __init__(self, name, config, data_generator):
         self.network_name = name
-        self.training_data = training_data
-        self.test_data = 'test' + training_data[5:]
-        self.n_hidden1 = n_hidden1
-        self.n_hidden2 = n_hidden2
-        self.n_classes = n_classes
-        self.n_10_batches = n_10_batches
-        self.segment_size = segment_size
-        self.input = (segment_size, frequency)
+        self.training_data = config.get('train', 'pickle')
+        self.n_hidden1 = config.getint('pairwise_lstm', 'n_hidden1')
+        self.n_hidden2 = config.getint('pairwise_lstm', 'n_hidden2')
+        self.n_speakers = config.getint('train', 'n_speakers')
+        self.n_10_batches = config.getint('pairwise_lstm', 'n_10_batches')
+        self.adam_lr = config.getfloat('pairwise_lstm', 'adam_lr')
+        self.adam_beta_1 = config.getfloat('pairwise_lstm', 'adam_beta_1')
+        self.adam_beta_2 = config.getfloat('pairwise_lstm', 'adam_beta_2')
+        self.adam_epsilon = config.getfloat('pairwise_lstm', 'adam_epsilon')
+        self.adam_decay = config.getfloat('pairwise_lstm', 'adam_decay')
+        self.segment_size = config.getint('pairwise_lstm', 'seg_size')
+        self.frequency = config.getint('pairwise_lstm', 'spectrogram_height')
+        self.input = (self.segment_size, self.frequency)
+        self.dg = data_generator
+        self.config = config
         print(self.network_name)
         self.run_network()
 
@@ -52,14 +58,15 @@ class bilstm_2layer_dropout(object):
         model.add(Bidirectional(LSTM(self.n_hidden1, return_sequences=True), input_shape=self.input))
         model.add(Dropout(0.50))
         model.add(Bidirectional(LSTM(self.n_hidden2)))
-        model.add(Dense(self.n_classes * 10))
+        model.add(Dense(self.n_speakers * 10))
         model.add(Dropout(0.25))
-        model.add(Dense(self.n_classes * 5))
-        model.add(Dense(self.n_classes))
-        model.add(Activation('softmax'))
-        adam = keras.optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
-        # ada = keras.optimizers.Adadelta(lr=1.0, rho=0.95, epsilon=1e-08, decay=0.0)
-        model.compile(loss=kld.pairwise_kl_divergence,
+        model.add(Dense(self.n_speakers * 5))
+        add_final_layers(model, self.config)
+
+        loss_function = get_loss(self.config)
+        adam = keras.optimizers.Adam(self.adam_lr, self.adam_beta_1, self.adam_beta_2,
+                                     self.adam_epsilon, self.adam_decay)
+        model.compile(loss=loss_function,
                       optimizer=adam,
                       metrics=['accuracy'])
         return model
@@ -68,8 +75,9 @@ class bilstm_2layer_dropout(object):
         with open(get_speaker_pickle(self.training_data), 'rb') as f:
             (X, y, speaker_names) = pickle.load(f)
 
-        splitter = sts.SpeakerTrainSplit(0.2, 10)
+        splitter = sts.SpeakerTrainSplit(0.2)
         X_t, X_v, y_t, y_v = splitter(X, y)
+
         return X_t, y_t, X_v, y_v
 
     def create_callbacks(self):
@@ -78,7 +86,7 @@ class bilstm_2layer_dropout(object):
             get_experiment_nets(self.network_name + "_best.h5"),
             monitor='val_loss', verbose=1, save_best_only=True)
         net_checkpoint = keras.callbacks.ModelCheckpoint(
-            get_experiment_nets(self.network_name + "_{epoch:05d}.h5"), period=100)
+            get_experiment_nets(self.network_name + "_{epoch:05d}.h5"), period=self.n_10_batches / 10)
         return [csv_logger, net_saver, net_checkpoint]
 
     def run_network(self):
@@ -86,8 +94,8 @@ class bilstm_2layer_dropout(object):
         calls = self.create_callbacks()
 
         X_t, y_t, X_v, y_v = self.create_train_data()
-        train_gen = dg.batch_generator_lstm(X_t, y_t, 100, segment_size=self.segment_size)
-        val_gen = dg.batch_generator_lstm(X_v, y_v, 100, segment_size=self.segment_size)
+        train_gen = self.dg.batch_generator_divergence_optimised(X_t, y_t, 100, sentences=8)
+        val_gen = self.dg.batch_generator_divergence_optimised(X_v, y_v, 100, sentences=2)
         # batches_t = ((X_t.shape[0] + 128 - 1) // 128)
         # batches_v = ((X_v.shape[0] + 128 - 1) // 128)
 
@@ -95,9 +103,8 @@ class bilstm_2layer_dropout(object):
                                       verbose=2, callbacks=calls, validation_data=val_gen,
                                       validation_steps=2, class_weight=None, max_q_size=10,
                                       nb_worker=1, pickle_safe=False)
+
         ps.save_accuracy_plot(history, self.network_name)
         ps.save_loss_plot(history, self.network_name)
         print("saving model")
         model.save(get_experiment_nets(self.network_name + ".h5"))
-        # print "evaluating model"
-        # da.calculate_test_acccuracies(self.network_name, self.test_data, True, True, True, segment_size=self.segment_size)

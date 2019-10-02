@@ -1,163 +1,151 @@
 """
 The main entry point of the speaker clustering suite.
 You can use this file to setup, train and test any network provided in the suite.
+Note that not all networks use all of the available parameters. Check their implementation beforehand.
 
-Usage: controller.py [-h] [-setup] [-n NETWORK] [-train] [-test] [-clear]
-                     [-debug]
+Usage: controller.py [-h] [-setup] [-n NETWORKS [NETWORKS ...]] [-train] [-test] [-clear]
 
 Controller suite for Speaker clustering
 
 optional arguments:
-  -h, --help  show this help message and exit
-  -setup      Run project setup.
-  -n NETWORK  The network to use for training or analysis.
-  -train      Train the specified network.
-  -test       Test the specified network.
-  -clear      Clean directories before starting network.
-  -debug      Set loglevel for TensorFlow and Logger to debug.
-  -plot       Plots the last results of the specified networks in one file.
-
+  -h, --help         show this help message and exit
+  -setup             Specify a dataset to run project setup. Available: 'timit', 'vox2'
+  -n                 The networks to use for training or analysis.
+                     Available: 'pairwise_lstm', 'pairwise_lstm_vox2', 'arc_face', 'pairwise_kldiv', 'luvo', 'gmm', 'i-vector'.
+                     All networks use different sets of parameters which can be configured in the file common/config.cfg
+  -train             Train the specified network.
+  -test              Test the specified network.
+  -best              Just the best results of the networks will be used in -train or -plot
+  -plot              Plots the last results of the specified networks in one file.
+  -dev               Enable dev mode so the dev set instead of the test set is used for testing
+  -config            The config file to use for training or analysis
 """
+
+
 import argparse
 import sys
 
-import matplotlib
-
-matplotlib.use('Agg')
-from common.analysis.analysis import *
-from common.extrapolation.setup import setup_suite, is_suite_setup
-from common.network_controller import NetworkController
+from common.analysis.plotting import plot_files
+from common.extrapolation.setup import setup_suite
 from common.utils.paths import *
-from networks.flow_me.me_controller import MEController
-from networks.lu_vo.luvo_controller import LuvoController
-from networks.pairwise_kldiv.kldiv_controller import KLDivController
-from networks.pairwise_lstm.lstm_controller import LSTMController
+from common.utils.load_config import *
 
 
-class Controller(NetworkController):
-    def __init__(self, setup=True, network='pairwise_lstm', train=False, test=False, clear=False, debug=False,
-                 plot=False, best=False, val_data=40):
-        super().__init__("Front")
+# Constants
+DEFAULT_SETUP = ''
+DEFAULT_NETWORKS = ()
+DEFAULT_TRAIN = False
+DEFAULT_TEST = False
+DEFAULT_PLOT = False
+DEFAULT_BEST = False
+DEFAULT_DEV = False
+DEFAULT_CONFIG = 'config'
+
+
+class Controller:
+    def __init__(self, config_name=DEFAULT_CONFIG,
+                 setup=DEFAULT_SETUP, networks=DEFAULT_NETWORKS, train=DEFAULT_TRAIN, test=DEFAULT_TEST,
+                 plot=DEFAULT_PLOT, best=DEFAULT_BEST, dev=DEFAULT_DEV):
+        self.config_name = config_name
+        self.config = load_config(None, join(get_configs(), config_name + '.cfg'))
         self.setup = setup
-        self.network = network
+        self.networks = networks
         self.train = train
         self.test = test
-        self.clear = clear
-        self.debug = debug
-        self.network_controllers = []
         self.plot = plot
         self.best = best
+        self.dev = dev
+        self.network_controllers = []
 
-        validation_data = {
-            40: "speakers_40_clustering_vs_reynolds",
-            60: "speakers_60_clustering",
-            80: "speakers_80_clustering"
-        }
-
-        self.val_data = validation_data[val_data]
+    def setup_networks(self, dataset):
+        print("Setting up the network suite.")
+        setup_suite(dataset)
 
     def train_network(self):
-        if not self.train:
-            return
-
         for network_controller in self.network_controllers:
             network_controller.train_network()
 
     def test_network(self):
-        if not self.test:
-            return
-
         for network_controller in self.network_controllers:
             network_controller.test_network()
 
-    def get_embeddings(self):
-        return None, None, None, None
+    def plot_results(self):
+        for network_controller in self.network_controllers:
+            name = network_controller.name
+            plot_files(name, get_result_files(name, self.best))
 
     def run(self):
-
         # Setup
-        self.setup_networks()
+        if self.setup:
+            self.setup_networks(self.setup)
 
         # Validate network
         self.generate_controllers()
 
         # Train network
-        self.train_network()
+        if self.train:
+            self.train_network()
 
         # Test network
-        self.test_network()
+        if self.test:
+            self.test_network()
 
         # Plot results
-        self.plot_results()
+        if self.plot:
+            self.plot_results()
 
     def generate_controllers(self):
+        for network in self.networks:
+            network_name = "{}_{}".format(network, self.config_name)
+            if network == 'pairwise_lstm':
+                from networks.pairwise_lstm.lstm_controller import LSTMController
+                self.network_controllers.append(LSTMController(network_name, self.config, self.dev, self.best))
+            elif network == 'pairwise_kldiv':
+                from networks.pairwise_kldiv.kldiv_controller import KLDivController
+                self.network_controllers.append(KLDivController(network_name, self.config, self.dev))
+            elif network == 'i_vector':
+                from networks.i_vector.ivec_controller import IVECController
+                self.network_controllers.append(IVECController(self.config, self.dev))
+            elif network == 'luvo':
+                from networks.lu_vo.luvo_controller import LuvoController
+                self.network_controllers.append(LuvoController(network_name, self.config, self.dev))
+            elif network == 'gmm':
+                from networks.gmm.gmm_controller import GMMController
+                self.network_controllers.append(GMMController(self.config, self.dev))
+            elif network == 'pairwise_lstm_vox2':
+                from networks.pairwise_lstm_vox.lstm_controller import LSTMVOX2Controller
+                self.network_controllers.append(LSTMVOX2Controller(network_name, self.config, self.dev, self.best))
+            else:
+                print("Network " + network + " is not known.")
+                sys.exit(1)
 
-        controller_dict = {
-            'pairwise_lstm': [LSTMController()],
-            'pairwise_kldiv': [KLDivController()],
-            'flow_me': [MEController(self.clear, self.debug, False)],
-            'luvo': [LuvoController()],
-            'all': [LSTMController(), KLDivController(), MEController(self.clear, self.debug, False), LuvoController()]
-        }
-
-        try:
-            self.network_controllers = controller_dict[self.network]
-            for net in self.network_controllers:
-                net.val_data = self.val_data
-
-        except KeyError:
-            print("Network " + self.network + " is not known:")
-            print("Valid Names: ", join([k for k in controller_dict.keys()]))
-            sys.exit(1)
-
-    def setup_networks(self):
-        if not self.setup:
-            return
-
-        if is_suite_setup():
-            print("Already fully setup.")
-        else:
-            print("Setting up the network suite.")
-
-        setup_suite()
-
-    def plot_results(self):
-        if not self.plot:
-            return
-
-        plot_files(self.network, self.get_result_files())
-
-    def get_result_files(self):
-        if self.network == "all":
-            regex = '*best*.pickle'
-        elif self.best:
-            regex = self.network + '*best*.pickle'
-        else:
-            regex = self.network + ".pickle"
-
-        files = list_all_files(get_results(), regex)
-        for index, file in enumerate(files):
-            files[index] = get_results(file)
-        return files
 
 if __name__ == '__main__':
     # Parse console Args
     parser = argparse.ArgumentParser(description='Controller suite for Speaker clustering')
-    parser.add_argument('-setup', dest='setup', action='store_true', help='Run project setup.')
-    parser.add_argument('-n', dest='network', default='pairwise_lstm',
-                        help='The network to use for training or analysis.')
-    parser.add_argument('-train', dest='train', action='store_true', help='Train the specified network.')
-    parser.add_argument('-test', dest='test', action='store_true', help='Test the specified network.')
-    parser.add_argument('-clear', dest='clear', action='store_true', help='Clean directories before starting network.')
-    parser.add_argument('-debug', dest='debug', action='store_true',
-                        help='Set loglevel for TensorFlow and Logger to debug')
+    # add all arguments and provide descriptions for them
+    parser.add_argument('-setup', dest='setup', default=DEFAULT_SETUP,
+                        help='Specify a dataset to run project setup.')
+    parser.add_argument('-n', nargs='+', dest='networks', default=DEFAULT_NETWORKS,
+                        help='The networks to use for training or analysis.')
+    parser.add_argument('-train', dest='train', action='store_true',
+                        help='Train the specified network.')
+    parser.add_argument('-test', dest='test', action='store_true',
+                        help='Test the specified network.')
     parser.add_argument('-plot', dest='plot', action='store_true',
-                        help='Plots the last results of the specified networks in one file.')
+                        help='Plots the results of the specified networks.')
     parser.add_argument('-best', dest='best', action='store_true',
-                        help='If a single Network is specified and plot was called, just the best curves will be plotted')
-    parser.add_argument('-val#', dest='validation_number', default=40,
-                        help='Specify how many speakers should be used for testing (40, 60, 80).')
+                        help='If a single Network is specified and plot was called, just the best curves will be plotted. If test was called only the best network will be tested')
+    parser.add_argument('-dev', dest='dev', action='store_true',
+                        help='Enable dev mode so the dev set instead of the test set is used for testing')
+    parser.add_argument('-config', dest='config_name', default=DEFAULT_CONFIG,
+                        help='The config to use for training or analysis.')
+
     args = parser.parse_args()
 
-    controller = Controller(args.setup, args.network, args.train, args.test, args.clear, args.debug, args.plot, args.best, args.validation_number)
+    controller = Controller(
+        config_name=args.config_name, setup=args.setup, networks=tuple(args.networks), train=args.train, test=args.test,
+        plot=args.plot, best=args.best, dev=args.dev
+    )
+
     controller.run()
